@@ -1,0 +1,164 @@
+package main
+
+import (
+	"fmt"
+	"runtime"
+
+	"io"
+	"os"
+
+	"bufio"
+
+	"github.com/alecthomas/kingpin"
+	"github.com/cheggaaa/pb"
+	"github.com/mingzhi/biogo/seq"
+	"github.com/mingzhi/ncbiftp/taxonomy"
+)
+
+func main() {
+	kingpin.Version("v0.1")
+	alnFile := kingpin.Arg("align_file", "input alignment file in FASTA format").Required().String()
+	outFile := kingpin.Arg("out_file", "output prefix").Required().String()
+	seqType := kingpin.Arg("seq_type", "coding|noncoding|partial").Required().String()
+	maxl := kingpin.Flag("max_len", "maximum length of correlation to calculate").Default("150").Int()
+	ncpu := kingpin.Flag("cpus", "number of threads (default 0, use all the cores)").Default("0").Int()
+	showProgress := kingpin.Flag("progress", "show progress?").Default("false").Bool()
+	kingpin.Parse()
+
+	var calculator Calculator
+	switch *seqType {
+	case "coding":
+		codonOffset := 0
+		codingTable := taxonomy.GeneticCodes()["11"]
+		maxCodonLen := *maxl / 3
+		calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset)
+		break
+	case "noncoding":
+		calculator = NewNoncodingCalculator(*maxl)
+		break
+	}
+
+	setNumThreads(*ncpu)
+	var pbar *pb.ProgressBar
+	if *showProgress {
+		count := countAlignments(*alnFile)
+		pbar = pb.StartNew(count)
+		defer pbar.Finish()
+	}
+
+	alnChan := readAlignments(*alnFile)
+	resChan := calc(alnChan, calculator)
+	collector := NewCollector()
+	for res := range resChan {
+		collector.Add(res)
+		pbar.Increment()
+	}
+	write(*outFile, collector)
+}
+
+func write(outfile string, collector *Collector) {
+	w, err := os.Create(outfile)
+	if err != nil {
+		panic(err)
+	}
+	defer w.Close()
+
+	results := collector.Results()
+
+	w.WriteString("l,m,v,n,t\n")
+	for _, res := range results {
+		w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type))
+	}
+}
+
+func calc(alnChan chan []seq.Sequence, calculator Calculator) (corrResChan chan []CorrResult) {
+	corrResChan = make(chan []CorrResult)
+	done := make(chan bool)
+
+	ncpu := runtime.GOMAXPROCS(0)
+	for i := 0; i < ncpu; i++ {
+		go func() {
+			for aln := range alnChan {
+				results := calculator.CalcP2(aln)
+				corrResChan <- results
+			}
+			done <- true
+		}()
+	}
+
+	go func() {
+		defer close(corrResChan)
+		for i := 0; i < ncpu; i++ {
+			<-done
+		}
+	}()
+	return
+}
+
+// setNumThreads sets number of CPU cores for using.
+// if ncpu == 0, we will used all core avaible.
+func setNumThreads(ncpu int) {
+	if ncpu == 0 {
+		ncpu = runtime.NumCPU()
+	}
+	runtime.GOMAXPROCS(ncpu)
+}
+
+// openFile is a helper function to open a file.
+// and panic if error occurs.
+func openFile(file string) (f *os.File) {
+	var err error
+	f, err = os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+// readAlignments reads sequence alignment from a extended Multi-FASTA file,
+// and return a channel of alignment, which is a list of seq.Sequence
+func readAlignments(file string) (alnChan chan []seq.Sequence) {
+	alnChan = make(chan []seq.Sequence)
+	read := func() {
+		defer close(alnChan)
+
+		f := openFile(file)
+		defer f.Close()
+		xmfaReader := NewXMFAReader(f)
+		for {
+			alignment, err := xmfaReader.Read()
+			if len(alignment) > 0 {
+				alnChan <- alignment
+			}
+
+			if err != nil {
+				if err != io.EOF {
+					panic(err)
+				}
+				break
+			}
+		}
+	}
+	go read()
+	return
+}
+
+// countAlignments return total number of alignments in a file.
+func countAlignments(file string) (count int) {
+	f := openFile(file)
+	defer f.Close()
+	rd := bufio.NewReader(f)
+	for {
+		line, err := rd.ReadString('\n')
+		if err != nil {
+			if err != io.EOF {
+				panic(err)
+			}
+			break
+		}
+		if line[0] == '=' {
+			count++
+		}
+	}
+	return
+}
