@@ -49,7 +49,6 @@ func main() {
 	notBootstrap := NewBootstrap("all", 1.0)
 	notBootstrap.SetRandom(false)
 	bootstraps = append(bootstraps, notBootstrap)
-	bootstraps = append(bootstraps, notBootstrap)
 	for i := 0; i < *numBoot; i++ {
 		id := fmt.Sprintf("boot_%d", i)
 		sampleRatio := 1.0
