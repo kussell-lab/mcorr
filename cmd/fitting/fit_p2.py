@@ -1,13 +1,12 @@
 """Fit correlation function (P2)"""
 from __future__ import print_function
-import sys
 from multiprocessing import cpu_count
+from argparse import ArgumentParser
 import numpy as np
 from joblib import Parallel, delayed
 import matplotlib
 matplotlib.use('Agg')
 matplotlib.rcParams.update({'font.size': 12})
-
 import matplotlib.pyplot as plt
 from lmfit import Parameters, Minimizer
 
@@ -254,10 +253,14 @@ class FitRes(object):
                 values.append("NA")
         return values
 
-def main(argv):
+def main():
     """Run fitting using lmfit"""
-    datafile = argv[0]
-    prefix = argv[1]
+    parser = ArgumentParser(description="fitting p2")
+    parser.add_argument("corr_file", type=str)
+    parser.add_argument("out_prefix", type=str)
+    opts = parser.parse_args()
+    datafile = opts.corr_file
+    prefix = opts.out_prefix
     data = read_csv(datafile)
     xmin = 3
     xmax = 150
@@ -305,4 +308,4 @@ def main(argv):
         plot_params(fit_results, names[1:], out_prefix+".svg")
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
