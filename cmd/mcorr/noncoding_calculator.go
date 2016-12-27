@@ -59,7 +59,7 @@ func doubleCounts(basePairs [][]byte) *NuclCov {
 	return c
 }
 
-// DNA
+// ATGC is DNA alphabet.
 const ATGC = "ATGC"
 const atgc = "atgc"
 

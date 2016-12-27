@@ -1,13 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"runtime"
-
 	"io"
 	"os"
-
-	"bufio"
+	"runtime"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/cheggaaa/pb"
@@ -22,6 +20,7 @@ func main() {
 	seqType := kingpin.Arg("seq_type", "coding|noncoding|partial").Required().String()
 	maxl := kingpin.Flag("max_len", "maximum length of correlation to calculate").Default("150").Int()
 	ncpu := kingpin.Flag("cpus", "number of threads (default 0, use all the cores)").Default("0").Int()
+	numBoot := kingpin.Flag("num_boot", "number of bootstrapping").Default("100").Int()
 	showProgress := kingpin.Flag("progress", "show progress?").Default("false").Bool()
 	kingpin.Parse()
 
@@ -47,27 +46,39 @@ func main() {
 	}
 
 	alnChan := readAlignments(*alnFile)
-	resChan := calc(alnChan, calculator)
-	collector := NewCollector()
-	for res := range resChan {
-		collector.Add(res)
-		pbar.Increment()
-	}
-	write(*outFile, collector)
-}
+	corrResChan := calc(alnChan, calculator)
 
-func write(outfile string, collector *Collector) {
-	w, err := os.Create(outfile)
+	bootstraps := []*Bootstrap{}
+	notBootstrap := NewBootstrap("all", 1.0)
+	notBootstrap.SetRandom(false)
+	bootstraps = append(bootstraps, notBootstrap)
+	bootstraps = append(bootstraps, notBootstrap)
+	for i := 0; i < *numBoot; i++ {
+		id := fmt.Sprintf("boot_%d", i)
+		sampleRatio := 1.0
+		bootstraps = append(bootstraps, NewBootstrap(id, sampleRatio))
+	}
+
+	for corrResults := range corrResChan {
+		if *showProgress {
+			pbar.Increment()
+		}
+		for _, bs := range bootstraps {
+			bs.Add(corrResults)
+		}
+	}
+
+	w, err := os.Create(*outFile)
 	if err != nil {
 		panic(err)
 	}
 	defer w.Close()
-
-	results := collector.Results()
-
-	w.WriteString("l,m,v,n,t\n")
-	for _, res := range results {
-		w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type))
+	w.WriteString("l,m,v,n,t,b\n")
+	for _, bs := range bootstraps {
+		results := bs.Results()
+		for _, res := range results {
+			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
+		}
 	}
 }
 
