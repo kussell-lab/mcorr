@@ -17,7 +17,7 @@ func main() {
 	kingpin.Version("v0.1")
 	alnFile := kingpin.Arg("align_file", "input alignment file in FASTA format").Required().String()
 	outFile := kingpin.Arg("out_file", "output prefix").Required().String()
-	seqType := kingpin.Arg("seq_type", "coding|noncoding|partial").Required().String()
+	noncoding := kingpin.Flag("non_coding", "non_coding sequences?").Default("false").Bool()
 	maxl := kingpin.Flag("max_len", "maximum length of correlation to calculate").Default("150").Int()
 	ncpu := kingpin.Flag("cpus", "number of threads (default 0, use all the cores)").Default("0").Int()
 	numBoot := kingpin.Flag("num_boot", "number of bootstrapping").Default("100").Int()
@@ -25,16 +25,13 @@ func main() {
 	kingpin.Parse()
 
 	var calculator Calculator
-	switch *seqType {
-	case "coding":
+	if *noncoding {
+		calculator = NewNoncodingCalculator(*maxl)
+	} else {
 		codonOffset := 0
 		codingTable := taxonomy.GeneticCodes()["11"]
 		maxCodonLen := *maxl / 3
 		calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset)
-		break
-	case "noncoding":
-		calculator = NewNoncodingCalculator(*maxl)
-		break
 	}
 
 	setNumThreads(*ncpu)
