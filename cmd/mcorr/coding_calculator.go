@@ -24,23 +24,25 @@ type CodingCalculator struct {
 	CodingTable *taxonomy.GeneticCode
 	MaxCodonLen int
 	CodonOffset int
+	Synonymous  bool
 }
 
 // NewCodingCalculator return a CodingCalculator
-func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset int) *CodingCalculator {
+func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset int, synonymous bool) *CodingCalculator {
 	return &CodingCalculator{
 		CodingTable: codingTable,
 		MaxCodonLen: maxCodonLen,
 		CodonOffset: codonOffset,
+		Synonymous:  synonymous,
 	}
 }
 
 // CalcP2 calculate P2
 func (cc *CodingCalculator) CalcP2(alignment []seq.Sequence) (results []CorrResult) {
-	return calcP2Coding(alignment, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable)
+	return calcP2Coding(alignment, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
 }
 
-func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode) (results []CorrResult) {
+func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
 	codonSequences := [][]Codon{}
 	for _, s := range aln {
 		codons := extractCodons(s, codonOffset)
@@ -54,10 +56,18 @@ func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTa
 			codonPairs := [][]Codon{}
 			j := i + l
 			for _, cc := range codonSequences {
-				codonPairs = append(codonPairs, []Codon{cc[i], cc[j]})
+				if i+l < len(cc) {
+					codonPairs = append(codonPairs, []Codon{cc[i], cc[j]})
+				}
 			}
 
-			multiCodonPairs := synonymousSplit(codonPairs, codingTable)
+			multiCodonPairs := [][][]Codon{}
+			if synonymous {
+				multiCodonPairs = synonymousSplit(codonPairs, codingTable)
+			} else {
+				multiCodonPairs = append(multiCodonPairs, codonPairs)
+			}
+
 			for _, codonPairs := range multiCodonPairs {
 				if len(codonPairs) >= 2 {
 					nc := doubleCodons(codonPairs)
