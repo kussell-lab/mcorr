@@ -137,7 +137,7 @@ func readAlignments(file string) (alnChan chan []seq.Sequence) {
 
 		f := openFile(file)
 		defer f.Close()
-		xmfaReader := NewXMFAReader(f)
+		xmfaReader := seq.NewXMFAReader(f)
 		for {
 			alignment, err := xmfaReader.Read()
 			if len(alignment) > 0 {
