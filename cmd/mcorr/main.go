@@ -88,8 +88,10 @@ func calc(alnChan chan []seq.Sequence, calculator Calculator, geneSize int) (cor
 				} else {
 					subAln = splitAlignment(aln, geneSize)
 				}
-				results := calculator.CalcP2(aln)
-				corrResChan <- results
+				for _, aa := range subAln {
+					results := calculator.CalcP2(aa)
+					corrResChan <- results
+				}
 			}
 			done <- true
 		}()
