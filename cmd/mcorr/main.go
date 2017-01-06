@@ -8,7 +8,6 @@ import (
 	"runtime"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
@@ -22,7 +21,7 @@ func main() {
 	maxl := kingpin.Flag("max_len", "maximum length of correlation to calculate").Default("300").Int()
 	ncpu := kingpin.Flag("cpus", "number of threads (default 0, use all the cores)").Default("0").Int()
 	numBoot := kingpin.Flag("num_boot", "number of bootstrapping").Default("100").Int()
-	showProgress := kingpin.Flag("progress", "show progress?").Default("false").Bool()
+	splitGeneSize := kingpin.Flag("gene_size", "split genes").Default("0").Int()
 	kingpin.Parse()
 
 	var calculator Calculator
@@ -41,15 +40,9 @@ func main() {
 	}
 
 	setNumThreads(*ncpu)
-	var pbar *pb.ProgressBar
-	if *showProgress {
-		count := countAlignments(*alnFile)
-		pbar = pb.StartNew(count)
-		defer pbar.Finish()
-	}
 
 	alnChan := readAlignments(*alnFile)
-	corrResChan := calc(alnChan, calculator)
+	corrResChan := calc(alnChan, calculator, *splitGeneSize)
 
 	bootstraps := []*Bootstrap{}
 	notBootstrap := NewBootstrap("all", 1.0)
@@ -62,9 +55,6 @@ func main() {
 	}
 
 	for corrResults := range corrResChan {
-		if *showProgress {
-			pbar.Increment()
-		}
 		for _, bs := range bootstraps {
 			bs.Add(corrResults)
 		}
@@ -84,7 +74,7 @@ func main() {
 	}
 }
 
-func calc(alnChan chan []seq.Sequence, calculator Calculator) (corrResChan chan []CorrResult) {
+func calc(alnChan chan []seq.Sequence, calculator Calculator, geneSize int) (corrResChan chan []CorrResult) {
 	corrResChan = make(chan []CorrResult)
 	done := make(chan bool)
 
@@ -92,6 +82,12 @@ func calc(alnChan chan []seq.Sequence, calculator Calculator) (corrResChan chan 
 	for i := 0; i < ncpu; i++ {
 		go func() {
 			for aln := range alnChan {
+				subAln := [][]seq.Sequence{}
+				if geneSize <= 0 {
+					subAln = append(subAln, aln)
+				} else {
+					subAln = splitAlignment(aln, geneSize)
+				}
 				results := calculator.CalcP2(aln)
 				corrResChan <- results
 			}
@@ -153,6 +149,48 @@ func readAlignments(file string) (alnChan chan []seq.Sequence) {
 		}
 	}
 	go read()
+	return
+}
+
+// splitAlignment splits an alignment into mutiple parts.
+func splitAlignment(sequences []seq.Sequence, size int) [][]seq.Sequence {
+	genes := [][]seq.Sequence{}
+	for _, gene := range sequences {
+		s := gene.Seq
+		parts, starts, ends := split(s, size)
+
+		if len(genes) == 0 {
+			genes = make([][]seq.Sequence, len(parts))
+		}
+
+		for i := 0; i < len(parts); i++ {
+			id := fmt.Sprintf("%s_%d_%d", gene.Id, starts[i], ends[i])
+			g := seq.Sequence{Id: id, Seq: parts[i]}
+			genes[i] = append(genes[i], g)
+		}
+	}
+
+	return genes
+}
+
+// split a sequence into multiple constant parts of constant size.
+func split(s []byte, size int) (parts [][]byte, starts, ends []int) {
+	numOfParts := len(s) / size
+	mode := len(s) % size
+	beginOfSeq := mode / 2
+
+	for i := 0; i < numOfParts; i++ {
+		part := []byte{}
+		start := beginOfSeq + i*size
+		end := beginOfSeq + (i+1)*size
+		for j := start; j < end && j < len(s); j++ {
+			part = append(part, s[j])
+		}
+		parts = append(parts, part)
+		starts = append(starts, start)
+		ends = append(ends, end)
+	}
+
 	return
 }
 
