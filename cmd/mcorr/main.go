@@ -16,6 +16,7 @@ func main() {
 	kingpin.Version("v0.1")
 	alnFile := kingpin.Arg("align_file", "input alignment file in FASTA format").Required().String()
 	outFile := kingpin.Arg("out_file", "output prefix").Required().String()
+	mateFile := kingpin.Flag("mate_file", "mate file").Default("").String()
 	noncoding := kingpin.Flag("non_coding", "non_coding sequences?").Default("false").Bool()
 	partial := kingpin.Flag("partial", "partial genes (like MLST data)").Default("false").Bool()
 	maxl := kingpin.Flag("max_len", "maximum length of correlation to calculate").Default("300").Int()
@@ -35,14 +36,24 @@ func main() {
 		} else {
 			codonOffset := 0
 			synonymous := true
-			calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, synonymous)
+			if *mateFile != "" {
+				calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, synonymous)
+			} else {
+				calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, synonymous)
+			}
 		}
 	}
 
 	setNumThreads(*ncpu)
 
 	alnChan := readAlignments(*alnFile)
-	corrResChan := calc(alnChan, calculator, *splitGeneSize)
+	var corrResChan chan []CorrResult
+	if *mateFile != "" {
+		mateAlnChan := readAlignments(*mateFile)
+		corrResChan = calcWithMate(alnChan, mateAlnChan, calculator, *splitGeneSize)
+	} else {
+		corrResChan = calc(alnChan, calculator, *splitGeneSize)
+	}
 
 	bootstraps := []*Bootstrap{}
 	notBootstrap := NewBootstrap("all", 1.0)
@@ -72,6 +83,42 @@ func main() {
 			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
 		}
 	}
+}
+
+func calcWithMate(alnChan, mateAlnChan chan []seq.Sequence, calculator Calculator, geneSize int) (corrResChan chan []CorrResult) {
+	corrResChan = make(chan []CorrResult)
+	done := make(chan bool)
+
+	ncpu := runtime.GOMAXPROCS(0)
+	for i := 0; i < ncpu; i++ {
+		go func() {
+			for aln := range alnChan {
+				mateAln := <-mateAlnChan
+				subAln := [][]seq.Sequence{}
+				mateSubAln := [][]seq.Sequence{}
+				if geneSize <= 0 {
+					subAln = append(subAln, aln)
+					mateSubAln = append(mateSubAln, mateAln)
+				} else {
+					subAln = splitAlignment(aln, geneSize)
+					mateSubAln = splitAlignment(mateAln, geneSize)
+				}
+				for i, aa := range subAln {
+					results := calculator.CalcP2(aa, mateSubAln[i])
+					corrResChan <- results
+				}
+			}
+			done <- true
+		}()
+	}
+
+	go func() {
+		defer close(corrResChan)
+		for i := 0; i < ncpu; i++ {
+			<-done
+		}
+	}()
+	return
 }
 
 func calc(alnChan chan []seq.Sequence, calculator Calculator, geneSize int) (corrResChan chan []CorrResult) {
