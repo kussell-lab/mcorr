@@ -86,14 +86,28 @@ func main() {
 }
 
 func calcWithMate(alnChan, mateAlnChan chan []seq.Sequence, calculator Calculator, geneSize int) (corrResChan chan []CorrResult) {
+	type job struct {
+		A, B []seq.Sequence
+	}
+	jobChan := make(chan job)
+	go func() {
+		defer close(jobChan)
+		for aln := range alnChan {
+			mateAln := <-mateAlnChan
+			j := job{A: aln, B: mateAln}
+			jobChan <- j
+		}
+	}()
+
 	corrResChan = make(chan []CorrResult)
 	done := make(chan bool)
 
 	ncpu := runtime.GOMAXPROCS(0)
 	for i := 0; i < ncpu; i++ {
 		go func() {
-			for aln := range alnChan {
-				mateAln := <-mateAlnChan
+			for j := range jobChan {
+				aln := j.A
+				mateAln := j.B
 				subAln := [][]seq.Sequence{}
 				mateSubAln := [][]seq.Sequence{}
 				if geneSize <= 0 {
