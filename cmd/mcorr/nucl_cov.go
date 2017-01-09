@@ -102,7 +102,7 @@ func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
 		if nc.Doublets[i] > 0 {
 			for j := 0; j < len(nc2.Doublets); j++ {
 				if i != j && nc2.Doublets[j] > 0 {
-					c := float64(nc.Doublets[i] * nc.Doublets[j])
+					c := float64(nc.Doublets[i] * nc2.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
 						xy += c
 					}
