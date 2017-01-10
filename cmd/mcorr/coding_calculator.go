@@ -16,7 +16,7 @@ type CorrResult struct {
 
 // Calculator define a interface for calculating correlations.
 type Calculator interface {
-	CalcP2(alignments []seq.Sequence, others ...[]seq.Sequence) (corrResults []CorrResult)
+	CalcP2(a Alignment, others ...Alignment) (corrResults []CorrResult)
 }
 
 // CodingCalculator for calculating coding sequences.
@@ -38,11 +38,11 @@ func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOf
 }
 
 // CalcP2 calculate P2
-func (cc *CodingCalculator) CalcP2(alignment []seq.Sequence, others ...[]seq.Sequence) (results []CorrResult) {
-	return calcP2Coding(alignment, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
+func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) (results []CorrResult) {
+	return calcP2Coding(a, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
 }
 
-func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
+func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
 	codonSequences := [][]Codon{}
 	for _, s := range aln {
 		codons := extractCodons(s, codonOffset)

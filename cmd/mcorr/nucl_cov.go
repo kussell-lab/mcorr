@@ -74,16 +74,17 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 		if nc.Doublets[i] > 0 {
 			for j := i + 1; j < len(nc.Doublets); j++ {
 				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xy += float64(nc.Doublets[i] * nc.Doublets[j])
+						xy += c
 					}
 
 					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += float64(nc.Doublets[i] * nc.Doublets[j])
+						xbar += c
 					}
 
 					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += float64(nc.Doublets[i] * nc.Doublets[j])
+						ybar += c
 					}
 
 					n += nc.Doublets[i] * nc.Doublets[j]

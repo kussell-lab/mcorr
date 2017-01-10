@@ -1,9 +1,6 @@
 package main
 
-import (
-	"github.com/mingzhi/biogo/seq"
-	"github.com/mingzhi/ncbiftp/taxonomy"
-)
+import "github.com/mingzhi/ncbiftp/taxonomy"
 
 // MateCalculator for calculating correlation for two clusters of sequences.
 type MateCalculator struct {
@@ -24,7 +21,7 @@ func NewMateCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffs
 }
 
 // CalcP2 calcualtes P2
-func (cc *MateCalculator) CalcP2(aln1 []seq.Sequence, mates ...[]seq.Sequence) (results []CorrResult) {
+func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (results []CorrResult) {
 	if len(mates) == 0 {
 		return
 	}
@@ -76,7 +73,7 @@ func (cc *MateCalculator) translateCodonPair(cp CodonPair) string {
 	return string([]byte{a, b})
 }
 
-func (cc *MateCalculator) extractCodonSequences(aln []seq.Sequence) (csList []CodonSequence) {
+func (cc *MateCalculator) extractCodonSequences(aln Alignment) (csList []CodonSequence) {
 	for _, s := range aln {
 		csList = append(csList, extractCodons(s, cc.CodonOffset))
 	}

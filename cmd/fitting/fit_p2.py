@@ -73,7 +73,7 @@ def fit_model1(xvalues, yvalues):
         params1 = Parameters()
         params1.add('theta', value=0.1, min=0)
         params1.add('phi', value=phi_start, min=0)
-        params1.add('fbar', value=100, min=1, max=100000)
+        params1.add('fbar', value=100, min=1, max=10000000)
         minner1 = Minimizer(fcn1min, params1, fcn_args=(xvalues, yvalues))
         fitres1 = minner1.minimize()
         fitresults.append(fitres1)
