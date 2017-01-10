@@ -16,7 +16,7 @@ type CorrResult struct {
 
 // Calculator define a interface for calculating correlations.
 type Calculator interface {
-	CalcP2(alignments []seq.Sequence) (corrResults []CorrResult)
+	CalcP2(a Alignment, others ...Alignment) (corrResults []CorrResult)
 }
 
 // CodingCalculator for calculating coding sequences.
@@ -38,11 +38,11 @@ func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOf
 }
 
 // CalcP2 calculate P2
-func (cc *CodingCalculator) CalcP2(alignment []seq.Sequence) (results []CorrResult) {
-	return calcP2Coding(alignment, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
+func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) (results []CorrResult) {
+	return calcP2Coding(a, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
 }
 
-func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
+func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
 	codonSequences := [][]Codon{}
 	for _, s := range aln {
 		codons := extractCodons(s, codonOffset)
@@ -53,15 +53,15 @@ func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTa
 		totalxy := 0.0
 		totaln := 0
 		for i := 0; i+l < len(codonSequences[0]); i++ {
-			codonPairs := [][]Codon{}
+			codonPairs := []CodonPair{}
 			j := i + l
 			for _, cc := range codonSequences {
 				if i+l < len(cc) {
-					codonPairs = append(codonPairs, []Codon{cc[i], cc[j]})
+					codonPairs = append(codonPairs, CodonPair{A: cc[i], B: cc[j]})
 				}
 			}
 
-			multiCodonPairs := [][][]Codon{}
+			multiCodonPairs := [][]CodonPair{}
 			if synonymous {
 				multiCodonPairs = synonymousSplit(codonPairs, codingTable)
 			} else {
@@ -88,12 +88,12 @@ func calcP2Coding(aln []seq.Sequence, codonOffset int, maxCodonLen int, codingTa
 	return
 }
 
-func doubleCodons(codonPairs [][]Codon) *NuclCov {
+func doubleCodons(codonPairs []CodonPair) *NuclCov {
 	alphabet := []byte{'A', 'T', 'G', 'C'}
 	c := NewNuclCov(alphabet)
 	for _, codonPair := range codonPairs {
-		a := codonPair[0][2]
-		b := codonPair[1][2]
+		a := codonPair.A[2]
+		b := codonPair.B[2]
 		c.Add(a, b)
 	}
 	return c
@@ -101,6 +101,14 @@ func doubleCodons(codonPairs [][]Codon) *NuclCov {
 
 // Codon is a byte list of length 3
 type Codon []byte
+
+// CodonSequence is a sequence of codons.
+type CodonSequence []Codon
+
+// CodonPair is a pair of Codons.
+type CodonPair struct {
+	A, B Codon
+}
 
 // extractCodons return a list of codons from a DNA sequence.
 func extractCodons(s seq.Sequence, offset int) (codons []Codon) {
@@ -113,12 +121,12 @@ func extractCodons(s seq.Sequence, offset int) (codons []Codon) {
 
 // synonymousSplit split a list of codon pairs into multiple
 // synonymous pairs.
-func synonymousSplit(codonPairs [][]Codon, codingTable *taxonomy.GeneticCode) (multiCodonPairs [][][]Codon) {
+func synonymousSplit(codonPairs []CodonPair, codingTable *taxonomy.GeneticCode) (multiCodonPairs [][]CodonPair) {
 	aaList := []string{}
 	for _, codonPair := range codonPairs {
 		// check gap.
 		containsGap := false
-		for _, codon := range codonPair {
+		for _, codon := range []Codon{codonPair.A, codonPair.B} {
 			for i := 0; i < 3; i++ {
 				if codon[i] == '-' || codon[i] == 'N' {
 					containsGap = true
@@ -130,8 +138,8 @@ func synonymousSplit(codonPairs [][]Codon, codingTable *taxonomy.GeneticCode) (m
 			continue
 		}
 
-		codonA := string(codonPair[0])
-		codonB := string(codonPair[1])
+		codonA := string(codonPair.A)
+		codonB := string(codonPair.B)
 		a := codingTable.Table[codonA]
 		b := codingTable.Table[codonB]
 		ab := string([]byte{a, b})
@@ -144,7 +152,7 @@ func synonymousSplit(codonPairs [][]Codon, codingTable *taxonomy.GeneticCode) (m
 		if index == -1 {
 			index = len(aaList)
 			aaList = append(aaList, ab)
-			multiCodonPairs = append(multiCodonPairs, [][]Codon{})
+			multiCodonPairs = append(multiCodonPairs, []CodonPair{})
 		}
 
 		multiCodonPairs[index] = append(multiCodonPairs[index], codonPair)

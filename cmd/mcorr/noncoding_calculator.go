@@ -15,7 +15,7 @@ func NewNoncodingCalculator(maxLen int) *NoncodingCalculator {
 }
 
 // CalcP2 calculate P2
-func (cc *NoncodingCalculator) CalcP2(alignment []seq.Sequence) (results []CorrResult) {
+func (cc *NoncodingCalculator) CalcP2(alignment []seq.Sequence, others ...[]seq.Sequence) (results []CorrResult) {
 	return calcP2Noncoding(alignment, cc.MaxLen)
 }
 

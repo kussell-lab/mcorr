@@ -74,16 +74,17 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 		if nc.Doublets[i] > 0 {
 			for j := i + 1; j < len(nc.Doublets); j++ {
 				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xy += float64(nc.Doublets[i] * nc.Doublets[j])
+						xy += c
 					}
 
 					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += float64(nc.Doublets[i] * nc.Doublets[j])
+						xbar += c
 					}
 
 					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += float64(nc.Doublets[i] * nc.Doublets[j])
+						ybar += c
 					}
 
 					n += nc.Doublets[i] * nc.Doublets[j]
@@ -92,6 +93,39 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 			n += nc.Doublets[i] * (nc.Doublets[i] - 1) / 2
 		}
 	}
+	return
+}
+
+// CovMate11 calculate covariance between two clusters.
+func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+	sizeOfAlphabet := len(nc.Alphabet)
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > 0 {
+			for j := 0; j < len(nc2.Doublets); j++ {
+				if i != j && nc2.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc2.Doublets[j])
+					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
+						xy += c
+					}
+
+					if i/sizeOfAlphabet != j/sizeOfAlphabet {
+						xbar += c
+					}
+
+					if i%sizeOfAlphabet != j%sizeOfAlphabet {
+						ybar += c
+					}
+				}
+			}
+		}
+	}
+	n1 := 0
+	n2 := 0
+	for i := 0; i < len(nc.Doublets); i++ {
+		n1 += nc.Doublets[i]
+		n2 += nc2.Doublets[i]
+	}
+	n = n1 * n2
 	return
 }
 

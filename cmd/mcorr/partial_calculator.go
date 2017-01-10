@@ -19,7 +19,7 @@ func NewPartialCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen int) *P
 }
 
 // CalcP2 calculates P2.
-func (pc *PartialCalculator) CalcP2(alignment []seq.Sequence) []CorrResult {
+func (pc *PartialCalculator) CalcP2(alignment []seq.Sequence, others ...[]seq.Sequence) []CorrResult {
 	offset := determineOffset(alignment, pc.CodingTable)
 	results := calcP2Coding(alignment, offset, pc.MaxCodonLen, pc.CodingTable, true)
 	ks := math.NaN()
