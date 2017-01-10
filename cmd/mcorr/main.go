@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"runtime"
-
-	"log"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/cheggaaa/pb"
@@ -36,7 +35,7 @@ func main() {
 	if *progress {
 		numAlignment = countAlignments(*alnFile)
 		log.Printf("Total number of alignments: %d\n", numAlignment)
-		pbar = pb.New(numAlignment)
+		pbar = pb.StartNew(numAlignment)
 		defer pbar.Finish()
 	}
 
