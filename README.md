@@ -13,6 +13,7 @@ go get -u github.com/mingzhi/mcorr/cmd/mcorr
 
 ## Usage
 The inference of recombination rates requires two steps:
+
 1. calculate mutation correlation from sequence data using `mcorr`;
 
     ```sh
