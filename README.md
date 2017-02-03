@@ -34,3 +34,5 @@ The inference of recombination rates requires two steps:
     * `<output_prefix>_best_fit.svg`
     * `<output_prefix>_fit_results.csv` -- table of the best-fitted parameters
     * `<output_prefix>_fit_results.svg` -- histograms of the best-fitted parameters
+
+Example data can be found [here](https://github.com/mingzhi/mcorr_examples).
