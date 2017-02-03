@@ -14,17 +14,17 @@ import (
 )
 
 func main() {
-	app := kingpin.New("mcorr", "calculate correlated mutations for bacterial genomes")
+	app := kingpin.New("mcorr", "Calculate mutation correlation from bacterial sequence data")
 	app.Version("v0.2")
 
-	alnFile := app.Arg("align_file", "alignment file in XMFA format").Required().String()
-	outFile := app.Arg("output_file", "output file in CSV format").Required().String()
+	alnFile := app.Arg("input", "Alignment file in XMFA format").Required().String()
+	outFile := app.Arg("output", "Output file in CSV format").Required().String()
 
-	mateFile := app.Flag("mate_file", "mate file").Default("").String()
-	maxl := app.Flag("max_len", "maximum length of correlation (base pairs)").Default("300").Int()
-	ncpu := app.Flag("threads", "number of threads (default: using all available cores)").Default("0").Int()
-	numBoot := app.Flag("num_boot", "number of bootstrapping of genes").Default("1000").Int()
-	progress := app.Flag("progress", "show progress").Default("false").Bool()
+	mateFile := app.Flag("mate_file", "Experiment: calculate correlation between two clusters of strains").Default("").String()
+	maxl := app.Flag("max_corr_len", "Maximum length of correlation (base pairs)").Default("300").Int()
+	ncpu := app.Flag("ncpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
+	numBoot := app.Flag("num_boot", "Number of bootstrapping on genes").Default("1000").Int()
+	progress := app.Flag("progress", "Show progress").Default("false").Bool()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
