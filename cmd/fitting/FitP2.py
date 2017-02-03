@@ -248,7 +248,7 @@ def main():
     parser.add_argument('--xmax', nargs='?', const=150, type=int, default=150)
     opts = parser.parse_args()
     datafile = opts.corr_file
-    prefix = opts.out_prefix
+    prefix = opts.output_prefix
     xmin = opts.xmin
     xmax = opts.xmax
 

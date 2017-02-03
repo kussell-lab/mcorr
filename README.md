@@ -17,10 +17,11 @@ The inference of recombination rates requires two steps:
 1. calculate mutation correlation from sequence data using `mcorr`;
 
     ```sh
-    mcorr <input (XMFA file)> <output (CSV file)>
+    mcorr <input ([XMFA] file)> <output (CSV file)>
     ```
 
     **Note**: the program assumes that the input file contains only *coding* sequences.
+    The description of XMFA file can be found in [here](http://darlinglab.org/mauve/user-guide/files.html).
 
 2. fit the output correlation results using `FitP2.py`:
 
