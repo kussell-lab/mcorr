@@ -21,7 +21,7 @@ The inference of recombination rates requires two steps:
     ```
 
     **Note**: the program assumes that the input file contains only *coding* sequences.
-    The description of XMFA file can be found in [here](http://darlinglab.org/mauve/user-guide/files.html).
+    The description of XMFA file can be found [here](http://darlinglab.org/mauve/user-guide/files.html).
 
 2. fit the output correlation results using `FitP2.py`:
 
