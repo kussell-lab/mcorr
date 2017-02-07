@@ -13,8 +13,8 @@ func NewCollector() *Collector {
 }
 
 // Add add an array of CorrResult.
-func (c *Collector) Add(results []CorrResult) {
-	for _, res := range results {
+func (c *Collector) Add(results CorrResults) {
+	for _, res := range results.Results {
 		for len(c.m[res.Type]) <= res.Lag {
 			c.m[res.Type] = append(c.m[res.Type], NewMeanVar())
 		}

@@ -34,7 +34,7 @@ func (b *Bootstrap) SetRandom(r bool) {
 }
 
 // Add add one result into the Bootstrap.
-func (b *Bootstrap) Add(results []CorrResult) {
+func (b *Bootstrap) Add(results CorrResults) {
 	if b.isRandom {
 		k := poisson(b.sampleRatio)
 		for i := 0; i < k; i++ {

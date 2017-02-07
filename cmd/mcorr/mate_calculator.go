@@ -21,11 +21,12 @@ func NewMateCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffs
 }
 
 // CalcP2 calcualtes P2
-func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (results []CorrResult) {
+func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResults CorrResults) {
 	if len(mates) == 0 {
 		return
 	}
 
+	var results []CorrResult
 	cs1 := cc.extractCodonSequences(aln1)
 	cs2 := cc.extractCodonSequences(mates[0])
 
@@ -64,6 +65,8 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (results []
 		results = append(results, res)
 	}
 
+	corrResults = CorrResults{ID: aln1.ID, Results: results}
+
 	return
 }
 
@@ -74,7 +77,7 @@ func (cc *MateCalculator) translateCodonPair(cp CodonPair) string {
 }
 
 func (cc *MateCalculator) extractCodonSequences(aln Alignment) (csList []CodonSequence) {
-	for _, s := range aln {
+	for _, s := range aln.Sequences {
 		csList = append(csList, extractCodons(s, cc.CodonOffset))
 	}
 	return

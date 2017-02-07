@@ -50,7 +50,7 @@ func main() {
 	synonymous := true
 
 	alnChan := readAlignments(*alnFile)
-	var corrResChan chan []CorrResult
+	var corrResChan chan CorrResults
 	if *mateFile != "" {
 		calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, synonymous)
 		mateAlnChan := readAlignments(*mateFile)
@@ -61,7 +61,7 @@ func main() {
 	}
 
 	if *jsonFile != "" {
-		corrResChan = writeCorrResults(*outFile, corrResChan)
+		corrResChan = writeCorrResults(*jsonFile, corrResChan)
 	}
 
 	// prepare bootstrappers.
@@ -100,11 +100,11 @@ func main() {
 }
 
 // writeCorrResults
-func writeCorrResults(file string, corrResChan chan []CorrResult) (duplicateChan chan []CorrResult) {
-	duplicateChan = make(chan []CorrResult)
+func writeCorrResults(file string, corrResChan chan CorrResults) (duplicateChan chan CorrResults) {
+	duplicateChan = make(chan CorrResults)
 
 	go func() {
-		close(duplicateChan)
+		defer close(duplicateChan)
 		f, err := os.Create(file)
 		if err != nil {
 			panic(err)
@@ -112,19 +112,20 @@ func writeCorrResults(file string, corrResChan chan []CorrResult) (duplicateChan
 		defer f.Close()
 
 		encoder := json.NewEncoder(f)
-		for corrResList := range corrResChan {
-			var filteredCorrResList []CorrResult
-			for _, corrRes := range corrResList {
+		for corrResults := range corrResChan {
+			var filteredCorrResults CorrResults
+			filteredCorrResults.ID = corrResults.ID
+			for _, corrRes := range corrResults.Results {
 				if !math.IsNaN(corrRes.Mean) && !math.IsNaN(corrRes.Variance) {
-					filteredCorrResList = append(filteredCorrResList, corrRes)
+					filteredCorrResults.Results = append(filteredCorrResults.Results, corrRes)
 				}
 			}
-			if len(filteredCorrResList) > 0 {
-				if err := encoder.Encode(filteredCorrResList); err != nil {
+			if len(filteredCorrResults.Results) > 0 {
+				if err := encoder.Encode(filteredCorrResults); err != nil {
 					panic(err)
 				}
+				duplicateChan <- filteredCorrResults
 			}
-			duplicateChan <- corrResList
 		}
 	}()
 
@@ -132,11 +133,14 @@ func writeCorrResults(file string, corrResChan chan []CorrResult) (duplicateChan
 }
 
 // Alignment is an array of mutliple sequences with same length.
-type Alignment []seq.Sequence
+type Alignment struct {
+	ID        string
+	Sequences []seq.Sequence
+}
 
 // calcSingleClade calculate correlation functions in a single cluster of sequence.
-func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan chan []CorrResult) {
-	corrResChan = make(chan []CorrResult)
+func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan chan CorrResults) {
+	corrResChan = make(chan CorrResults)
 	done := make(chan bool)
 
 	ncpu := runtime.GOMAXPROCS(0)
@@ -160,9 +164,9 @@ func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan
 }
 
 // calcTwoClade calculate correlation functions between two clades.
-func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (corrResChan chan []CorrResult) {
+func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (corrResChan chan CorrResults) {
 	type job struct {
-		A, B []seq.Sequence
+		A, B Alignment
 	}
 	jobChan := make(chan job)
 	go func() {
@@ -174,7 +178,7 @@ func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (c
 		}
 	}()
 
-	corrResChan = make(chan []CorrResult)
+	corrResChan = make(chan CorrResults)
 	done := make(chan bool)
 
 	ncpu := runtime.GOMAXPROCS(0)
@@ -216,10 +220,11 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		f := openFile(file)
 		defer f.Close()
 		xmfaReader := seq.NewXMFAReader(f)
+		index := 0
 		for {
 			alignment, err := xmfaReader.Read()
 			if len(alignment) > 0 {
-				alnChan <- alignment
+				alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
 			}
 
 			if err != nil {
@@ -228,6 +233,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				}
 				break
 			}
+			index++
 		}
 	}
 	go read()

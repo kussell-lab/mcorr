@@ -14,9 +14,15 @@ type CorrResult struct {
 	Type     string
 }
 
+// CorrResults stores a list of CorrResult with an gene ID.
+type CorrResults struct {
+	ID      string
+	Results []CorrResult
+}
+
 // Calculator define a interface for calculating correlations.
 type Calculator interface {
-	CalcP2(a Alignment, others ...Alignment) (corrResults []CorrResult)
+	CalcP2(a Alignment, others ...Alignment) (corrResults CorrResults)
 }
 
 // CodingCalculator for calculating coding sequences.
@@ -38,13 +44,14 @@ func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOf
 }
 
 // CalcP2 calculate P2
-func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) (results []CorrResult) {
-	return calcP2Coding(a, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
+func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) CorrResults {
+	results := calcP2Coding(a, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
+	return CorrResults{ID: a.ID, Results: results}
 }
 
 func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
 	codonSequences := [][]Codon{}
-	for _, s := range aln {
+	for _, s := range aln.Sequences {
 		codons := extractCodons(s, codonOffset)
 		codonSequences = append(codonSequences, codons)
 	}
