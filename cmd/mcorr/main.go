@@ -7,10 +7,12 @@ import (
 	"os"
 	"runtime"
 
+	"encoding/json"
 	"github.com/alecthomas/kingpin"
 	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
 	"github.com/mingzhi/ncbiftp/taxonomy"
+	"math"
 )
 
 func main() {
@@ -20,6 +22,7 @@ func main() {
 	alnFile := app.Arg("input", "Alignment file in XMFA format").Required().String()
 	outFile := app.Arg("output", "Output file in CSV format").Required().String()
 
+	jsonFile := app.Flag("json_file", "intermediate files in JSON format").Default("").String()
 	mateFile := app.Flag("mate_file", "Experiment: calculate correlation between two clusters of strains").Default("").String()
 	maxl := app.Flag("max_corr_len", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("ncpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
@@ -57,6 +60,10 @@ func main() {
 		corrResChan = calcSingleClade(alnChan, calculator)
 	}
 
+	if *jsonFile != "" {
+		corrResChan = writeCorrResults(*outFile, corrResChan)
+	}
+
 	// prepare bootstrappers.
 	bootstraps := []*Bootstrap{}
 	notBootstrap := NewBootstrap("all", 1.0)
@@ -90,6 +97,38 @@ func main() {
 			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
 		}
 	}
+}
+
+// writeCorrResults
+func writeCorrResults(file string, corrResChan chan []CorrResult) (duplicateChan chan []CorrResult) {
+	duplicateChan = make(chan []CorrResult)
+
+	go func() {
+		close(duplicateChan)
+		f, err := os.Create(file)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		encoder := json.NewEncoder(f)
+		for corrResList := range corrResChan {
+			var filteredCorrResList []CorrResult
+			for _, corrRes := range corrResList {
+				if !math.IsNaN(corrRes.Mean) && !math.IsNaN(corrRes.Variance) {
+					filteredCorrResList = append(filteredCorrResList, corrRes)
+				}
+			}
+			if len(filteredCorrResList) > 0 {
+				if err := encoder.Encode(filteredCorrResList); err != nil {
+					panic(err)
+				}
+			}
+			duplicateChan <- corrResList
+		}
+	}()
+
+	return
 }
 
 // Alignment is an array of mutliple sequences with same length.
