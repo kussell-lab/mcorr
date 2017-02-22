@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 import numpy as np
 from lmfit import Parameters, Minimizer
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from joblib import Parallel, delayed
+from multiprocessing import cpu_count
 
 class CorrRes(object):
     """One correlation result"""
@@ -143,12 +144,14 @@ def fit_model1(xvalues, yvalues, sample_diversity):
     best_model_index = get_best_model_index(fitresults)
     return fitresults[best_model_index]
 
+def fit_one(fitdata):
+    """Fit one data set"""
+    fitres = fit_model1(fitdata.xvalues, fitdata.yvalues, fitdata.sample_diversity)
+    return (fitdata.group, fitres)
+
 def fit_all(fitdatas):
     """Fit all bootstrap data sets"""
-    allresults = []
-    for fitdata in tqdm(fitdatas.getall()):
-        fitres = fit_model1(fitdata.xvalues, fitdata.yvalues, fitdata.sample_diversity)
-        allresults.append((fitdata.group, fitres))
+    allresults = Parallel(n_jobs=cpu_count())(delayed(fit_one)(data) for data in fitdatas.getall())
     return allresults
 
 def plot_fit(fitdata, plot_file):
@@ -212,6 +215,10 @@ def plot_params(fitresults, param_names, plot_file):
 
     fig.savefig(plot_file)
 
+def getKey(item):
+    """return the first item"""
+    return item[0]
+
 def fitp2(corr_file, prefix, xmin, xmax):
     """Fit p2"""
     corr_results = read_corr(corr_file)
@@ -220,7 +227,7 @@ def fitp2(corr_file, prefix, xmin, xmax):
     best_fit_plot_file = prefix + "_best_fit.svg"
     plot_fit(fitdatas.get("all"), best_fit_plot_file)
 
-    all_results = fit_all(fitdatas)
+    all_results = sorted(fit_all(fitdatas), key=getKey)
     model_params = ["group", "sample_d", "theta",
                     "phi", "fbar", "ratio", "rho",
                     "sample_theta", "sample_rho"]
