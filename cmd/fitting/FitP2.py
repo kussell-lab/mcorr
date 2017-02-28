@@ -108,6 +108,11 @@ def prepare_fitting_data(fitdata, xmin, xmax):
     yvalues = np.array(yvalues)
     return (xvalues, yvalues, diver)
 
+def calc_p2(diversity, theta, rrate):
+    """bulk p2 expression"""
+    p2_value = diversity * (1.0 / (2.0 * theta * 4.0 / 3.0 + 4.0 / 3.0 * rrate + 1.0) + 1.0)
+    return p2_value
+
 def fcnmin(params, xvalues, yvalues):
     """Model function"""
     theta = params['theta']
@@ -117,8 +122,10 @@ def fcnmin(params, xvalues, yvalues):
     diversity = theta / (1.0 + 4.0 / 3.0 * theta)
     rrate = phi * xvalues
     rcover = sample_diversity / diversity
-    predicts = diversity * (1.0 / (2.0 * theta * 4.0 / 3.0 + 4.0 / 3.0 * rrate + 1.0) + 1.0) \
-     * (1.0 - xvalues / fbar + rcover * xvalues / fbar)
+    if rcover > 1.0:
+        rcover = 1.0
+    factor = (2.0 * rcover - 1.0 + (1.0 - rcover) ** (1.0 + xvalues / fbar)) / rcover
+    predicts = factor * calc_p2(diversity, theta, rrate)
     return predicts - yvalues
 
 def get_best_model_index(fitresults):
@@ -134,9 +141,10 @@ def fit_model1(xvalues, yvalues, sample_diversity):
     fitresults = []
     for phi_start in phi_start_values:
         params1 = Parameters()
-        params1.add('theta', value=0.1, min=0)
+        sample_theta = sample_diversity / (1.0 - 4.0/3.0 * sample_diversity)
+        params1.add('theta', value=0.1, min=sample_theta)
         params1.add('phi', value=phi_start, min=0)
-        params1.add('fbar', value=100, min=1, max=10000000)
+        params1.add('fbar', value=1000, min=300, max=10000000)
         params1.add('ds', value=sample_diversity, vary=False)
         minner1 = Minimizer(fcnmin, params1, fcn_args=(xvalues, yvalues))
         fitres1 = minner1.minimize()
