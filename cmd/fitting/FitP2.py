@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Infer recombination rates by fitting mutation correlations"""
 from __future__ import print_function
 from argparse import ArgumentParser
