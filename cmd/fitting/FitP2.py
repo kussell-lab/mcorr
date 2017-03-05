@@ -73,6 +73,11 @@ class FitRes(object):
                 self.sample_theta = self.sample_d / self.rho
         if 'theta' in params:
             self.sample_rho = self.sample_d / self.theta
+        sample_rho = getattr(self, 'sample_rho', None)
+        fbar = getattr(self, 'fbar', None)
+        if sample_rho is not None and fbar is not None:
+            self.sample_phi = sample_rho / fbar
+
     def get_values(self, attributes):
         """Get attribute values"""
         values = []
@@ -239,7 +244,7 @@ def fitp2(corr_file, prefix, xmin, xmax):
     all_results = sorted(fit_all(fitdatas), key=getKey)
     model_params = ["group", "sample_d", "theta",
                     "phi", "fbar", "ratio", "rho",
-                    "sample_theta", "sample_rho"]
+                    "sample_theta", "sample_phi", "sample_rho"]
     out_prefix = prefix + "_fit_results"
     out_file = out_prefix + ".csv"
     sep = ","
