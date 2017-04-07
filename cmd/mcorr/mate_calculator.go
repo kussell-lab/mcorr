@@ -31,7 +31,8 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 	cs2 := cc.extractCodonSequences(mates[0])
 
 	for l := 0; l < cc.MaxCodonLen; l++ {
-		totalxy := 0.0
+		totalP2 := 0.0
+		totalP0 := 0.0
 		totaln := 0
 		for pos := 0; pos+l < len(cs1[0]) && pos+l < len(cs2[0]); pos++ {
 			cpList1 := cc.extractCodonPairs(cs1, pos, pos+l)
@@ -45,24 +46,36 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 						aa2 := cc.translateCodonPair(cp2[0])
 						if aa1 == aa2 {
 							xy, _, _, n := nc1.CovMate11(nc2)
-							totalxy += xy
+							totalP2 += xy
 							totaln += n
+							xy, _, _, n = nc1.CovMate00(nc2)
+							totalP0 += xy
 						}
 					} else {
 						xy, _, _, n := nc1.CovMate11(nc2)
-						totalxy += xy
+						totalP2 += xy
 						totaln += n
+						xy, _, _, n = nc1.CovMate00(nc2)
+						totalP0 += xy
 					}
 				}
 			}
 		}
 
-		res := CorrResult{
+		res1 := CorrResult{
 			Lag:  l * 3,
-			Mean: totalxy / float64(totaln),
+			Mean: totalP2 / float64(totaln),
 			N:    totaln,
-			Type: "P2"}
-		results = append(results, res)
+			Type: "P2",
+		}
+		results = append(results, res1)
+		res2 := CorrResult{
+			Lag:  l * 3,
+			Mean: totalP0 / float64(totaln),
+			N:    totaln,
+			Type: "P0",
+		}
+		results = append(results, res2)
 	}
 
 	corrResults = CorrResults{ID: aln1.ID, Results: results}

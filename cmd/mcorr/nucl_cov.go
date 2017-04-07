@@ -129,6 +129,18 @@ func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
 	return
 }
 
+// CovMate00 calculate covariance between two clusters.
+func (nc *NuclCov) CovMate00(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+	n1, n2 := 0, 0
+	for i := 0; i < len(nc.Doublets); i++ {
+		xy += float64(nc.Doublets[i] * nc2.Doublets[i])
+		n1 += nc.Doublets[i]
+		n2 += nc2.Doublets[i]
+	}
+	n = n1 * n2
+	return
+}
+
 // Append another NuclCov.
 func (nc *NuclCov) Append(nc2 *NuclCov) error {
 	// Check alphabet

@@ -57,7 +57,8 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 	}
 
 	for l := 0; l < maxCodonLen; l++ {
-		totalxy := 0.0
+		totalP2 := 0.0
+		totalP0 := 0.0
 		totaln := 0
 		for i := 0; i+l < len(codonSequences[0]); i++ {
 			codonPairs := []CodonPair{}
@@ -79,17 +80,27 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 				if len(codonPairs) >= 2 {
 					nc := doubleCodons(codonPairs)
 					xy, _, _, n := nc.Cov11()
-					totalxy += xy
+					totalP2 += xy
 					totaln += n
+					xy, _, _, n = nc.Cov00()
+					totalP0 += xy
 				}
 			}
 		}
-		res := CorrResult{
+		res1 := CorrResult{
 			Lag:  l * 3,
-			Mean: totalxy / float64(totaln),
+			Mean: totalP2 / float64(totaln),
 			N:    totaln,
-			Type: "P2"}
-		results = append(results, res)
+			Type: "P2",
+		}
+		results = append(results, res1)
+		res2 := CorrResult{
+			Lag:  l * 3,
+			Mean: totalP0 / float64(totaln),
+			N:    totaln,
+			Type: "P0",
+		}
+		results = append(results, res2)
 	}
 
 	return
