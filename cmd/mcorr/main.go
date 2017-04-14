@@ -147,8 +147,10 @@ func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan
 	for i := 0; i < ncpu; i++ {
 		go func() {
 			for aln := range alnChan {
-				results := calculator.CalcP2(aln)
-				corrResChan <- results
+				if len(aln.Sequences) > 1 {
+					results := calculator.CalcP2(aln)
+					corrResChan <- results
+				}
 			}
 			done <- true
 		}()
@@ -173,8 +175,10 @@ func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (c
 		defer close(jobChan)
 		for aln := range alnChan {
 			mateAln := <-mateAlnChan
-			j := job{A: aln, B: mateAln}
-			jobChan <- j
+			if len(aln.Sequences) > 1 && len(mateAln.Sequences) > 1 {
+				j := job{A: aln, B: mateAln}
+				jobChan <- j
+			}
 		}
 	}()
 
@@ -223,9 +227,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		index := 0
 		for {
 			alignment, err := xmfaReader.Read()
-			if len(alignment) > 0 {
-				alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
-			}
+			alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
 
 			if err != nil {
 				if err != io.EOF {
