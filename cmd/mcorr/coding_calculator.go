@@ -55,38 +55,51 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 		codons := extractCodons(s, codonOffset)
 		codonSequences = append(codonSequences, codons)
 	}
-
+	ks := 1.0
+	nn := 0
 	for l := 0; l < maxCodonLen; l++ {
 		totalP2 := 0.0
 		totalP0 := 0.0
 		totaln := 0
-		for i := 0; i+l < len(codonSequences[0]); i++ {
-			codonPairs := []CodonPair{}
-			j := i + l
-			for _, cc := range codonSequences {
-				if i+l < len(cc) {
-					codonPairs = append(codonPairs, CodonPair{A: cc[i], B: cc[j]})
+		if l > 0 && ks == 0.0 {
+			totalP0 = 1.0
+			totalP2 = 0.0
+			totaln = nn
+		} else {
+			for i := 0; i+l < len(codonSequences[0]); i++ {
+				codonPairs := []CodonPair{}
+				j := i + l
+				for _, cc := range codonSequences {
+					if i+l < len(cc) {
+						codonPairs = append(codonPairs, CodonPair{A: cc[i], B: cc[j]})
+					}
 				}
-			}
 
-			multiCodonPairs := [][]CodonPair{}
-			if synonymous {
-				multiCodonPairs = synonymousSplit(codonPairs, codingTable)
-			} else {
-				multiCodonPairs = append(multiCodonPairs, codonPairs)
-			}
+				multiCodonPairs := [][]CodonPair{}
+				if synonymous {
+					multiCodonPairs = synonymousSplit(codonPairs, codingTable)
+				} else {
+					multiCodonPairs = append(multiCodonPairs, codonPairs)
+				}
 
-			for _, codonPairs := range multiCodonPairs {
-				if len(codonPairs) >= 2 {
-					nc := doubleCodons(codonPairs)
-					xy, _, _, n := nc.Cov11()
-					totalP2 += xy
-					totaln += n
-					xy, _, _, n = nc.Cov00()
-					totalP0 += xy
+				for _, codonPairs := range multiCodonPairs {
+					if len(codonPairs) >= 2 {
+						nc := doubleCodons(codonPairs)
+						xy, _, _, n := nc.Cov11()
+						totalP2 += xy
+						totaln += n
+						xy, _, _, n = nc.Cov00()
+						totalP0 += xy
+					}
 				}
 			}
 		}
+
+		if l == 0 {
+			ks = totalP2
+			nn = totaln
+		}
+
 		res1 := CorrResult{
 			Lag:  l * 3,
 			Mean: totalP2 / float64(totaln),
