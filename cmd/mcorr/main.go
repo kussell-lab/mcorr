@@ -8,11 +8,12 @@ import (
 	"runtime"
 
 	"encoding/json"
+	"math"
+
 	"github.com/alecthomas/kingpin"
 	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
 	"github.com/mingzhi/ncbiftp/taxonomy"
-	"math"
 )
 
 func main() {
@@ -228,13 +229,13 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		for {
 			alignment, err := xmfaReader.Read()
 			alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
-
 			if err != nil {
 				if err != io.EOF {
 					panic(err)
 				}
 				break
 			}
+			alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
 			index++
 		}
 	}
