@@ -228,7 +228,6 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		index := 0
 		for {
 			alignment, err := xmfaReader.Read()
-			alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
 			if err != nil {
 				if err != io.EOF {
 					panic(err)
