@@ -119,18 +119,27 @@ def calc_p2(diversity, theta, rrate):
     p2_value = diversity * (1.0 / (2.0 * theta * 4.0 / 3.0 + 4.0 / 3.0 * rrate + 1.0) + 1.0)
     return p2_value
 
+def constant_one_site(xvalue, fbar):
+    """one site function of constant size"""
+    return xvalue / fbar
+
+def expon_one_site(xvalue, fbar):
+    """one site function of exponential decay size"""
+    return 1.0 - np.exp(-xvalue/fbar)
+
 def fcnmin(params, xvalues, yvalues):
     """Model function"""
+    global ONESITEFUNC
     theta = params['theta']
     phi = params['phi']
     fbar = params['fbar']
     sample_diversity = params['ds']
     diversity = theta / (1.0 + 4.0 / 3.0 * theta)
-    rrate = phi * xvalues
+    rrate = phi * fbar * ONESITEFUNC(xvalues, fbar)
     rcover = sample_diversity / diversity
     if rcover > 1.0:
         rcover = 1.0
-    factor = (2.0 * rcover - 1.0 + (1.0 - rcover) ** (1.0 + xvalues / fbar)) / rcover
+    factor = (2.0 * rcover - 1.0 + (1.0 - rcover) ** (1.0 + ONESITEFUNC(xvalues, fbar))) / rcover
     predicts = factor * calc_p2(diversity, theta, rrate)
     return predicts - yvalues
 
@@ -150,7 +159,7 @@ def fit_model1(xvalues, yvalues, sample_diversity):
         sample_theta = sample_diversity / (1.0 - 4.0/3.0 * sample_diversity)
         params1.add('theta', value=0.1, min=sample_theta)
         params1.add('phi', value=phi_start, min=0)
-        params1.add('fbar', value=1000, min=300, max=10000000)
+        params1.add('fbar', value=1000, min=3, max=10000000)
         params1.add('ds', value=sample_diversity, vary=False)
         minner1 = Minimizer(fcnmin, params1, fcn_args=(xvalues, yvalues))
         fitres1 = minner1.minimize()
@@ -259,6 +268,8 @@ def fitp2(corr_file, prefix, xmin, xmax):
             fit_results.append(fit_res)
     plot_params(fit_results, model_params[1:], out_prefix+".svg")
 
+ONESITEFUNC = constant_one_site
+
 def main():
     """Run fitting using lmfit"""
     parser = ArgumentParser(description="Infer recombination rates\
@@ -266,12 +277,19 @@ def main():
     parser.add_argument("corr_file", type=str)
     parser.add_argument("output_prefix", type=str)
     parser.add_argument('--xmin', nargs='?', const=3, type=int, default=3)
-    parser.add_argument('--xmax', nargs='?', const=150, type=int, default=150)
+    parser.add_argument('--xmax', nargs='?', const=300, type=int, default=300)
+    parser.add_argument('--onesite', nargs='?', const="const", type=str, default="const")
     opts = parser.parse_args()
     datafile = opts.corr_file
     prefix = opts.output_prefix
     xmin = opts.xmin
     xmax = opts.xmax
+    onesite = opts.onesite
+    global ONESITEFUNC
+    if onesite == "exp":
+        ONESITEFUNC = expon_one_site
+    else:
+        ONESITEFUNC = constant_one_site
 
     fitp2(datafile, prefix, xmin, xmax)
 
