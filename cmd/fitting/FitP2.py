@@ -228,8 +228,11 @@ def plot_params(fitresults, param_names, plot_file):
                 else:
                     values.append(value)
         if len(values) > 0:
+            lowbound = np.percentile(values, 5)
+            upbound = np.percentile(values, 95)
+            filteredvalues = [x for x in values if x > lowbound and x < upbound]
             ax1 = fig.add_subplot(num_col * num_row, num_col, i + 1)
-            ax1.hist(values, histtype='stepfilled', bins=30, color="black", alpha=0.5)
+            ax1.hist(filteredvalues, histtype='stepfilled', bins=30, color="black", alpha=0.5)
             label = label_names.get(name, name)
             ax1.set_xlabel(label)
             ax1.axvline(x=raw_value)
