@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"math"
 
+	"strings"
+
 	"github.com/alecthomas/kingpin"
 	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
@@ -225,7 +227,6 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		f := openFile(file)
 		defer f.Close()
 		xmfaReader := seq.NewXMFAReader(f)
-		index := 0
 		for {
 			alignment, err := xmfaReader.Read()
 			if err != nil {
@@ -234,8 +235,10 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				}
 				break
 			}
-			alnChan <- Alignment{ID: fmt.Sprintf("%d", index), Sequences: alignment}
-			index++
+			if len(alignment) > 0 {
+				alnID := strings.Split(alignment[0].Id, " ")[0]
+				alnChan <- Alignment{ID: alnID, Sequences: alignment}
+			}
 		}
 	}
 	go read()
