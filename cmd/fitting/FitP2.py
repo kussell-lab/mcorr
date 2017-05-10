@@ -152,7 +152,7 @@ def get_best_model_index(fitresults):
 
 def fit_model1(xvalues, yvalues, sample_diversity):
     """Do fitting using the Model 1"""
-    phi_start_values = [0.001, 0.01, 0.1, 1]
+    phi_start_values = [0.001, 0.01, 0.1]
     fitresults = []
     for phi_start in phi_start_values:
         params1 = Parameters()
