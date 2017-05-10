@@ -157,8 +157,8 @@ def fit_model1(xvalues, yvalues, sample_diversity):
     for phi_start in phi_start_values:
         params1 = Parameters()
         sample_theta = sample_diversity / (1.0 - 4.0/3.0 * sample_diversity)
-        params1.add('theta', value=0.1, min=sample_theta)
-        params1.add('phi', value=phi_start, min=0)
+        params1.add('theta', value=0.1, min=0, max=1)
+        params1.add('phi', value=phi_start, min=0, max=1)
         params1.add('fbar', value=1000, min=3, max=10000000)
         params1.add('ds', value=sample_diversity, vary=False)
         minner1 = Minimizer(fcnmin, params1, fcn_args=(xvalues, yvalues))
