@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
@@ -22,13 +24,20 @@ func main() {
 
 	maxl := app.Flag("max_corr_len", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("ncpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-
+	progress := app.Flag("progress", "show progress").Default("false").Bool()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *ncpu == 0 {
 		*ncpu = runtime.NumCPU()
 	}
 	runtime.GOMAXPROCS(*ncpu)
+
+	var pbar *pb.ProgressBar
+	if *progress {
+		numAln := countAlignments(*alnFile)
+		pbar = pb.StartNew(numAln)
+		defer pbar.Finish()
+	}
 
 	alnChan := readAlignments(*alnFile)
 
@@ -44,6 +53,9 @@ func main() {
 		go func() {
 			for aln := range alnChan {
 				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous)
+				if pbar != nil {
+					pbar.Increment()
+				}
 				for _, res := range corrRes {
 					resChan <- res
 				}
@@ -224,4 +236,27 @@ func collect(resChan chan CorrResults) (collectors []*Collector) {
 
 func getGenome(s string) string {
 	return strings.Split(s, " ")[1]
+}
+
+// countAlignments return total number of alignments in a file.
+func countAlignments(file string) (count int) {
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	rd := bufio.NewReader(f)
+	for {
+		line, err := rd.ReadString('\n')
+		if err != nil {
+			if err != io.EOF {
+				panic(err)
+			}
+			break
+		}
+		if line[0] == '=' {
+			count++
+		}
+	}
+	return
 }
