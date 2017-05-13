@@ -178,7 +178,7 @@ func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (c
 		defer close(jobChan)
 		for aln := range alnChan {
 			mateAln := <-mateAlnChan
-			if len(aln.Sequences) > 1 && len(mateAln.Sequences) > 1 {
+			if len(aln.Sequences) >= 1 && len(mateAln.Sequences) >= 1 {
 				j := job{A: aln, B: mateAln}
 				jobChan <- j
 			}
