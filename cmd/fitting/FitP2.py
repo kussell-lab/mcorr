@@ -220,22 +220,27 @@ def plot_params(fitresults, param_names, plot_file):
     for (i, name) in enumerate(param_names):
         values = []
         raw_value = None
+        is_boot = False
         for fitres in fitresults:
             if hasattr(fitres, name):
                 value = getattr(fitres, name)
-                if "boot" not in fitres.group:
+                values.append(value)
+                if fitres.group == "all":
                     raw_value = value
-                else:
-                    values.append(value)
+                if fitres.group == "boot_1":
+                    is_boot = True
         if len(values) > 0:
-            lowbound = np.percentile(values, 5)
-            upbound = np.percentile(values, 95)
-            filteredvalues = [x for x in values if x > lowbound and x < upbound]
+            filteredvalues = values
+            if is_boot:
+                lowbound = np.percentile(values, 5)
+                upbound = np.percentile(values, 95)
+                filteredvalues = [x for x in values if x > lowbound and x < upbound]
             ax1 = fig.add_subplot(num_col * num_row, num_col, i + 1)
-            ax1.hist(filteredvalues, histtype='stepfilled', bins=30, color="black", alpha=0.5)
+            ax1.hist(filteredvalues, histtype='stepfilled', bins = "auto", color="black", alpha=0.5)
             label = label_names.get(name, name)
             ax1.set_xlabel(label)
-            ax1.axvline(x=raw_value)
+            if raw_value:
+                ax1.axvline(x=raw_value)
             ax1.locator_params(axis='x', nbins=4)
             ax1.ticklabel_format(axis='x', style='sci', scilimits=(-2, 2))
 
@@ -250,8 +255,9 @@ def fitp2(corr_file, prefix, xmin, xmax):
     corr_results = read_corr(corr_file)
     fitdatas = FitDatas(corr_results, xmin, xmax)
 
-    best_fit_plot_file = prefix + "_best_fit.svg"
-    plot_fit(fitdatas.get("all"), best_fit_plot_file)
+    if fitdatas.get("all"):
+        best_fit_plot_file = prefix + "_best_fit.svg"
+        plot_fit(fitdatas.get("all"), best_fit_plot_file)
 
     all_results = sorted(fit_all(fitdatas), key=getKey)
     model_params = ["group", "sample_d", "theta",
