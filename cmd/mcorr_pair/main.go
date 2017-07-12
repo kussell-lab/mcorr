@@ -296,7 +296,7 @@ func collect(resChan chan CorrResults) (collectors []*Collector) {
 }
 
 func getGenome(s string) string {
-	return strings.Split(s, " ")[1]
+	return strings.Split(strings.Split(s, "|")[0], "_")[0]
 }
 
 // countAlignments return total number of alignments in a file.
