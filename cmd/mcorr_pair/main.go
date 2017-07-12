@@ -38,7 +38,9 @@ func main() {
 	var pbar *pb.ProgressBar
 	if *progress {
 		numAln := countAlignments(*alnFile)
-		pbar = pb.StartNew(numAln)
+		pbar = pb.New(numAln)
+		pbar.SetWidth(60)
+		pbar.Start()
 		defer pbar.Finish()
 	}
 
