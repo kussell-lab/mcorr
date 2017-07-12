@@ -22,9 +22,12 @@ func main() {
 	alnFile := app.Arg("input", "Alignment file in XMFA format").Required().String()
 	outFile := app.Arg("output", "Output file in CSV format").Required().String()
 
+	mateFile := app.Flag("mate_file", "mate file").Default("").String()
 	maxl := app.Flag("max_corr_len", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("ncpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	progress := app.Flag("progress", "show progress").Default("false").Bool()
+	codonPos := app.Flag("codon_pos", "codon position").Default("3").Int()
+	synonymous := app.Flag("synonymous", "synonymous").Default("false").Bool()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *ncpu == 0 {
@@ -39,12 +42,37 @@ func main() {
 		defer pbar.Finish()
 	}
 
+	var mateMap map[string]*seq.Sequence
+	if *mateFile != "" {
+		f, err := os.Open(*mateFile)
+		if err != nil {
+			panic(err)
+		}
+		rd := seq.NewFastaReader(f)
+		sequences, err := rd.ReadAll()
+		if err != nil {
+			panic(err)
+		}
+
+		mateMap = make(map[string]*seq.Sequence)
+		for _, s := range sequences {
+			geneid := strings.Split(s.Id, " ")[0]
+			mateMap[geneid] = s
+		}
+
+		f.Close()
+	}
+
 	alnChan := readAlignments(*alnFile)
 
 	codingTable := taxonomy.GeneticCodes()["11"]
 	maxCodonLen := *maxl / 3
 	codonOffset := 0
-	synonymous := true
+
+	if *codonPos == 4 {
+		*synonymous = true
+		*codonPos = 3
+	}
 
 	numJob := *ncpu
 	done := make(chan bool)
@@ -52,7 +80,15 @@ func main() {
 	for i := 0; i < numJob; i++ {
 		go func() {
 			for aln := range alnChan {
-				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous)
+				var mateSequence *seq.Sequence
+				if mateMap != nil {
+					geneid := strings.Split(aln.Sequences[0].Id, " ")[0]
+					s, found := mateMap[geneid]
+					if found {
+						mateSequence = s
+					}
+				}
+				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, *synonymous, *codonPos-1, mateSequence)
 				if pbar != nil {
 					pbar.Increment()
 				}
@@ -140,9 +176,14 @@ type CorrResults struct {
 	Results []CorrResult
 }
 
-func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResults) {
+func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []CorrResults) {
 	codonSequences := [][]Codon{}
-	for _, s := range aln.Sequences {
+	sequences := []seq.Sequence{}
+	if mateSequence != nil {
+		sequences = append(sequences, *mateSequence)
+	}
+	sequences = append(sequences, aln.Sequences...)
+	for _, s := range sequences {
 		codons := extractCodons(s, codonOffset)
 		codonSequences = append(codonSequences, codons)
 	}
@@ -163,15 +204,32 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 					if found1 && found2 && a1 == a2 {
 						b1 := seq1[k+l]
 						b2 := seq2[k+l]
-						d1, found1 := codingTable.Table[string(c1)]
-						d2, found2 := codingTable.Table[string(c2)]
-						if found1 && found2 && d1 == d2 {
-							if c1[2] != c2[2] {
-								if b1[2] != b2[2] {
-									d++
-								}
+
+						good := true
+						if synonymous {
+							d1, found1 := codingTable.Table[string(c1)]
+							d2, found2 := codingTable.Table[string(c2)]
+							if found1 && found2 && d1 == d2 {
+								good = true
+							} else {
+								good = false
 							}
-							t++
+						}
+						if good {
+							var codonPositions []int
+							if codonPos < 0 || codonPos > 2 {
+								codonPositions = []int{0, 1, 2}
+							} else {
+								codonPositions = append(codonPositions, codonPos)
+							}
+							for _, codonP := range codonPositions {
+								if c1[codonP] != c2[codonP] {
+									if b1[codonP] != b2[codonP] {
+										d++
+									}
+								}
+								t++
+							}
 						}
 					}
 				}
@@ -183,6 +241,9 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 				crRes.Results = append(crRes.Results, cr)
 			}
 			results = append(results, crRes)
+		}
+		if mateSequence != nil {
+			break
 		}
 	}
 
