@@ -232,6 +232,7 @@ func calcP2(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 	for i := range p2Res {
 		if p2Res[i].N > 0 {
 			p2Res[i].Mean /= float64(p2Res[i].N)
+			p2Res[i].Lag *= 3
 		}
 	}
 
@@ -277,6 +278,7 @@ func calcP4(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 	for i := range p4Res {
 		if p4Res[i].N > 0 {
 			p4Res[i].Mean /= float64(p4Res[i].N)
+			p4Res[i].Lag *= 3
 		}
 	}
 
