@@ -64,28 +64,32 @@ func (c *Collector) CorrTypes() (corrTypes []string) {
 // Results get results
 func (c *Collector) Results() (results []CorrResult) {
 	corrTypes := c.CorrTypes()
-	ks := 0.0
+	// calculate ks first
+	ks := c.Means("P2")[0]
+	results = append(results,
+		CorrResult{
+			Lag:      0,
+			N:        c.Ns("P2")[0],
+			Type:     "Ks",
+			Mean:     c.Means("P2")[0],
+			Variance: c.Vars("P2")[0],
+		})
+	if ks == 0 {
+		return
+	}
+
 	for _, ctype := range corrTypes {
 		means := c.Means(ctype)
 		vars := c.Vars(ctype)
 		ns := c.Ns(ctype)
 		for i := 0; i < len(means); i++ {
-			if ns[i] > 0 {
+			if !(ctype == "P2" && i == 0) && ns[i] > 0 {
 				res := CorrResult{}
 				res.Lag = i
 				res.N = ns[i]
 				res.Type = ctype
-				res.Mean = means[i]
-				res.Variance = vars[i]
-				if ctype == "P2" {
-					if i == 0 {
-						res.Type = "Ks"
-						ks = res.Mean
-					} else {
-						res.Mean /= ks
-						res.Variance /= (ks * ks)
-					}
-				}
+				res.Mean = means[i] / ks
+				res.Variance = vars[i] / (ks * ks)
 				results = append(results, res)
 			}
 		}
