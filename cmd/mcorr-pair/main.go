@@ -2,32 +2,30 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
+	"log"
 	"os"
+	"runtime"
 	"strings"
 
-	"runtime"
-
 	"github.com/alecthomas/kingpin"
-	"github.com/cheggaaa/pb"
 	"github.com/mingzhi/biogo/seq"
+	"github.com/mingzhi/mcorr"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
 
 func main() {
-	app := kingpin.New("mcorr", "Calculate mutation correlation for each pair of isolates")
-	app.Version("v0.2")
+	app := kingpin.New("mcorr-pair", "Calculate mutation correlation for each pair of isolates")
+	app.Version("v20170728")
 
-	alnFile := app.Arg("input", "Alignment file in XMFA format").Required().String()
-	outFile := app.Arg("output", "Output file in CSV format").Required().String()
+	alnFile := app.Arg("in", "Alignment file in XMFA format").Required().String()
+	outFile := app.Arg("out", "Output file in CSV format").Required().String()
 
-	mateFile := app.Flag("mate_file", "mate file").Default("").String()
-	maxl := app.Flag("max_corr_len", "Maximum length of correlation (base pairs)").Default("300").Int()
-	ncpu := app.Flag("ncpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	progress := app.Flag("progress", "show progress").Default("false").Bool()
-	codonPos := app.Flag("codon_pos", "codon position").Default("3").Int()
-	synonymous := app.Flag("synonymous", "synonymous").Default("false").Bool()
+	mateFile := app.Flag("second-alignment", "Second alignment file in XMFA format").Default("").String()
+	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
+	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
+	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
+	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *ncpu == 0 {
@@ -35,13 +33,13 @@ func main() {
 	}
 	runtime.GOMAXPROCS(*ncpu)
 
-	var pbar *pb.ProgressBar
-	if *progress {
-		numAln := countAlignments(*alnFile)
-		pbar = pb.New(numAln)
-		pbar.SetWidth(60)
-		pbar.Start()
-		defer pbar.Finish()
+	synoumous := false
+	if *codonPos == 4 {
+		synoumous = true
+		*codonPos = 3
+	}
+	if *codonPos <= 0 || *codonPos > 4 {
+		log.Fatalln("--codon-position should be in the range of 1 to 4.")
 	}
 
 	var mateMap map[string]*seq.Sequence
@@ -71,14 +69,9 @@ func main() {
 	maxCodonLen := *maxl / 3
 	codonOffset := 0
 
-	if *codonPos == 4 {
-		*synonymous = true
-		*codonPos = 3
-	}
-
 	numJob := *ncpu
 	done := make(chan bool)
-	resChan := make(chan CorrResults)
+	resChan := make(chan mcorr.CorrResults)
 	for i := 0; i < numJob; i++ {
 		go func() {
 			for aln := range alnChan {
@@ -90,10 +83,7 @@ func main() {
 						mateSequence = s
 					}
 				}
-				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, *synonymous, *codonPos-1, mateSequence)
-				if pbar != nil {
-					pbar.Increment()
-				}
+				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synoumous, *codonPos-1, mateSequence)
 				for _, res := range corrRes {
 					resChan <- res
 				}
@@ -109,21 +99,7 @@ func main() {
 		}
 	}()
 
-	collectors := collect(resChan)
-
-	w, err := os.Create(*outFile)
-	if err != nil {
-		panic(err)
-	}
-	defer w.Close()
-
-	w.WriteString("l,m,v,n,t,b\n")
-	for _, cc := range collectors {
-		results := cc.Results()
-		for _, res := range results {
-			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, cc.ID))
-		}
-	}
+	mcorr.CollectWrite(resChan, *outFile, *numBoot)
 }
 
 // Alignment is an array of multiple sequences with same length
@@ -163,22 +139,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 	return
 }
 
-// CorrResult stores a correlation result.
-type CorrResult struct {
-	Lag      int
-	Mean     float64
-	Variance float64
-	N        int
-	Type     string
-}
-
-// CorrResults stores a list of CorrResult with an gene ID.
-type CorrResults struct {
-	ID      string
-	Results []CorrResult
-}
-
-func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []CorrResults) {
+func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []mcorr.CorrResults) {
 	codonSequences := [][]Codon{}
 	sequences := []seq.Sequence{}
 	if mateSequence != nil {
@@ -194,7 +155,7 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 		for j := i + 1; j < len(codonSequences); j++ {
 			id := aln.Sequences[i].Id + "_vs_" + aln.Sequences[j].Id
 			seq2 := codonSequences[j]
-			crRes := CorrResults{ID: id}
+			crRes := mcorr.CorrResults{ID: id}
 			for l := 0; l < maxCodonLen; l++ {
 				d := 0.0
 				t := 0
@@ -235,7 +196,7 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 						}
 					}
 				}
-				cr := CorrResult{}
+				cr := mcorr.CorrResult{}
 				cr.Lag = l * 3
 				cr.Mean = d / float64(t)
 				cr.N = t
@@ -269,31 +230,6 @@ func extractCodons(s seq.Sequence, offset int) (codons []Codon) {
 		c := s.Seq[i:(i + 3)]
 		codons = append(codons, c)
 	}
-	return
-}
-
-func collect(resChan chan CorrResults) (collectors []*Collector) {
-	cmap := make(map[string]*Collector)
-	for res := range resChan {
-		terms := strings.Split(res.ID, "_vs_")
-		isolate1 := getGenome(terms[0])
-		isolate2 := getGenome(terms[1])
-		if isolate1 > isolate2 {
-			isolate1, isolate2 = isolate2, isolate1
-		}
-		id := strings.Join([]string{isolate1, isolate2}, "_vs_")
-		_, found := cmap[id]
-		if !found {
-			cmap[id] = NewCollector()
-		}
-		cmap[id].Add(res)
-	}
-
-	for id, c := range cmap {
-		c.ID = id
-		collectors = append(collectors, c)
-	}
-
 	return
 }
 

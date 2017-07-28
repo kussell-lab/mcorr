@@ -8,7 +8,7 @@ Infer recombination rates from bacterial sequence data using correlated mutation
 
 ## Installation
 ```sh
-go get -u github.com/mingzhi/mcorr/cmd/mcorr
+go get -u github.com/mingzhi/mcorr/cmd/mcorr-xmfa
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ The inference of recombination rates requires two steps:
 1. calculate mutation correlation from sequence data using `mcorr`;
 
     ```sh
-    mcorr <input ([XMFA] file)> <output (CSV file)>
+    mcorr-xmfa <input ([XMFA] file)> <output (CSV file)>
     ```
 
     **Note**: the program assumes that the input file contains only *coding* sequences.

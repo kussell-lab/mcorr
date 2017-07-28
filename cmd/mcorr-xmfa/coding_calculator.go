@@ -2,54 +2,42 @@ package main
 
 import (
 	"github.com/mingzhi/biogo/seq"
+	"github.com/mingzhi/mcorr"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
 
-// CorrResult stores a correlation result.
-type CorrResult struct {
-	Lag      int
-	Mean     float64
-	Variance float64
-	N        int
-	Type     string
-}
-
-// CorrResults stores a list of CorrResult with an gene ID.
-type CorrResults struct {
-	ID      string
-	Results []CorrResult
-}
-
 // Calculator define a interface for calculating correlations.
 type Calculator interface {
-	CalcP2(a Alignment, others ...Alignment) (corrResults CorrResults)
+	CalcP2(a Alignment, others ...Alignment) (corrResults mcorr.CorrResults)
 }
 
 // CodingCalculator for calculating coding sequences.
 type CodingCalculator struct {
-	CodingTable *taxonomy.GeneticCode
-	MaxCodonLen int
-	CodonOffset int
-	Synonymous  bool
+	CodingTable   *taxonomy.GeneticCode
+	MaxCodonLen   int
+	CodonOffset   int
+	CodonPosition int
+	Synonymous    bool
 }
 
 // NewCodingCalculator return a CodingCalculator
-func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset int, synonymous bool) *CodingCalculator {
+func NewCodingCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset int, codonPosition int, synonymous bool) *CodingCalculator {
 	return &CodingCalculator{
-		CodingTable: codingTable,
-		MaxCodonLen: maxCodonLen,
-		CodonOffset: codonOffset,
-		Synonymous:  synonymous,
+		CodingTable:   codingTable,
+		MaxCodonLen:   maxCodonLen,
+		CodonOffset:   codonOffset,
+		CodonPosition: codonPosition,
+		Synonymous:    synonymous,
 	}
 }
 
 // CalcP2 calculate P2
-func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) CorrResults {
-	results := calcP2Coding(a, cc.CodonOffset, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
-	return CorrResults{ID: a.ID, Results: results}
+func (cc *CodingCalculator) CalcP2(a Alignment, others ...Alignment) mcorr.CorrResults {
+	results := calcP2Coding(a, cc.CodonOffset, cc.CodonPosition, cc.MaxCodonLen, cc.CodingTable, cc.Synonymous)
+	return mcorr.CorrResults{ID: a.ID, Results: results}
 }
 
-func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []CorrResult) {
+func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool) (results []mcorr.CorrResult) {
 	codonSequences := [][]Codon{}
 	for _, s := range aln.Sequences {
 		codons := extractCodons(s, codonOffset)
@@ -59,10 +47,8 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 	nn := 0
 	for l := 0; l < maxCodonLen; l++ {
 		totalP2 := 0.0
-		totalP0 := 0.0
 		totaln := 0
 		if l > 0 && ks == 0.0 {
-			totalP0 = 1.0
 			totalP2 = 0.0
 			totaln = nn
 		} else {
@@ -84,12 +70,10 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 
 				for _, codonPairs := range multiCodonPairs {
 					if len(codonPairs) >= 2 {
-						nc := doubleCodons(codonPairs)
+						nc := doubleCodons(codonPairs, codonPosition)
 						xy, _, _, n := nc.Cov11()
 						totalP2 += xy
 						totaln += n
-						xy, _, _, n = nc.Cov00()
-						totalP0 += xy
 					}
 				}
 			}
@@ -100,31 +84,24 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 			nn = totaln
 		}
 
-		res1 := CorrResult{
+		res1 := mcorr.CorrResult{
 			Lag:  l * 3,
 			Mean: totalP2 / float64(totaln),
 			N:    totaln,
 			Type: "P2",
 		}
 		results = append(results, res1)
-		res2 := CorrResult{
-			Lag:  l * 3,
-			Mean: totalP0 / float64(totaln),
-			N:    totaln,
-			Type: "P0",
-		}
-		results = append(results, res2)
 	}
 
 	return
 }
 
-func doubleCodons(codonPairs []CodonPair) *NuclCov {
+func doubleCodons(codonPairs []CodonPair, codonPosition int) *mcorr.NuclCov {
 	alphabet := []byte{'A', 'T', 'G', 'C'}
-	c := NewNuclCov(alphabet)
+	c := mcorr.NewNuclCov(alphabet)
 	for _, codonPair := range codonPairs {
-		a := codonPair.A[2]
-		b := codonPair.B[2]
+		a := codonPair.A[codonPosition]
+		b := codonPair.B[codonPosition]
 		c.Add(a, b)
 	}
 	return c

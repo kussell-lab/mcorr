@@ -1,6 +1,9 @@
 package main
 
-import "github.com/mingzhi/biogo/seq"
+import (
+	"github.com/mingzhi/biogo/seq"
+	"github.com/mingzhi/mcorr"
+)
 
 // NoncodingCalculator for calculating noncoding sequences.
 type NoncodingCalculator struct {
@@ -15,11 +18,11 @@ func NewNoncodingCalculator(maxLen int) *NoncodingCalculator {
 }
 
 // CalcP2 calculate P2
-func (cc *NoncodingCalculator) CalcP2(alignment []seq.Sequence, others ...[]seq.Sequence) (results []CorrResult) {
+func (cc *NoncodingCalculator) CalcP2(alignment []seq.Sequence, others ...[]seq.Sequence) (results []mcorr.CorrResult) {
 	return calcP2Noncoding(alignment, cc.MaxLen)
 }
 
-func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []CorrResult) {
+func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []mcorr.CorrResult) {
 	for l := 0; l < maxLen; l++ {
 		totalxy := 0.0
 		totaln := 0
@@ -35,7 +38,7 @@ func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []CorrResult) {
 			totalxy += xy
 			totaln += n
 		}
-		res := CorrResult{
+		res := mcorr.CorrResult{
 			Lag:  l,
 			Mean: totalxy / float64(totaln),
 			N:    totaln,
@@ -46,9 +49,9 @@ func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []CorrResult) {
 	return
 }
 
-func doubleCounts(basePairs [][]byte) *NuclCov {
+func doubleCounts(basePairs [][]byte) *mcorr.NuclCov {
 	alphabet := []byte{'A', 'T', 'G', 'C'}
-	c := NewNuclCov(alphabet)
+	c := mcorr.NewNuclCov(alphabet)
 	for _, basePair := range basePairs {
 		a := basePair[0]
 		b := basePair[1]

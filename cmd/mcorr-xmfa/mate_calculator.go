@@ -1,32 +1,37 @@
 package main
 
-import "github.com/mingzhi/ncbiftp/taxonomy"
+import (
+	"github.com/mingzhi/mcorr"
+	"github.com/mingzhi/ncbiftp/taxonomy"
+)
 
 // MateCalculator for calculating correlation for two clusters of sequences.
 type MateCalculator struct {
-	CodingTable *taxonomy.GeneticCode
-	MaxCodonLen int
-	CodonOffset int
-	Synonymous  bool
+	CodingTable   *taxonomy.GeneticCode
+	MaxCodonLen   int
+	CodonOffset   int
+	CodonPosition int
+	Synonymous    bool
 }
 
 // NewMateCalculator returns a MateCalculator
-func NewMateCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset int, synonymous bool) *MateCalculator {
+func NewMateCalculator(codingTable *taxonomy.GeneticCode, maxCodonLen, codonOffset, codonPos int, synonymous bool) *MateCalculator {
 	return &MateCalculator{
-		CodingTable: codingTable,
-		MaxCodonLen: maxCodonLen,
-		CodonOffset: codonOffset,
-		Synonymous:  synonymous,
+		CodingTable:   codingTable,
+		MaxCodonLen:   maxCodonLen,
+		CodonOffset:   codonOffset,
+		CodonPosition: codonPos,
+		Synonymous:    synonymous,
 	}
 }
 
 // CalcP2 calcualtes P2
-func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResults CorrResults) {
+func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResults mcorr.CorrResults) {
 	if len(mates) == 0 {
 		return
 	}
 
-	var results []CorrResult
+	var results []mcorr.CorrResult
 	cs1 := cc.extractCodonSequences(aln1)
 	cs2 := cc.extractCodonSequences(mates[0])
 
@@ -38,9 +43,9 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 			cpList1 := cc.extractCodonPairs(cs1, pos, pos+l)
 			cpList2 := cc.extractCodonPairs(cs2, pos, pos+l)
 			for _, cp1 := range cpList1 {
-				nc1 := doubleCodons(cp1)
+				nc1 := doubleCodons(cp1, cc.CodonPosition)
 				for _, cp2 := range cpList2 {
-					nc2 := doubleCodons(cp2)
+					nc2 := doubleCodons(cp2, cc.CodonPosition)
 					if cc.Synonymous {
 						aa1 := cc.translateCodonPair(cp1[0])
 						aa2 := cc.translateCodonPair(cp2[0])
@@ -62,14 +67,14 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 			}
 		}
 
-		res1 := CorrResult{
+		res1 := mcorr.CorrResult{
 			Lag:  l * 3,
 			Mean: totalP2 / float64(totaln),
 			N:    totaln,
 			Type: "P2",
 		}
 		results = append(results, res1)
-		res2 := CorrResult{
+		res2 := mcorr.CorrResult{
 			Lag:  l * 3,
 			Mean: totalP0 / float64(totaln),
 			N:    totaln,
@@ -78,7 +83,7 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 		results = append(results, res2)
 	}
 
-	corrResults = CorrResults{ID: aln1.ID, Results: results}
+	corrResults = mcorr.CorrResults{ID: aln1.ID, Results: results}
 
 	return
 }

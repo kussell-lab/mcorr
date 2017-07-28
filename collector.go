@@ -1,9 +1,8 @@
-package main
+package mcorr
 
 // Collector collect correlation results.
 type Collector struct {
-	ID string
-	m  map[string][]*MeanVar
+	m map[string][]*MeanVar
 }
 
 // NewCollector return a new Collector.
