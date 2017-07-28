@@ -102,7 +102,7 @@ func main() {
 				gene := pileupCodons(geneRecords)
 				ok := checkCoverage(gene, geneLen, minDepth, minCoverage)
 				if ok {
-					p2 := calcP2(gene, maxl, minDepth, codeTable, *codonPosition-1, synoumous)
+					p2 := calcP2(gene, 10, minDepth, codeTable, *codonPosition-1, synoumous)
 					p4 := calcP4(gene, maxl, minDepth, codeTable, *codonPosition-1, synoumous)
 					p2 = append(p2, p4...)
 					p2Chan <- mcorr.CorrResults{Results: p2, ID: geneRecords.ID}
@@ -229,6 +229,12 @@ func calcP2(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 		}
 	}
 
+	for i := range p2Res {
+		if p2Res[i].N > 0 {
+			p2Res[i].Mean /= float64(p2Res[i].N)
+		}
+	}
+
 	return
 }
 
@@ -265,6 +271,12 @@ func calcP4(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 			}
 			p4Res[lag].Mean += xbar * ybar
 			p4Res[lag].N++
+		}
+	}
+
+	for i := range p4Res {
+		if p4Res[i].N > 0 {
+			p4Res[i].Mean /= float64(p4Res[i].N)
 		}
 	}
 
