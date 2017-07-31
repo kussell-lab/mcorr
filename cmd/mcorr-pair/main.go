@@ -77,7 +77,7 @@ func main() {
 			for aln := range alnChan {
 				var mateSequence *seq.Sequence
 				if mateMap != nil {
-					geneid := strings.Split(aln.Sequences[0].Id, " ")[0]
+					geneid, _ := getNames(aln.Sequences[0].Id)
 					s, found := mateMap[geneid]
 					if found {
 						mateSequence = s
@@ -153,7 +153,12 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 
 	for i, seq1 := range codonSequences {
 		for j := i + 1; j < len(codonSequences); j++ {
-			id := aln.Sequences[i].Id + "_vs_" + aln.Sequences[j].Id
+			_, genomeName1 := getNames(aln.Sequences[i].Id)
+			_, genomeName2 := getNames(aln.Sequences[j].Id)
+			if genomeName1 > genomeName2 {
+				genomeName1, genomeName2 = genomeName2, genomeName1
+			}
+			id := genomeName1 + "_vs_" + genomeName2
 			seq2 := codonSequences[j]
 			crRes := mcorr.CorrResults{ID: id}
 			for l := 0; l < maxCodonLen; l++ {
@@ -233,10 +238,6 @@ func extractCodons(s seq.Sequence, offset int) (codons []Codon) {
 	return
 }
 
-func getGenome(s string) string {
-	return strings.Split(strings.Split(s, "|")[0], "_")[0]
-}
-
 // countAlignments return total number of alignments in a file.
 func countAlignments(file string) (count int) {
 	f, err := os.Open(file)
@@ -257,5 +258,12 @@ func countAlignments(file string) (count int) {
 			count++
 		}
 	}
+	return
+}
+
+func getNames(s string) (geneName, genomeName string) {
+	terms := strings.Split(s, " ")
+	geneName = terms[0]
+	genomeName = terms[1]
 	return
 }
