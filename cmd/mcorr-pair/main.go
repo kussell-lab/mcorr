@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -99,7 +100,7 @@ func main() {
 		}
 	}()
 
-	mcorr.CollectWrite(resChan, *outFile, *numBoot)
+	CollectWrite(resChan, *outFile, *numBoot)
 }
 
 // Alignment is an array of multiple sequences with same length
@@ -266,4 +267,37 @@ func getNames(s string) (geneName, genomeName string) {
 	geneName = terms[0]
 	genomeName = terms[1]
 	return
+}
+
+// CollectWrite collects and writes the correlation results.
+func CollectWrite(corrResChan chan mcorr.CorrResults, outFile string, numBoot int) {
+	// prepare bootstrappers.
+	bootstraps := make(map[string]*mcorr.Bootstrap)
+	notBootstrap := mcorr.NewBootstrap("all", 1.0)
+	notBootstrap.SetRandom(false)
+	bootstraps["all"] = notBootstrap
+
+	for corrResults := range corrResChan {
+		id := corrResults.ID
+		if _, found := bootstraps[id]; !found {
+			bootstraps[id] = mcorr.NewBootstrap(id, 1.0)
+			bootstraps[id].SetRandom(false)
+		}
+		bootstraps[id].Add(corrResults)
+		bootstraps["all"].Add(corrResults)
+	}
+
+	w, err := os.Create(outFile)
+	if err != nil {
+		panic(err)
+	}
+	defer w.Close()
+
+	w.WriteString("l,m,v,n,t,b\n")
+	for _, bs := range bootstraps {
+		results := bs.Results()
+		for _, res := range results {
+			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
+		}
+	}
 }
