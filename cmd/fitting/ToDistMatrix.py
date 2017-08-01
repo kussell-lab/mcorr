@@ -18,14 +18,15 @@ def main():
         for line in reader:
             terms = line.rstrip().split(",")
             group = terms[0]
-            isolates = group.split("_vs_")
-            ddmap = dmap.get(isolates[0], {})
-            ddmap[isolates[1]] = terms[header.index(byvalue)]
-            dmap[isolates[0]] = ddmap
+            if "_vs_" in group:
+                isolates = group.split("_vs_")
+                ddmap = dmap.get(isolates[0], {})
+                ddmap[isolates[1]] = terms[header.index(byvalue)]
+                dmap[isolates[0]] = ddmap
 
-            ddmap = dmap.get(isolates[1], {})
-            ddmap[isolates[0]] = terms[header.index(byvalue)]
-            dmap[isolates[1]] = ddmap
+                ddmap = dmap.get(isolates[1], {})
+                ddmap[isolates[0]] = terms[header.index(byvalue)]
+                dmap[isolates[1]] = ddmap
     isolates = sorted(dmap.keys())
     with open(outfile, 'w') as writer:
         writer.write("," + ",".join(isolates) + "\n")

@@ -25,7 +25,6 @@ func main() {
 	mateFile := app.Flag("second-alignment", "Second alignment file in XMFA format").Default("").String()
 	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
 	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -100,7 +99,7 @@ func main() {
 		}
 	}()
 
-	CollectWrite(resChan, *outFile, *numBoot)
+	CollectWrite(resChan, *outFile)
 }
 
 // Alignment is an array of multiple sequences with same length
@@ -122,6 +121,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		}
 		defer f.Close()
 		xmfaReader := seq.NewXMFAReader(f)
+		numAln := 0
 		for {
 			alignment, err := xmfaReader.Read()
 			if err != nil {
@@ -133,8 +133,10 @@ func readAlignments(file string) (alnChan chan Alignment) {
 			if len(alignment) > 0 {
 				alnID := strings.Split(alignment[0].Id, " ")[0]
 				alnChan <- Alignment{ID: alnID, Sequences: alignment}
+				log.Printf("\rRead %d alignments.", numAln)
 			}
 		}
+		log.Printf(" Total alignments %d\n", numAln)
 	}
 	go read()
 	return
@@ -270,7 +272,7 @@ func getNames(s string) (geneName, genomeName string) {
 }
 
 // CollectWrite collects and writes the correlation results.
-func CollectWrite(corrResChan chan mcorr.CorrResults, outFile string, numBoot int) {
+func CollectWrite(corrResChan chan mcorr.CorrResults, outFile string) {
 	// prepare bootstrappers.
 	bootstraps := make(map[string]*mcorr.Bootstrap)
 	notBootstrap := mcorr.NewBootstrap("all", 1.0)
