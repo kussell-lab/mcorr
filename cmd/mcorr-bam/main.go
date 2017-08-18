@@ -4,11 +4,13 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/biogo/hts/sam"
@@ -119,7 +121,56 @@ func main() {
 		}
 	}()
 
-	mcorr.CollectWrite(p2Chan, outFile, *numBoot)
+	bootstraps := mcorr.Collect(p2Chan, *numBoot)
+
+	w, err := os.Create(outFile)
+	if err != nil {
+		panic(err)
+	}
+	defer w.Close()
+
+	w.WriteString("l,m,v,n,t,b\n")
+	for _, bs := range bootstraps {
+		results := bs.Results()
+		qfactor := getQfactor(results)
+		for _, res := range results {
+			if res.Type == "Ks" || (res.Type == "P4" && res.Lag > 0) {
+				if res.Type == "P4" {
+					res.Mean *= qfactor
+					res.Type = "P2"
+				}
+				w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n",
+					res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
+			}
+		}
+	}
+}
+
+// getQfactor return the q factor between p2 and p4.
+func getQfactor(results []mcorr.CorrResult) float64 {
+	p2values := make([]float64, 31)
+	p4values := make([]float64, 31)
+	for _, res := range results {
+		if res.Lag <= 30 && res.Lag > 0 {
+			if res.Type == "P2" {
+				p2values[res.Lag] = res.Mean
+			} else if res.Type == "P4" {
+				p4values[res.Lag] = res.Mean
+			}
+		}
+	}
+
+	var factors []float64
+	for i := range p2values {
+		if p2values[i] > 0 && p4values[i] > 0 {
+			factors = append(factors, p2values[i]/p4values[i])
+		}
+	}
+	sort.Float64s(factors)
+	if len(factors)%2 == 0 {
+		return (factors[len(factors)/2] + factors[len(factors)/2-1]) / 2
+	}
+	return (factors[len(factors)/2])
 }
 
 // pileupCodons pileup codons of a list of reads at a gene.

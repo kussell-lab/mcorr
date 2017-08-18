@@ -5,8 +5,8 @@ from argparse import ArgumentParser
 import numpy as np
 from lmfit import Parameters, Minimizer
 import matplotlib.pyplot as plt
-from joblib import Parallel, delayed
-from multiprocessing import cpu_count
+from matplotlib import gridspec
+from tqdm import tqdm
 
 class CorrRes(object):
     """One correlation result"""
@@ -45,6 +45,9 @@ class FitDatas(object):
             xvalues, yvalues, sample_diver = prepare_fitting_data(items, xmin, xmax)
             fitdata_map[group] = FitData(group, xvalues, yvalues, sample_diver)
         self.fitdata_dict = fitdata_map
+    def has(self, group):
+        return group in self.fitdata_dict
+
     def get(self, group):
         """return fit data"""
         fitdata = self.fitdata_dict.get(group, None)
@@ -143,130 +146,91 @@ def fcnmin(params, xvalues, yvalues):
     predicts = factor * calc_p2(diversity, theta, rrate)
     return predicts - yvalues
 
-def get_best_model_index(fitresults):
-    """Get the index of the best model"""
-    aics = []
-    for fitres in fitresults:
-        aics.append(fitres.aic)
-    return np.argmin(aics)
-
-def fit_model1(xvalues, yvalues, sample_diversity):
+def fit_model1(xvalues, yvalues, sample_diversity, phi_start, theta_start):
     """Do fitting using the Model 1"""
-    phi_start_values = [0.001, 0.01, 0.1]
-    fitresults = []
-    for phi_start in phi_start_values:
-        params1 = Parameters()
-        sample_theta = sample_diversity / (1.0 - 4.0/3.0 * sample_diversity)
-        params1.add('theta', value=0.1, min=0, max=1)
-        params1.add('phi', value=phi_start, min=0, max=1)
-        params1.add('fbar', value=1000, min=3, max=10000000)
-        params1.add('ds', value=sample_diversity, vary=False)
-        minner1 = Minimizer(fcnmin, params1, fcn_args=(xvalues, yvalues))
-        fitres1 = minner1.minimize()
-        fitresults.append(fitres1)
-    best_model_index = get_best_model_index(fitresults)
-    return fitresults[best_model_index]
+    params1 = Parameters()
+    sample_theta = sample_diversity / (1.0 - 4.0/3.0 * sample_diversity)
+    params1.add('theta', value=theta_start, min=0, max=1)
+    params1.add('phi', value=phi_start, min=0, max=1)
+    params1.add('fbar', value=1000, min=3, max=10000000)
+    params1.add('ds', value=sample_diversity, vary=False)
+    minner1 = Minimizer(fcnmin, params1, fcn_args=(xvalues, yvalues))
+    fitres1 = minner1.minimize()
+    return fitres1
 
-def fit_one(fitdata):
+def fit_one(fitdata, phi_start, theta_start):
     """Fit one data set"""
-    fitres = fit_model1(fitdata.xvalues, fitdata.yvalues, fitdata.sample_diversity)
-    return (fitdata.group, fitres)
+    fitres = fit_model1(fitdata.xvalues, fitdata.yvalues, fitdata.sample_diversity, phi_start, theta_start)
+    return fitres
 
-def fit_all(fitdatas):
-    """Fit all bootstrap data sets"""
-    allresults = Parallel(n_jobs=cpu_count())(delayed(fit_one)(data) for data in fitdatas.getall())
-    return allresults
-
-def plot_fit(fitdata, plot_file):
+def plot_fit(fitdata, fitres, plot_file):
     """Fit all row data and do ploting"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     sample_diversity = fitdata.sample_diversity
-    fitres = fit_model1(xvalues, yvalues, sample_diversity)
     fig = plt.figure(tight_layout=True)
-    fig.set_figheight(2)
-    fig.set_figwidth(3)
-    ax1 = fig.add_subplot(1, 1, 1)
-    ax1.plot(xvalues, yvalues, 'o',
-             markersize=4,
-             markeredgewidth=0.75,
-             markeredgecolor='k',
-             markerfacecolor='None')
+    fig.set_figheight(5)
+    fig.set_figwidth(7)
+    gs = gridspec.GridSpec(2, 2, height_ratios=[2.5, 1.5], width_ratios=[2, 1.5])
+    ax1 = plt.subplot(gs[0, 0])
+    ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
     predictions = yvalues + fitres.residual
     ax1.plot(xvalues, predictions, 'k')
-    ax1.set_xlabel(r'distance $l$ (bp)')
-    ax1.set_ylabel(r'$\tilde P^{(2)}_{s,2}$')
+    ax1.set_xlabel(r'$l$')
+    ax1.set_ylabel(r'$P$')
     ax1.locator_params(axis='x', nbins=5)
     ax1.locator_params(axis='y', nbins=5)
+
+    ax2 = plt.subplot(gs[1, 0])
+    markerline, stemlines, baseline = ax2.stem(xvalues, fitres.residual, linefmt='k-', basefmt='r-', markerfmt='ko')
+    ax2.set_xlabel(r'$l$')
+    ax2.set_ylabel("Residual")
+    ax2.locator_params(axis='x', nbins=5)
+    plt.setp(markerline, "markersize", 4)
+
+    ax3 = plt.subplot(gs[1, 1])
+    n, bins, patches = ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
+    ax3.set_xlabel("Residual")
     fig.savefig(plot_file)
 
-def plot_params(fitresults, param_names, plot_file):
-    """Plot histograms"""
-    num_col = 3
-    num_row = len(param_names) // num_col
-    if len(param_names) % num_col > 0:
-        num_row = num_row + 1
-    fig = plt.figure(tight_layout=True)
-    fig.set_figheight(num_row * 6)
-    fig.set_figwidth(num_col * 3)
-    label_names = {"theta": r"$\theta$",
-                   "phi": r"$\phi$",
-                   "fbar":r"$\bar f$",
-                   "sample_d": r'$d_s$',
-                   "ratio": r'$\gamma/\mu$',
-                   "rho": r'$\rho$',
-                   "sample_theta": r'$\theta_s$',
-                   "sample_rho": r'$\rho_s$'}
-    for (i, name) in enumerate(param_names):
-        values = []
-        raw_value = None
-        is_boot = False
-        for fitres in fitresults:
-            if hasattr(fitres, name):
-                value = getattr(fitres, name)
-                values.append(value)
-                if fitres.group == "all":
-                    raw_value = value
-                if fitres.group == "boot_1":
-                    is_boot = True
-        if len(values) > 0:
-            filteredvalues = values
-            if is_boot:
-                lowbound = np.percentile(values, 5)
-                upbound = np.percentile(values, 95)
-                filteredvalues = [x for x in values if x > lowbound and x < upbound]
-            ax1 = fig.add_subplot(num_col * num_row, num_col, i + 1)
-            ax1.hist(filteredvalues, histtype='stepfilled', bins = "auto", color="black", alpha=0.5)
-            label = label_names.get(name, name)
-            ax1.set_xlabel(label)
-            if raw_value:
-                ax1.axvline(x=raw_value)
-            ax1.locator_params(axis='x', nbins=4)
-            ax1.ticklabel_format(axis='x', style='sci', scilimits=(-2, 2))
-
-    fig.savefig(plot_file)
 
 def getKey(item):
     """return the first item"""
     return item[0]
 
-def fitp2(corr_file, prefix, xmin, xmax):
+def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1, theta_start=0.1):
     """Fit p2"""
     corr_results = read_corr(corr_file)
     fitdatas = FitDatas(corr_results, xmin, xmax)
 
-    if fitdatas.get("all"):
+    all_results = []
+    if fitdatas.has("all"):
+        fitdata = fitdatas.get("all")
         best_fit_plot_file = prefix + "_best_fit.svg"
-        plot_fit(fitdatas.get("all"), best_fit_plot_file)
+        fitres = fit_one(fitdata, phi_start, theta_start)
+        plot_fit(fitdata, fitres, best_fit_plot_file)
+        all_results.append((fitdata.group, fitres))
 
-    all_results = sorted(fit_all(fitdatas), key=getKey)
+    to_fit_groups = []
+    for fitdata in fitdatas.getall():
+        tofit = True
+        if fitdata.group == "all": tofit = False
+        if "boot" in fitdata.group: tofit = fit_bootstraps
+        if tofit:
+            to_fit_groups.append(fitdata.group)
+    if len(to_fit_groups) > 0:
+        for group in tqdm(to_fit_groups):
+            fitdata = fitdatas.get(group)
+            fitres = fit_one(fitdata, phi_start, theta_start)
+            all_results.append((fitdata.group, fitres))
+            
+    # write fitting results.
     model_params = ["group", "sample_d", "theta",
                     "phi", "fbar", "ratio", "rho",
-                    "sample_theta", "sample_phi", "sample_rho"]
+                    "sample_theta", "sample_rho"]
     out_prefix = prefix + "_fit_results"
     out_file = out_prefix + ".csv"
     sep = ","
-    fit_results = []
     with open(out_file, 'w') as out:
         out.write(sep.join(model_params)+"\n")
         for (group, minres) in all_results:
@@ -274,8 +238,6 @@ def fitp2(corr_file, prefix, xmin, xmax):
             fit_res = FitRes(group, minres, sample_d)
             values = fit_res.get_values(model_params)
             out.write(sep.join([str(x) for x in values])+"\n")
-            fit_results.append(fit_res)
-    plot_params(fit_results, model_params[1:], out_prefix+".svg")
 
 ONESITEFUNC = constant_one_site
 
@@ -286,21 +248,27 @@ def main():
     parser.add_argument("corr_file", type=str)
     parser.add_argument("output_prefix", type=str)
     parser.add_argument('--xmin', nargs='?', const=3, type=int, default=3)
-    parser.add_argument('--xmax', nargs='?', const=300, type=int, default=300)
+    parser.add_argument('--xmax', nargs='?', const=150, type=int, default=150)
     parser.add_argument('--onesite', nargs='?', const="const", type=str, default="const")
+    parser.add_argument('--fit_bootstraps', nargs='?', const="false", type=bool, default=False)
+    parser.add_argument('--phi_start', nargs='?', const=0.1, type=float, default=0.1)
+    parser.add_argument('--theta_start', nargs='?', const=0.1, type=float, default=0.1)
     opts = parser.parse_args()
     datafile = opts.corr_file
     prefix = opts.output_prefix
     xmin = opts.xmin
     xmax = opts.xmax
     onesite = opts.onesite
+    fit_bootstraps = opts.fit_bootstraps
+    phi_start = opts.phi_start
+    theta_start = opts.theta_start
     global ONESITEFUNC
     if onesite == "exp":
         ONESITEFUNC = expon_one_site
     else:
         ONESITEFUNC = constant_one_site
 
-    fitp2(datafile, prefix, xmin, xmax)
+    fitp2(datafile, prefix, xmin, xmax, fit_bootstraps, phi_start, theta_start)
 
 if __name__ == "__main__":
     main()

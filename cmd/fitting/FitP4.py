@@ -223,11 +223,6 @@ def plot_fit(corr_results, xmin, xmax, plot_file):
              markeredgewidth=0.75,
              markeredgecolor='k',
              markerfacecolor='None')
-    # ax1.plot(rest_xvalues, rest_yvalues, 'o',
-    #          markersize=4,
-    #          markeredgewidth=0.75,
-    #          markeredgecolor='r',
-    #          markerfacecolor='None')
     predictions = fit_yvalues + fcnmin(fitres.params, fit_xvalues, fit_yvalues)
     ax1.plot(fit_xvalues, predictions, 'k--')
     ax1.set_xlabel(r'distance $l$ (bp)')

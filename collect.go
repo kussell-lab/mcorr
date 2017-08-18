@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-// CollectWrite collects and writes the correlation results.
-func CollectWrite(corrResChan chan CorrResults, outFile string, numBoot int) {
+// Collect feed correlation results into boostrappers and return them.
+func Collect(corrResChan chan CorrResults, numBoot int) []*Bootstrap {
 	// prepare bootstrappers.
 	bootstraps := []*Bootstrap{}
 	notBootstrap := NewBootstrap("all", 1.0)
@@ -23,6 +23,12 @@ func CollectWrite(corrResChan chan CorrResults, outFile string, numBoot int) {
 			bs.Add(corrResults)
 		}
 	}
+	return bootstraps
+}
+
+// CollectWrite collects and writes the correlation results.
+func CollectWrite(corrResChan chan CorrResults, outFile string, numBoot int) {
+	bootstraps := Collect(corrResChan, numBoot)
 
 	w, err := os.Create(outFile)
 	if err != nil {
