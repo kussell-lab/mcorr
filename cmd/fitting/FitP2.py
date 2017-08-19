@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from tqdm import tqdm
 
+plt.rcParams['mathtext.fontset'] = 'cm'
+
 class CorrRes(object):
     """One correlation result"""
     def __init__(self, terms):
@@ -46,6 +48,7 @@ class FitDatas(object):
             fitdata_map[group] = FitData(group, xvalues, yvalues, sample_diver)
         self.fitdata_dict = fitdata_map
     def has(self, group):
+        """return True if the group is in the data"""
         return group in self.fitdata_dict
 
     def get(self, group):
@@ -160,43 +163,49 @@ def fit_model1(xvalues, yvalues, sample_diversity, phi_start, theta_start):
 
 def fit_one(fitdata, phi_start, theta_start):
     """Fit one data set"""
-    fitres = fit_model1(fitdata.xvalues, fitdata.yvalues, fitdata.sample_diversity, phi_start, theta_start)
+    fitres = fit_model1(fitdata.xvalues, 
+                        fitdata.yvalues, 
+                        fitdata.sample_diversity, 
+                        phi_start, 
+                        theta_start)
     return fitres
 
 def plot_fit(fitdata, fitres, plot_file):
     """Fit all row data and do ploting"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
-    sample_diversity = fitdata.sample_diversity
     fig = plt.figure(tight_layout=True)
-    fig.set_figheight(5)
-    fig.set_figwidth(7)
-    gs = gridspec.GridSpec(2, 2, height_ratios=[2.5, 1.5], width_ratios=[2, 1.5])
+
+    fig.set_figheight(4)
+    fig.set_figwidth(6)
+    gs = gridspec.GridSpec(2, 2, height_ratios=[3, 1], width_ratios=[2, 1], hspace=0)
     ax1 = plt.subplot(gs[0, 0])
     ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
     predictions = yvalues + fitres.residual
     ax1.plot(xvalues, predictions, 'k')
-    ax1.set_xlabel(r'$l$')
     ax1.set_ylabel(r'$P$')
     ax1.locator_params(axis='x', nbins=5)
     ax1.locator_params(axis='y', nbins=5)
+    plt.setp(ax1.get_xticklabels(), visible=False)
 
     ax2 = plt.subplot(gs[1, 0])
-    markerline, stemlines, baseline = ax2.stem(xvalues, fitres.residual, linefmt='k-', basefmt='r-', markerfmt='ko')
+    markerline, _, _ = ax2.stem(xvalues, 
+                                fitres.residual, 
+                                linefmt='k-', 
+                                basefmt='r-', 
+                                markerfmt='ko')
     ax2.set_xlabel(r'$l$')
     ax2.set_ylabel("Residual")
     ax2.locator_params(axis='x', nbins=5)
     plt.setp(markerline, "markersize", 4)
+    fig.tight_layout()
 
     ax3 = plt.subplot(gs[1, 1])
-    n, bins, patches = ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
+    ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
     ax3.set_xlabel("Residual")
+    plt.setp(ax3.get_xticklabels(), rotation=10, horizontalalignment='right')
+    ax3.axes.get_yaxis().set_ticks([])
     fig.savefig(plot_file)
-
-
-def getKey(item):
-    """return the first item"""
-    return item[0]
 
 def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1, theta_start=0.1):
     """Fit p2"""
@@ -214,16 +223,19 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1, th
     to_fit_groups = []
     for fitdata in fitdatas.getall():
         tofit = True
-        if fitdata.group == "all": tofit = False
-        if "boot" in fitdata.group: tofit = fit_bootstraps
+        if fitdata.group == "all":
+            tofit = False
+        if "boot" in fitdata.group:
+            tofit = fit_bootstraps
         if tofit:
             to_fit_groups.append(fitdata.group)
-    if len(to_fit_groups) > 0:
+    num_groups = len(to_fit_groups)
+    if num_groups > 0:
         for group in tqdm(to_fit_groups):
             fitdata = fitdatas.get(group)
             fitres = fit_one(fitdata, phi_start, theta_start)
             all_results.append((fitdata.group, fitres))
-            
+
     # write fitting results.
     model_params = ["group", "sample_d", "theta",
                     "phi", "fbar", "ratio", "rho",
