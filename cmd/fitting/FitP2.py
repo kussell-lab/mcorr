@@ -38,8 +38,11 @@ class FitDatas(object):
     """Fitting data"""
     def __init__(self, corr_results, xmin, xmax):
         corr_map = {}
+        groups = []
         for row in corr_results:
             rows = corr_map.get(row.group, [])
+            if len(rows) == 0:
+                groups.append(row.group)
             rows.append(row)
             corr_map[row.group] = rows
         fitdata_map = {}
@@ -47,6 +50,7 @@ class FitDatas(object):
             xvalues, yvalues, sample_diver = prepare_fitting_data(items, xmin, xmax)
             fitdata_map[group] = FitData(group, xvalues, yvalues, sample_diver)
         self.fitdata_dict = fitdata_map
+        self.groups = groups
     def has(self, group):
         """return True if the group is in the data"""
         return group in self.fitdata_dict
@@ -57,8 +61,7 @@ class FitDatas(object):
         return fitdata
     def getall(self):
         """return all"""
-        groups = sorted(self.fitdata_dict.keys())
-        return [self.fitdata_dict[group] for group in groups]
+        return [self.fitdata_dict[group] for group in self.groups]
 
 class FitRes(object):
     """Fitting results"""

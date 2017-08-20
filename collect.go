@@ -1,9 +1,32 @@
 package mcorr
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
+
+// PipeOutCorrResults pipe the the channel of CorrResults out to a file.
+func PipeOutCorrResults(corrResChan chan CorrResults, outFile string) chan CorrResults {
+	c := make(chan CorrResults)
+	go func() {
+		defer close(c)
+		f, err := os.Create(outFile)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		encoder := json.NewEncoder(f)
+		for res := range corrResChan {
+			if err := encoder.Encode(res); err != nil {
+				panic(err)
+			}
+			c <- res
+		}
+	}()
+	return c
+}
 
 // Collect feed correlation results into boostrappers and return them.
 func Collect(corrResChan chan CorrResults, numBoot int) []*Bootstrap {

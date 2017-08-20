@@ -44,6 +44,7 @@ func main() {
 	var minDepth int        // min depth
 	var minCoverage float64 // min coveage
 	var gffFile string      // gff file
+	var corrChanFile string // CorrResults channel results.
 
 	// Parse command arguments.
 	app := kingpin.New("mcorr-bam", "Calculate mutation correlation from bacterial metagenomic sequence in BAM read files.")
@@ -61,6 +62,7 @@ func main() {
 	minReadLenFlag := app.Flag("min-read-length", "Minimal read length").Default("60").Int()
 	codonPosition := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
+	corrChanFileFlag := app.Flag("temp", "temp results").Default("").String()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	bamFile = *bamFileArg
@@ -78,6 +80,7 @@ func main() {
 	MinBaseQuality = *minBaseQFlag
 	MinMapQuality = *minMapQFlag
 	MinReadLength = *minReadLenFlag
+	corrChanFile = *corrChanFileFlag
 
 	synoumous := false
 	if *codonPosition == 4 {
@@ -121,7 +124,14 @@ func main() {
 		}
 	}()
 
-	bootstraps := mcorr.Collect(p2Chan, *numBoot)
+	var resChan chan mcorr.CorrResults
+	if corrChanFile != "" {
+		resChan = mcorr.PipeOutCorrResults(p2Chan, corrChanFile)
+	} else {
+		resChan = p2Chan
+	}
+
+	bootstraps := mcorr.Collect(resChan, *numBoot)
 
 	w, err := os.Create(outFile)
 	if err != nil {
