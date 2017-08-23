@@ -51,8 +51,49 @@ func (nc *NuclCov) Count() int {
 	return n
 }
 
-// Cov00 returns the covariance.
-func (nc *NuclCov) Cov00() (xy, xbar, ybar float64, n int) {
+// XBar return the count of 1 at the first position
+func (nc *NuclCov) XBar() (x float64, n int) {
+	sizeOfAlphabet := len(nc.Alphabet)
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > 0 {
+			for j := i + 1; j < len(nc.Doublets); j++ {
+				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
+
+					if i/sizeOfAlphabet != j/sizeOfAlphabet {
+						x += c
+					}
+					n += nc.Doublets[i] * nc.Doublets[j]
+				}
+			}
+			n += nc.Doublets[i] * (nc.Doublets[i] - 1) / 2
+		}
+	}
+	return
+}
+
+// YBar return the count of 1 at the first position
+func (nc *NuclCov) YBar() (x float64, n int) {
+	sizeOfAlphabet := len(nc.Alphabet)
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > 0 {
+			for j := i + 1; j < len(nc.Doublets); j++ {
+				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
+					if i%sizeOfAlphabet != j%sizeOfAlphabet {
+						x += c
+					}
+					n += nc.Doublets[i] * nc.Doublets[j]
+				}
+			}
+			n += nc.Doublets[i] * (nc.Doublets[i] - 1) / 2
+		}
+	}
+	return
+}
+
+// P00 returns the covariance.
+func (nc *NuclCov) P00() (xy float64, n int) {
 	for i := 0; i < len(nc.Doublets); i++ {
 		if nc.Doublets[i] > 0 {
 			for j := i + 1; j < len(nc.Doublets); j++ {
@@ -67,8 +108,48 @@ func (nc *NuclCov) Cov00() (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// Cov11 returns the covariance.
-func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
+// P01 returns the covariance.
+func (nc *NuclCov) P01() (xy float64, n int) {
+	sizeOfAlphabet := len(nc.Alphabet)
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > 0 {
+			for j := i + 1; j < len(nc.Doublets); j++ {
+				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
+					if i%sizeOfAlphabet != j%sizeOfAlphabet {
+						xy += c
+					}
+					n += nc.Doublets[i] * nc.Doublets[j]
+				}
+			}
+			n += nc.Doublets[i] * (nc.Doublets[i] - 1) / 2
+		}
+	}
+	return
+}
+
+// P10 returns the covariance.
+func (nc *NuclCov) P10() (xy float64, n int) {
+	sizeOfAlphabet := len(nc.Alphabet)
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > 0 {
+			for j := i + 1; j < len(nc.Doublets); j++ {
+				if nc.Doublets[j] > 0 {
+					c := float64(nc.Doublets[i] * nc.Doublets[j])
+					if i/sizeOfAlphabet != j/sizeOfAlphabet {
+						xy += c
+					}
+					n += nc.Doublets[i] * nc.Doublets[j]
+				}
+			}
+			n += nc.Doublets[i] * (nc.Doublets[i] - 1) / 2
+		}
+	}
+	return
+}
+
+// P11 returns the covariance.
+func (nc *NuclCov) P11() (xy float64, n int) {
 	sizeOfAlphabet := len(nc.Alphabet)
 	for i := 0; i < len(nc.Doublets); i++ {
 		if nc.Doublets[i] > 0 {
@@ -77,14 +158,6 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 					c := float64(nc.Doublets[i] * nc.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
 						xy += c
-					}
-
-					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += c
-					}
-
-					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += c
 					}
 
 					n += nc.Doublets[i] * nc.Doublets[j]
@@ -96,8 +169,8 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// CovMate11 calculate covariance between two clusters.
-func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+// MateP11 calculate covariance between two clusters.
+func (nc *NuclCov) MateP11(nc2 *NuclCov) (xy float64, n int) {
 	sizeOfAlphabet := len(nc.Alphabet)
 	for i := 0; i < len(nc.Doublets); i++ {
 		if nc.Doublets[i] > 0 {
@@ -106,14 +179,6 @@ func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
 					c := float64(nc.Doublets[i] * nc2.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
 						xy += c
-					}
-
-					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += c
-					}
-
-					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += c
 					}
 				}
 			}
@@ -129,8 +194,8 @@ func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// CovMate00 calculate covariance between two clusters.
-func (nc *NuclCov) CovMate00(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+// MateP00 calculate covariance between two clusters.
+func (nc *NuclCov) MateP00(nc2 *NuclCov) (xy float64, n int) {
 	n1, n2 := 0, 0
 	for i := 0; i < len(nc.Doublets); i++ {
 		xy += float64(nc.Doublets[i] * nc2.Doublets[i])

@@ -282,7 +282,7 @@ func calcP2(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 					for len(p2Res) <= lag {
 						p2Res = append(p2Res, mcorr.CorrResult{Type: "P2", Lag: len(p2Res)})
 					}
-					xy, _, _, n := nc.Cov11()
+					xy, n := nc.P11()
 					p2Res[lag].N += n
 					p2Res[lag].Mean += xy
 				}
@@ -369,7 +369,7 @@ func autoCov(gene *CodonGene, i, minDepth int, codeTable *taxonomy.GeneticCode, 
 			nc := mcorr.NewNuclCov(alphabet)
 			doubleCount(nc, synPairs, codonPosition)
 
-			xy, _, _, n := nc.Cov11()
+			xy,  n := nc.P11()
 			value += xy
 			count += n
 		}
