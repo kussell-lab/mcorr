@@ -35,6 +35,9 @@ var MinMapQuality int
 // MinReadLength minimal read length
 var MinReadLength int
 
+// MinAlleleNumber minimal allele (pairs) number
+var MinAlleleNumber int
+
 func main() {
 	// Command variables.
 	var bamFile string      // bam or sam file
@@ -62,7 +65,8 @@ func main() {
 	minReadLenFlag := app.Flag("min-read-length", "Minimal read length").Default("60").Int()
 	codonPosition := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
-	corrChanFileFlag := app.Flag("temp", "temp results").Default("").String()
+	corrChanFileFlag := app.Flag("temp", "Temp results").Default("").String()
+	minAlleleNumber := app.Flag("min-allele-number", "Minimal number of alleles").Default("0").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	bamFile = *bamFileArg
@@ -80,6 +84,7 @@ func main() {
 	MinBaseQuality = *minBaseQFlag
 	MinMapQuality = *minMapQFlag
 	MinReadLength = *minReadLenFlag
+	MinAlleleNumber = *minAlleleNumber
 	corrChanFile = *corrChanFileFlag
 
 	synoumous := false
@@ -282,7 +287,7 @@ func calcP2(gene *CodonGene, maxl, minDepth int, codeTable *taxonomy.GeneticCode
 					for len(p2Res) <= lag {
 						p2Res = append(p2Res, mcorr.CorrResult{Type: "P2", Lag: len(p2Res)})
 					}
-					xy, _, _, n := nc.Cov11()
+					xy, n := nc.P11(MinAlleleNumber)
 					p2Res[lag].N += n
 					p2Res[lag].Mean += xy
 				}
@@ -369,7 +374,7 @@ func autoCov(gene *CodonGene, i, minDepth int, codeTable *taxonomy.GeneticCode, 
 			nc := mcorr.NewNuclCov(alphabet)
 			doubleCount(nc, synPairs, codonPosition)
 
-			xy, _, _, n := nc.Cov11()
+			xy, n := nc.P11(MinAlleleNumber)
 			value += xy
 			count += n
 		}

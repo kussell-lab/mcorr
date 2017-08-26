@@ -50,17 +50,17 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 						aa1 := cc.translateCodonPair(cp1[0])
 						aa2 := cc.translateCodonPair(cp2[0])
 						if aa1 == aa2 {
-							xy, _, _, n := nc1.CovMate11(nc2)
+							xy, n := nc1.MateP11(nc2, 0)
 							totalP2 += xy
 							totaln += n
-							xy, _, _, n = nc1.CovMate00(nc2)
+							xy, n = nc1.MateP00(nc2, 0)
 							totalP0 += xy
 						}
 					} else {
-						xy, _, _, n := nc1.CovMate11(nc2)
+						xy, n := nc1.MateP11(nc2, 0)
 						totalP2 += xy
 						totaln += n
-						xy, _, _, n = nc1.CovMate00(nc2)
+						xy, n = nc1.MateP00(nc2, 0)
 						totalP0 += xy
 					}
 				}

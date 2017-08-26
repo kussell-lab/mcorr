@@ -71,7 +71,7 @@ func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, co
 				for _, codonPairs := range multiCodonPairs {
 					if len(codonPairs) >= 2 {
 						nc := doubleCodons(codonPairs, codonPosition)
-						xy, _, _, n := nc.Cov11()
+						xy, n := nc.P11(0)
 						totalP2 += xy
 						totaln += n
 					}

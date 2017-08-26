@@ -34,7 +34,7 @@ func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []mcorr.CorrResult
 			}
 
 			nc := doubleCounts(basePairs)
-			xy, _, _, n := nc.Cov11()
+			xy, n := nc.P11(0)
 			totalxy += xy
 			totaln += n
 		}
