@@ -25,6 +25,7 @@ func main() {
 	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
+	corrChanFileFlag := app.Flag("temp", "temp results").Default("").String()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -59,7 +60,14 @@ func main() {
 		corrResChan = calcSingleClade(alnChan, calculator)
 	}
 
-	mcorr.CollectWrite(corrResChan, *outFile, *numBoot)
+	var resChan chan mcorr.CorrResults
+	if corrChanFile != "" {
+		resChan = mcorr.PipeOutCorrResults(corrResChan, corrChanFile)
+	} else {
+		resChan = corrResChan
+	}
+
+	mcorr.CollectWrite(resChan, *outFile, *numBoot)
 }
 
 // Alignment is an array of mutliple sequences with same length.
