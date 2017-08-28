@@ -51,12 +51,12 @@ func (nc *NuclCov) Count() int {
 	return n
 }
 
-// Cov00 returns the covariance.
-func (nc *NuclCov) Cov00() (xy, xbar, ybar float64, n int) {
+// P00 returns the probability of 00.
+func (nc *NuclCov) P00(minAlleleNum int) (xy float64, n int) {
 	for i := 0; i < len(nc.Doublets); i++ {
-		if nc.Doublets[i] > 0 {
+		if nc.Doublets[i] > minAlleleNum {
 			for j := i + 1; j < len(nc.Doublets); j++ {
-				if nc.Doublets[j] > 0 {
+				if nc.Doublets[j] > minAlleleNum {
 					n += nc.Doublets[i] * nc.Doublets[j]
 				}
 			}
@@ -67,24 +67,16 @@ func (nc *NuclCov) Cov00() (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// Cov11 returns the covariance.
-func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
+// P11 returns the probability of 11.
+func (nc *NuclCov) P11(minAlleleNum int) (xy float64, n int) {
 	sizeOfAlphabet := len(nc.Alphabet)
 	for i := 0; i < len(nc.Doublets); i++ {
-		if nc.Doublets[i] > 0 {
+		if nc.Doublets[i] > minAlleleNum {
 			for j := i + 1; j < len(nc.Doublets); j++ {
-				if nc.Doublets[j] > 0 {
+				if nc.Doublets[j] > minAlleleNum {
 					c := float64(nc.Doublets[i] * nc.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
 						xy += c
-					}
-
-					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += c
-					}
-
-					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += c
 					}
 
 					n += nc.Doublets[i] * nc.Doublets[j]
@@ -96,24 +88,16 @@ func (nc *NuclCov) Cov11() (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// CovMate11 calculate covariance between two clusters.
-func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+// MateP11 calculate covariance between two clusters.
+func (nc *NuclCov) MateP11(nc2 *NuclCov, minAlleleNum int) (xy float64, n int) {
 	sizeOfAlphabet := len(nc.Alphabet)
 	for i := 0; i < len(nc.Doublets); i++ {
-		if nc.Doublets[i] > 0 {
+		if nc.Doublets[i] > minAlleleNum {
 			for j := 0; j < len(nc2.Doublets); j++ {
-				if i != j && nc2.Doublets[j] > 0 {
+				if i != j && nc2.Doublets[j] > minAlleleNum {
 					c := float64(nc.Doublets[i] * nc2.Doublets[j])
 					if i%sizeOfAlphabet != j%sizeOfAlphabet && i/sizeOfAlphabet != j/sizeOfAlphabet {
 						xy += c
-					}
-
-					if i/sizeOfAlphabet != j/sizeOfAlphabet {
-						xbar += c
-					}
-
-					if i%sizeOfAlphabet != j%sizeOfAlphabet {
-						ybar += c
 					}
 				}
 			}
@@ -129,8 +113,8 @@ func (nc *NuclCov) CovMate11(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
 	return
 }
 
-// CovMate00 calculate covariance between two clusters.
-func (nc *NuclCov) CovMate00(nc2 *NuclCov) (xy, xbar, ybar float64, n int) {
+// MateP00 calculate covariance between two clusters.
+func (nc *NuclCov) MateP00(nc2 *NuclCov, minAlleleNum int) (xy float64, n int) {
 	n1, n2 := 0, 0
 	for i := 0; i < len(nc.Doublets); i++ {
 		xy += float64(nc.Doublets[i] * nc2.Doublets[i])
