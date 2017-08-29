@@ -152,6 +152,7 @@ func main() {
 			if res.Type == "Ks" || (res.Type == "P4" && res.Lag > 0) {
 				if res.Type == "P4" {
 					res.Mean *= qfactor
+					res.Variance *= qfactor * qfactor
 					res.Type = "P2"
 				}
 				w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n",
