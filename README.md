@@ -18,11 +18,11 @@ The inference requires two steps:
 1. calculate mutation correlation using `mcorr-xmfa` from gene alignments or `mcorr-bam` from read alignments:
 
     ```sh
-    mcorr-xmfa <input XMFA file)> <output CSV file>
+    mcorr-xmfa <input XMFA file)> <output prefix>
     ```
     or
     ```sh
-    mcorr-bam <GFF3 file> <input BAM file> <output (CSV file)>
+    mcorr-bam <GFF3 file> <input BAM file> <output prefix>
     ```
 
     **Note**: the XMFA files should contain only *coding* sequences.

@@ -54,7 +54,7 @@ func main() {
 	app.Version("v20170728")
 	gffFileArg := app.Arg("gff", "Gff3 file").Required().String()
 	bamFileArg := app.Arg("in", "input file.").Required().String()
-	outFileArg := app.Arg("out", "output file.").Required().String()
+	outPrefixArg := app.Arg("out-prefix", "output prefix.").Required().String()
 
 	maxlFlag := app.Flag("max-corr-length", "Max len of correlations (base pairs).").Default("300").Int()
 	ncpuFlag := app.Flag("num-cpu", "Number of CPUs (default: using all available cores).").Default("0").Int()
@@ -65,12 +65,11 @@ func main() {
 	minReadLenFlag := app.Flag("min-read-length", "Minimal read length").Default("60").Int()
 	codonPosition := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
-	corrChanFileFlag := app.Flag("temp", "Temp results").Default("").String()
 	minAlleleNumber := app.Flag("min-allele-number", "Minimal number of alleles").Default("0").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	bamFile = *bamFileArg
-	outFile = *outFileArg
+	outFile = *outPrefixArg + ".csv"
 	maxl = *maxlFlag / 3
 	if *ncpuFlag <= 0 {
 		ncpu = runtime.NumCPU()
@@ -85,7 +84,7 @@ func main() {
 	MinMapQuality = *minMapQFlag
 	MinReadLength = *minReadLenFlag
 	MinAlleleNumber = *minAlleleNumber
-	corrChanFile = *corrChanFileFlag
+	corrChanFile = *outPrefixArg + ".json"
 
 	synoumous := false
 	if *codonPosition == 4 {
@@ -130,11 +129,7 @@ func main() {
 	}()
 
 	var resChan chan mcorr.CorrResults
-	if corrChanFile != "" {
-		resChan = mcorr.PipeOutCorrResults(p2Chan, corrChanFile)
-	} else {
-		resChan = p2Chan
-	}
+	resChan = mcorr.PipeOutCorrResults(p2Chan, corrChanFile)
 
 	bootstraps := mcorr.Collect(resChan, *numBoot)
 
