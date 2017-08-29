@@ -83,14 +83,15 @@ func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, co
 			ks = totalP2
 			nn = totaln
 		}
-
-		res1 := mcorr.CorrResult{
-			Lag:  l * 3,
-			Mean: totalP2 / float64(totaln),
-			N:    totaln,
-			Type: "P2",
+		if totaln > 0 {
+			res1 := mcorr.CorrResult{
+				Lag:  l * 3,
+				Mean: totalP2 / float64(totaln),
+				N:    totaln,
+				Type: "P2",
+			}
+			results = append(results, res1)
 		}
-		results = append(results, res1)
 	}
 
 	return

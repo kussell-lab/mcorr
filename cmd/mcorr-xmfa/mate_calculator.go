@@ -37,7 +37,6 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 
 	for l := 0; l < cc.MaxCodonLen; l++ {
 		totalP2 := 0.0
-		totalP0 := 0.0
 		totaln := 0
 		for pos := 0; pos+l < len(cs1[0]) && pos+l < len(cs2[0]); pos++ {
 			cpList1 := cc.extractCodonPairs(cs1, pos, pos+l)
@@ -53,34 +52,24 @@ func (cc *MateCalculator) CalcP2(aln1 Alignment, mates ...Alignment) (corrResult
 							xy, n := nc1.MateP11(nc2, 0)
 							totalP2 += xy
 							totaln += n
-							xy, n = nc1.MateP00(nc2, 0)
-							totalP0 += xy
 						}
 					} else {
 						xy, n := nc1.MateP11(nc2, 0)
 						totalP2 += xy
 						totaln += n
-						xy, n = nc1.MateP00(nc2, 0)
-						totalP0 += xy
 					}
 				}
 			}
 		}
-
-		res1 := mcorr.CorrResult{
-			Lag:  l * 3,
-			Mean: totalP2 / float64(totaln),
-			N:    totaln,
-			Type: "P2",
+		if totaln > 0 {
+			res1 := mcorr.CorrResult{
+				Lag:  l * 3,
+				Mean: totalP2 / float64(totaln),
+				N:    totaln,
+				Type: "P2",
+			}
+			results = append(results, res1)
 		}
-		results = append(results, res1)
-		res2 := mcorr.CorrResult{
-			Lag:  l * 3,
-			Mean: totalP0 / float64(totaln),
-			N:    totaln,
-			Type: "P0",
-		}
-		results = append(results, res2)
 	}
 
 	corrResults = mcorr.CorrResults{ID: aln1.ID, Results: results}

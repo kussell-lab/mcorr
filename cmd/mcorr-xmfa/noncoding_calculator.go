@@ -38,12 +38,14 @@ func calcP2Noncoding(aln []seq.Sequence, maxLen int) (results []mcorr.CorrResult
 			totalxy += xy
 			totaln += n
 		}
-		res := mcorr.CorrResult{
-			Lag:  l,
-			Mean: totalxy / float64(totaln),
-			N:    totaln,
-			Type: "P2"}
-		results = append(results, res)
+		if totaln > 0 {
+			res := mcorr.CorrResult{
+				Lag:  l,
+				Mean: totalxy / float64(totaln),
+				N:    totaln,
+				Type: "P2"}
+			results = append(results, res)
+		}
 	}
 
 	return

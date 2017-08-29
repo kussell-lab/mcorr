@@ -2,7 +2,8 @@ package mcorr
 
 // Collector collect correlation results.
 type Collector struct {
-	m map[string][]*MeanVar
+	m    map[string][]*MeanVar
+	minN int
 }
 
 // NewCollector return a new Collector.
@@ -18,7 +19,7 @@ func (c *Collector) Add(results CorrResults) {
 		for len(c.m[res.Type]) <= res.Lag {
 			c.m[res.Type] = append(c.m[res.Type], NewMeanVar())
 		}
-		if res.N > 0 {
+		if res.N > c.minN {
 			c.m[res.Type][res.Lag].Add(res.Mean)
 		}
 	}
