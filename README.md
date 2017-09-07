@@ -1,5 +1,5 @@
 # mcorr
-Infer recombination rates from bacterial sequence data using correlated mutations.
+Inferring bacterial recombination rates from large-scale sequencing datasets.
 
 ## Requirments
 * [Git](https://git-scm.com/);
@@ -8,8 +8,8 @@ Infer recombination rates from bacterial sequence data using correlated mutation
 
 ## Installation
 ```sh
-go get -u github.com/mingzhi/mcorr/cmd/mcorr-xmfa
-go get -u github.com/mingzhi/mcorr/cmd/mcorr-bam
+go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
+go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
 
 ## Usage
@@ -31,7 +31,7 @@ The inference requires two steps:
 2. fit the correlation results using `FitP2.py`:
 
     ```sh
-    python $GOPATH/src/github.com/mingzhi/mcorr/cmd/fitting/FitP2.py <input (mcorr output file)> <output prefix>
+    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP2.py <input (mcorr output file)> <output prefix>
     ```
 
     The resulted files:
@@ -39,4 +39,4 @@ The inference requires two steps:
     * `<output_prefix>_best_fit.svg` -- the correlation profile, fitting, and residual plots;
     * `<output_prefix>_fit_results.csv` -- table of the best-fitted parameters.
 
-Example data can be found [here](https://github.com/mingzhi/mcorr_examples).
+Example data can be found [here](https://github.com/kussell-lab/mcorr_examples).

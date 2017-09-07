@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/alecthomas/kingpin"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"github.com/mingzhi/biogo/seq"
-	"github.com/mingzhi/mcorr"
+	"github.com/kussell-lab/mcorr"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
 

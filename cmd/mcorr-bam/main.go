@@ -15,7 +15,7 @@ import (
 
 	"github.com/biogo/hts/sam"
 	"github.com/mingzhi/biogo/seq"
-	"github.com/mingzhi/mcorr"
+	"github.com/kussell-lab/mcorr"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 )

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mingzhi/mcorr"
+	"github.com/kussell-lab/mcorr"
 	"github.com/mingzhi/ncbiftp/taxonomy"
 )
 
