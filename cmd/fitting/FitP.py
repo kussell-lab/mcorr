@@ -47,8 +47,8 @@ class FitDatas(object):
             corr_map[row.group] = rows
         fitdata_map = {}
         for group, items in corr_map.items():
-            xvalues, yvalues, sample_diver = prepare_fitting_data(items, xmin, xmax)
-            fitdata_map[group] = FitData(group, xvalues, yvalues, sample_diver)
+            xvalues, yvalues, d_sample = prepare_fitting_data(items, xmin, xmax)
+            fitdata_map[group] = FitData(group, xvalues, yvalues, d_sample)
         self.fitdata_dict = fitdata_map
         self.groups = groups
     def has(self, group):
@@ -174,26 +174,27 @@ def fcn2min(params, xvalues, yvalues):
     predictions = p2sample / dsample
     return predictions - yvalues
 
-def fit_model(xvalues, yvalues, d_sample, phi_start):
+def fit_model(xvalues, yvalues, d_sample, c_start):
     """Do fitting using the Model 1"""
     params1 = Parameters()
     params1.add('dsample', value=d_sample, vary=False)
-    params1.add('phi', value=phi_start, min=0, max=1)
-    params1.add('fbar', value=1000, min=3, max=10000000)
-    params1.add("dpool", value=d_sample+0.01, min=d_sample, max=1.0)
-    params1.add('dclonal', value=d_sample / 10.0, min=0.0, max=d_sample)
+    params1.add('c', value=c_start, min=0, max=1)
+    params1.add('fbar', value=100, min=3, max=10000000)
+    params1.add('dclonal', value=d_sample*0.001, min=0, max=d_sample)
+    params1.add('dpool', expr="(dsample-(1-c)*dclonal)/c")
     params1.add('theta', expr="dpool/(1-4.0/3.0*dpool)")
-    params1.add("c", expr="(dsample - dclonal)/(dpool - dclonal)")
+    params1.add('theta_clonal', expr="dclonal/(1-4.0/3.0*dclonal)")
+    params1.add('phi', expr="-theta*log(1-c)/(theta_clonal*fbar)")
     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues))
     fitres1 = minner1.minimize()
     return fitres1
 
-def fit_one(fitdata, phi_start):
+def fit_one(fitdata, c_start):
     """Fit one data set"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     dsample = fitdata.d_sample
-    fitres = fit_model(xvalues, yvalues, dsample, phi_start)
+    fitres = fit_model(xvalues, yvalues, dsample, c_start)
     return fitres
 
 def plot_fit(fitdata, fitres, plot_file):
@@ -233,7 +234,7 @@ def plot_fit(fitdata, fitres, plot_file):
     ax3.axes.get_yaxis().set_ticks([])
     fig.savefig(plot_file)
 
-def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1):
+def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, c_start=0.1):
     """Fit p2"""
     corr_results = read_corr(corr_file)
     fitdatas = FitDatas(corr_results, xmin, xmax)
@@ -242,7 +243,7 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1):
     if fitdatas.has("all"):
         fitdata = fitdatas.get("all")
         best_fit_plot_file = prefix + "_best_fit.svg"
-        fitres = fit_one(fitdata, phi_start)
+        fitres = fit_one(fitdata, c_start)
         plot_fit(fitdata, fitres, best_fit_plot_file)
         all_results.append((fitdata.group, fitres))
 
@@ -259,7 +260,7 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1):
     if num_groups > 0:
         for group in tqdm(to_fit_groups):
             fitdata = fitdatas.get(group)
-            fitres = fit_one(fitdata, phi_start)
+            fitres = fit_one(fitdata, c_start)
             all_results.append((fitdata.group, fitres))
 
     # write fitting results.
@@ -271,8 +272,8 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, phi_start=0.1):
     with open(out_file, 'w') as out:
         out.write(sep.join(model_params)+"\n")
         for (group, minres) in all_results:
-            sample_d = fitdatas.get(group).d_sample
-            fit_res = FitRes(group, minres, sample_d)
+            d_sample = fitdatas.get(group).d_sample
+            fit_res = FitRes(group, minres, d_sample)
             values = fit_res.get_values(model_params)
             out.write(sep.join([str(x) for x in values])+"\n")
 
@@ -288,7 +289,7 @@ def main():
     parser.add_argument('--xmax', nargs='?', const=150, type=int, default=150)
     parser.add_argument('--onesite', nargs='?', const="const", type=str, default="const")
     parser.add_argument('--fit_bootstraps', nargs='?', const="false", type=bool, default=False)
-    parser.add_argument('--phi_start', nargs='?', const=0.1, type=float, default=0.1)
+    parser.add_argument('--c_start', nargs='?', const=0.1, type=float, default=0.1)
     opts = parser.parse_args()
     datafile = opts.corr_file
     prefix = opts.output_prefix
@@ -296,14 +297,14 @@ def main():
     xmax = opts.xmax
     onesite = opts.onesite
     fit_bootstraps = opts.fit_bootstraps
-    phi_start = opts.phi_start
+    c_start = opts.c_start
     global ONESITEFUNC
     if onesite == "exp":
         ONESITEFUNC = expon_one_site
     else:
         ONESITEFUNC = constant_one_site
 
-    fitp2(datafile, prefix, xmin, xmax, fit_bootstraps, phi_start)
+    fitp2(datafile, prefix, xmin, xmax, fit_bootstraps, c_start)
 
 if __name__ == "__main__":
     main()
