@@ -28,10 +28,10 @@ The inference requires two steps:
     **Note**: the XMFA files should contain only *coding* sequences.
     The description of XMFA file can be found [here](http://darlinglab.org/mauve/user-guide/files.html).
 
-2. fit the correlation results using `FitP2.py`:
+2. fit the correlation results using `FitP.py`:
 
     ```sh
-    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP2.py <input (mcorr output file)> <output prefix>
+    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (mcorr output file)> <output prefix>
     ```
 
     The resulted files:
