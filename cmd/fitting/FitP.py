@@ -70,19 +70,21 @@ class FitRes(object):
         self.d_sample = d_sample
         params = fit_res.params.valuesdict()
         if "theta" in params:
-            self.theta = params['theta']
+            self.theta_pool = params['theta']
         if 'phi' in params:
-            self.phi = params['phi']
+            self.phi_pool = params['phi']
         if 'fbar' in params:
             self.fbar = params['fbar']
         if 'phi' in params:
-            self.ratio = self.phi / self.theta
+            self.ratio = self.phi_pool / self.theta_pool
             if 'fbar' in params:
-                self.rho = self.phi * self.fbar
+                self.rho = self.phi_pool * self.fbar
         if 'c' in params:
             self.c = params['c']
-        else:
-            self.c = self.d_sample / self.theta
+        if 'dclonal' in params:
+            self.d_clonal = params['dclonal']
+        if 'dpool' in params:
+            self.d_pool = params['dpool']
 
     def get_values(self, attributes):
         """Get attribute values"""
@@ -133,6 +135,11 @@ def constant_one_site(xvalue, fbar):
 def expon_one_site(xvalue, fbar):
     """one site function of exponential decay size"""
     return 1.0 - np.exp(-xvalue/fbar)
+
+def geom_one_site(xvalue, fbar):
+    """one site function of geometric distribution"""
+    p = 1.0/fbar
+    return 1.0 - np.power(1-p, xvalue)
 
 def calc_dpool(theta):
     """calculate d_{pool} from \theta_{pool}"""
@@ -186,7 +193,10 @@ def fit_model(xvalues, yvalues, d_sample, c_start):
     params1.add('theta_clonal', expr="dclonal/(1-4.0/3.0*dclonal)")
     params1.add('phi', expr="-theta*log(1-c)/(theta_clonal*fbar)")
     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues))
-    fitres1 = minner1.minimize()
+    try:
+        fitres1 = minner1.minimize()
+    except ZeroDivisionError:
+        fitres1 = None
     return fitres1
 
 def fit_one(fitdata, c_start):
@@ -244,8 +254,9 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, c_start=0.1):
         fitdata = fitdatas.get("all")
         best_fit_plot_file = prefix + "_best_fit.svg"
         fitres = fit_one(fitdata, c_start)
-        plot_fit(fitdata, fitres, best_fit_plot_file)
-        all_results.append((fitdata.group, fitres))
+        if fitres:
+            plot_fit(fitdata, fitres, best_fit_plot_file)
+            all_results.append((fitdata.group, fitres))
 
     to_fit_groups = []
     for fitdata in fitdatas.getall():
@@ -261,11 +272,12 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False, c_start=0.1):
         for group in tqdm(to_fit_groups):
             fitdata = fitdatas.get(group)
             fitres = fit_one(fitdata, c_start)
-            all_results.append((fitdata.group, fitres))
+            if fitres:
+                all_results.append((fitdata.group, fitres))
 
     # write fitting results.
-    model_params = ["group", "d_sample", "theta",
-                    "phi", "fbar", "c", "ratio"]
+    model_params = ["group", "d_sample", "theta_pool",
+                    "phi_pool", "ratio", "fbar", "c", "d_pool", "d_clonal"]
     out_prefix = prefix + "_fit_results"
     out_file = out_prefix + ".csv"
     sep = ","
@@ -301,6 +313,8 @@ def main():
     global ONESITEFUNC
     if onesite == "exp":
         ONESITEFUNC = expon_one_site
+    elif onesite == "geom":
+        ONESITEFUNC = geom_one_site
     else:
         ONESITEFUNC = constant_one_site
 
