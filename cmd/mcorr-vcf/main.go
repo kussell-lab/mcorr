@@ -19,7 +19,7 @@ func main() {
 	vcfFileArg := app.Arg("vcf-file", "VCF input file.").Required().String()
 	outFileArg := app.Arg("out-prefix", "output prefix.").Required().String()
 	maxlFlag := app.Flag("max-corr-length", "max length of correlations (bp).").Default("300").Int()
-	regionStartFlag := app.Flag("resion-start", "region start").Default("1").Int()
+	regionStartFlag := app.Flag("region-start", "region start").Default("1").Int()
 	regionEndFlag := app.Flag("region-end", "region end").Default("1000000000000").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -56,18 +56,19 @@ func main() {
 	defer w.Close()
 	w.WriteString("l,m,n,v,t,b\n")
 	for k := 0; k < len(p2arr); k++ {
-		m := p2arr[k] / float64(p2counts[k])
-		n := p2counts[k]
-		t := "Ks"
-		b := "all"
-		v := 0.0
-		l := k
-		if l > 0 {
-			m /= (p2arr[0] * float64(p2counts[0]) / float64(p2counts[k]))
+		var m float64
+		var n int64
+		var t string
+		n = p2counts[k]
+		if k == 0 {
+			m = p2arr[0] / float64(p2counts[0])
+			t = "Ks"
+		} else {
+			m = p2arr[k] * float64(p2counts[k]) / (p2arr[0] * float64(p2counts[0]))
 			t = "P2"
 		}
 		if n > 0 {
-			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", l, m, v, n, t, b))
+			w.WriteString(fmt.Sprintf("%d,%g,0,%d,%s,all\n", k, m, n, t))
 		}
 	}
 }
