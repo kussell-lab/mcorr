@@ -19,6 +19,8 @@ func main() {
 	vcfFileArg := app.Arg("vcf-file", "VCF input file.").Required().String()
 	outFileArg := app.Arg("out-prefix", "output prefix.").Required().String()
 	maxlFlag := app.Flag("max-corr-length", "max length of correlations (bp).").Default("300").Int()
+	regionStartFlag := app.Flag("resion-start", "region start").Default("1").Int()
+	regionEndFlag := app.Flag("region-end", "region end").Default("1000000000000").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	vcfChan := readVCF(*vcfFileArg)
@@ -27,6 +29,9 @@ func main() {
 	p2counts := make([]int64, *maxlFlag)
 	var buffer []VCFRecord
 	for rec := range vcfChan {
+		if rec.Pos < *regionStartFlag || rec.Pos > *regionEndFlag {
+			break
+		}
 		if len(buffer) == 0 || rec.Pos-buffer[0].Pos < *maxlFlag {
 			buffer = append(buffer, rec)
 		} else {
