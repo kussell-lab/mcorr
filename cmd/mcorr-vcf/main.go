@@ -19,6 +19,7 @@ func main() {
 	vcfFileArg := app.Arg("vcf-file", "VCF input file.").Required().String()
 	outFileArg := app.Arg("out-prefix", "output prefix.").Required().String()
 	maxlFlag := app.Flag("max-corr-length", "max length of correlations (bp).").Default("300").Int()
+	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	vcfChan := readVCF(*vcfFileArg)
 
