@@ -50,19 +50,16 @@ func main() {
 	}
 	defer w.Close()
 	w.WriteString("l,m,n,v,t,b\n")
-	var ks float64
 	for k := 0; k < len(p2arr); k++ {
 		m := p2arr[k] / float64(p2counts[k])
 		n := p2counts[k]
-		t := "P2"
+		t := "Ks"
 		b := "all"
 		v := 0.0
 		l := k
-		if l == 0 {
-			ks = m
-			t = "Ks"
-		} else {
-			m /= ks
+		if l > 0 {
+			m /= (p2arr[0] * float64(p2counts[0]) / float64(p2counts[k]))
+			t = "P2"
 		}
 		if n > 0 {
 			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", l, m, v, n, t, b))
@@ -72,6 +69,7 @@ func main() {
 
 // readVCF return a channel of VCF record.
 func readVCF(filename string) (c chan VCFRecord) {
+	c = make(chan VCFRecord)
 	go func() {
 		defer close(c)
 		f, err := os.Open(filename)
