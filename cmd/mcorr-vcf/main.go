@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -22,61 +21,24 @@ func main() {
 	maxlFlag := app.Flag("max-corr-length", "max length of correlations (bp).").Default("300").Int()
 	regionStartFlag := app.Flag("region-start", "region start").Default("1").Int()
 	regionEndFlag := app.Flag("region-end", "region end").Default("1000000000000").Int()
-	ncpu := app.Flag("ncpu", "number of cpus").Default("0").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	if *ncpu == 0 {
-		*ncpu = runtime.NumCPU()
-	}
-	runtime.GOMAXPROCS(*ncpu)
-
 	vcfChan := readVCF(*vcfFileArg)
-
-	// split channel
-	bufferChan := make(chan []VCFRecord)
-	go func() {
-		defer close(bufferChan)
-		var buffer []VCFRecord
-		for rec := range vcfChan {
-			if rec.Pos < *regionStartFlag || rec.Pos > *regionEndFlag {
-				break
-			}
-			if len(buffer) == 0 || rec.Pos-buffer[0].Pos < *maxlFlag {
-				buffer = append(buffer, rec)
-			} else {
-				bufferChan <- buffer
-				buffer = buffer[1:]
-			}
-		}
-		if len(buffer) > 0 {
-			bufferChan <- buffer
-		}
-	}()
-
-	collectors := make([]Collector, *ncpu)
-	done := make(chan int)
-	for i := 0; i < *ncpu; i++ {
-		collectors[i] = Collector{}
-		collectors[i].p2arr = make([]float64, *maxlFlag)
-		collectors[i].p2counts = make([]int64, *maxlFlag)
-		go func() {
-			for buffer := range bufferChan {
-				collectors[i].Compute(buffer)
-			}
-			done <- i
-		}()
-	}
-
 	p2arr := make([]float64, *maxlFlag)
 	p2counts := make([]int64, *maxlFlag)
-	for i := 0; i < *ncpu; i++ {
-		k := <-done
-		c := collectors[k]
-		for l := 0; l < len(c.p2arr); l++ {
-			p2arr[l] += c.p2arr[l]
-			p2counts[l] += c.p2counts[l]
+	var buffer []VCFRecord
+	for rec := range vcfChan {
+		if rec.Pos < *regionStartFlag || rec.Pos > *regionEndFlag {
+			break
+		}
+		if len(buffer) == 0 || rec.Pos-buffer[0].Pos < *maxlFlag {
+			buffer = append(buffer, rec)
+		} else {
+			compute(buffer, p2arr, p2counts)
+			buffer = buffer[1:]
 		}
 	}
+	compute(buffer, p2arr, p2counts)
 
 	w, err := os.Create(*outFileArg)
 	if err != nil {
@@ -102,14 +64,8 @@ func main() {
 	}
 }
 
-// Collector compute correlation function.
-type Collector struct {
-	p2arr    []float64
-	p2counts []int64
-}
-
 // Compute calculates correlation function.
-func (c *Collector) Compute(buffer []VCFRecord) {
+func compute(buffer []VCFRecord, p2arr []float64, p2counts []int64) {
 	for i := 0; i < len(buffer); i++ {
 		nc := mcorr.NewNuclCov([]byte{'0', '1'})
 		for k := 0; k < len(buffer[0].GTs); k++ {
@@ -117,8 +73,8 @@ func (c *Collector) Compute(buffer []VCFRecord) {
 		}
 		lag := buffer[i].Pos - buffer[0].Pos
 		xy, n := nc.P11(0)
-		c.p2arr[lag] += xy / float64(n)
-		c.p2counts[lag]++
+		p2arr[lag] += xy / float64(n)
+		p2counts[lag]++
 	}
 }
 
