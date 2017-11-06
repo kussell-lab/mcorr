@@ -15,6 +15,8 @@ go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
 
+The commands `mcorr-xmfa` and `mcorr-bam` will be installed in `$HOME/go/bin`.
+
 ## Usage
 The inference requires two steps:
 
