@@ -40,7 +40,7 @@ The inference requires two steps:
 
     The resulted files:
 
-    * `<output_prefix>_best_fit.svg` -- the plots of correlation profile, fitting, and residuals;
+    * `<output_prefix>_best_fit.jpg` -- the plots of correlation profile, fitting, and residuals;
     * `<output_prefix>_fit_results.csv` -- the table of fitted parameters.
 
 Example data can be found [here](https://github.com/kussell-lab/mcorr_examples).
