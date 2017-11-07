@@ -40,7 +40,7 @@ The inference requires two steps:
 2. fit the correlation profile using `FitP.py`, which is located in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
 
     ```sh
-    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (the .csv file from the first step)> <output prefix>
+    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (the .csv file)> <output prefix>
     ```
 
     It will produce two files:
