@@ -15,7 +15,7 @@ Using correlation profile of mutations to infer bacterial recombination rates fr
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
-2. Add `$HOME/go/bin` to your `$PATH` environment. The commands `mcorr-xmfa` and `mcorr-bam` are installed in `$HOME/go/bin`.
+2. Add `$HOME/go/bin` to your `$PATH` environment. Both programs are installed in `$HOME/go/bin`.
 
 ## Usage
 The inference requires two steps:
@@ -33,7 +33,7 @@ The inference requires two steps:
     ```
     The GFF3 file is used for extracting the coding regions of the sorted BAM file.
 
-    Both commands will produce two files:
+    Both programs will produce two files:
     * a .csv file stores the computed correlation profile, which will be used for fitting in the next step;
     * a .json file stores the (intermediate) correlation results for each gene.
 
