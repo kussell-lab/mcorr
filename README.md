@@ -1,4 +1,4 @@
-<># mcorr
+# mcorr
 Using correlation profile of mutations to infer bacterial recombination rates from large-scale sequencing datasets.
 
 ## Requirments
