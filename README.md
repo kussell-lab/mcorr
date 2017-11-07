@@ -1,4 +1,4 @@
-# mcorr
+<># mcorr
 Using correlation profile of mutations to infer bacterial recombination rates from large-scale sequencing datasets.
 
 ## Requirments
@@ -34,8 +34,8 @@ The inference requires two steps:
     The GFF3 file is used for extracting the coding regions of the sorted BAM file.
 
     Both programs will produce two files:
-    * a .csv file stores the computed correlation profile, which will be used for fitting in the next step;
-    * a .json file stores the (intermediate) correlation results for each gene.
+    * a <output prefix>.csv file stores the computed correlation profile, which will be used for fitting in the next step;
+    * a <output prefix>.json file stores the (intermediate) correlation results for each gene.
 
 2. fit the correlation profile using `FitP.py`, which is located in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
 
