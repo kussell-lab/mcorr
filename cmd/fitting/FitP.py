@@ -130,12 +130,27 @@ def Power(a, b):
     """compute power"""
     return a**b
 
+def const_r1(x, fBar, phiC):
+    """calculate r1 assuming constant fragment size"""
+    return np.where(x < fBar, phiC*x, phiC*fBar)
+
+def exp_r1(x, fBar, phiC):
+    """calculate r1 assuming exponetional decay of fragment size"""
+    return phiC*fBar*(1.0 - np.exp(-x/fBar))
+
+def geom_r1(x, fBar, phiC):
+    """calculate r1 assuming geom distribution"""
+    prob = 1.0/fBar
+    return phiC*fBar*(1.0 - np.power(1-prob, x))
+
 def calcP2(fBar, thetaC, phiC, d, x):
     """
     calcP2 using expression from Mathematica
     Yes! The line is super long!
     """
-    v = (4*(3*fBar*thetaC - 2*thetaC*x + d*(2 + 2*fBar*phiC + 3*thetaC)*x)*(2*Power(thetaC,2)*(9*fBar*(2 + 2*fBar*phiC + 3*thetaC) - 18*(1 + fBar*phiC + 2*thetaC)*x - 2*phiC*Power(x,2)) + d*thetaC*(2 + 2*fBar*phiC + 3*thetaC)*(-9*fBar*(4 + 2*fBar*phiC + 9*thetaC) + 18*(2 + fBar*phiC + 4*thetaC)*x + 4*phiC*Power(x,2)) + Power(d,2)*Power(2 + 2*fBar*phiC + 3*thetaC,2)*(9*Power(fBar,2)*phiC + 9*fBar*(1 + 3*thetaC) - x*(9 + 18*thetaC + phiC*x))))/(Power(fBar,2)*(6 + 6*fBar*phiC + 9*thetaC - 2*phiC*x)*(3 + 3*fBar*phiC + 9*thetaC + phiC*x)*(d*(2 + 2*fBar*phiC + 3*thetaC)*(9*thetaC + 8*phiC*x) - 2*thetaC*(-6*fBar*phiC + 9*thetaC + 8*phiC*x)))
+    r1 = const_r1(x, fBar, phiC)
+    r2 = phiC * fBar - r1
+    v = (4*(2*d*r1*(1 + r1 + r2) + (r1 + 3*d*r1 + 3*r2)*thetaC)*(Power(2*d*(1 + r1 + r2) + 3*d*thetaC,2)*(8*Power(r1,2) + 9*r1*(2*r2 + thetaC) + 9*r2*(1 + r2 + 3*thetaC)) + 2*Power(thetaC,2)*(-2*Power(r1,2) + 9*r1*(2*r2 - thetaC) + 9*r2*(2 + 2*r2 + 3*thetaC)) + d*thetaC*(2*(1 + r1 + r2) + 3*thetaC)*(4*Power(r1,2) - 9*r1*(2*r2 + thetaC) - 9*r2*(4 + 2*r2 + 9*thetaC))))/(Power(r1 + r2,2)*(3 + 4*r1 + 3*r2 + 9*thetaC)*(6 + 4*r1 + 6*r2 + 9*thetaC)*(d*(2*(1 + r1 + r2) + 3*thetaC)*(8*r1 + 9*thetaC) - 2*thetaC*(2*r1 - 6*r2 + 9*thetaC)))
     return v
 
 def fcn2min(params, xvalues, yvalues):
@@ -151,9 +166,9 @@ def fit_model(xvalues, yvalues, d_sample):
     """Do fitting using the Model 1"""
     params1 = Parameters()
     params1.add('dsample', value=d_sample, vary=False)
-    params1.add('theta_clonal', value=0.001, min=0, max=d_sample)
-    params1.add('fbar', value=1000, min=3, max=10000000)
-    params1.add('phi_clonal', value=0.0001, min=0, max=1)
+    params1.add('theta_clonal', value=0.00001, min=0, max=d_sample)
+    params1.add('fbar', value=1000, min=3, max=300000)
+    params1.add('phi_clonal', value=0.0005, min=0, max=1)
     params1.add('theta', expr='(-theta_clonal + dsample*(1 + fbar*phi_clonal + (3*theta_clonal)/2.))/((-3*dsample)/2. + (1 - (3*dsample)/2.)*(fbar*phi_clonal + (3*theta_clonal)/2.))')
     params1.add('phi', expr='(phi_clonal*(-theta_clonal + dsample*(1 + fbar*phi_clonal + (3*theta_clonal)/2.)))/(theta_clonal*((-3*dsample)/2. + (1 - (3*dsample)/2.)*(fbar*phi_clonal + (3*theta_clonal)/2.)))')
     params1.add('c', expr='fbar*phi_clonal/(1+4/3*theta_clonal+fbar*phi_clonal)')
@@ -162,7 +177,7 @@ def fit_model(xvalues, yvalues, d_sample):
     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues))
     try:
         fitres1 = minner1.minimize()
-    except ZeroDivisionError:
+    except:
         fitres1 = None
     return fitres1
 
@@ -246,7 +261,7 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False):
     # write fitting results.
     model_params = ["group", "d_sample", "theta_pool",
                     "phi_pool", "ratio", "fbar", "c", "d_pool", 
-                    "d_clonal", 'phi_clonal', 'theta_clonal']
+                    "d_clonal", 'theta_clonal', 'phi_clonal']
     out_prefix = prefix + "_fit_results"
     out_file = out_prefix + ".csv"
     sep = ","
@@ -261,7 +276,7 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False):
 def main():
     """Run fitting using lmfit"""
     parser = ArgumentParser(description="Infer recombination rates\
-                                         by fitting mutation correlations.")
+                                         by fitting correlation profile of mutations.")
     parser.add_argument("corr_file", type=str)
     parser.add_argument("output_prefix", type=str)
     parser.add_argument('--xmin', nargs='?', const=3, type=int, default=3)
