@@ -18,6 +18,8 @@ go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
 2. Both programs are installed in `$HOME/go/bin`. Add `$HOME/go/bin` to your `$PATH` environment.
 
+We have tested in Windows 10, Ubuntu 17.10, and MacOS High Sierra.
+
 ## Usage
 The inference of recombination parameters requires two steps:
 
