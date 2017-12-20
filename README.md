@@ -5,10 +5,10 @@ Using _Correlation Profile_ of mutations to infer the recombination rate from la
 * Install `git` from [https://git-scm.com](https://git-scm.com/);
 * Install `go` from [https://golang.org/doc/install](https://golang.org/doc/install);
 * Install `python` from [https://www.python.org/](https://www.python.org/);
-* Install `pip` from [https://pip.pypa.io/en/stable/installing/](https://pip.pypa.io/en/stable/installing/).
-* Use `pip` to install required Python packages: `numpy`, `matplotlib`, `lmfit`, and `tqdm`
+* Install `pip3` from [https://pip.pypa.io/en/stable/installing/](https://pip.pypa.io/en/stable/installing/).
+* Use `pip3` to install required Python packages: `numpy`, `matplotlib`, `lmfit`, and `tqdm`
 
-    `pip install --user numpy matplotlib lmfit tqdm`
+    `pip3 install --user numpy matplotlib lmfit tqdm`
 
 ## Installation
 1. Download and install `mcorr-xmfa` and `mcorr-bam` from your terminal:
