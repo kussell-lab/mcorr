@@ -18,7 +18,9 @@ go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
 2. Both programs are installed in `$HOME/go/bin`. Add `$HOME/go/bin` to your `$PATH` environment.
 
-We have tested in Windows 10, Ubuntu 17.10, and MacOS High Sierra.
+We have tested installation in Windows 10, Ubuntu 17.10, and MacOS High Sierra, using Python 3 and Go v1.9.2.
+
+Typical installation time on an iMac is 10 minutes.
 
 ## Usage
 The inference of recombination parameters requires two steps:
@@ -39,18 +41,18 @@ The inference of recombination parameters requires two steps:
     The GFF3 file is used for extracting the coding regions of the sorted BAM file.
 
     Both programs will produce two files:
-    * a <output prefix>.csv file stores the calculated Correlation Profile, which will be used for fitting in the next step;
-    * a <output prefix>.json file stores the (intermediate) Correlation Profile for each gene.
+    * a .csv file stores the calculated Correlation Profile, which will be used for fitting in the next step;
+    * a .json file stores the (intermediate) Correlation Profile for each gene.
 
 2. Fit the Correlation Profile using `FitP.py`, which can be found in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
 
     ```sh
-    python $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (the .csv file)> <output prefix>
+    python3 $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (the .csv file)> <output prefix>
     ```
 
     It will produce two files:
 
-    * `<output_prefix>_best_fit.jpg` -- the plots of Correlation Profile, fitting, and residuals;
+    * `<output_prefix>_best_fit.svg` -- the plots of the Correlation Profile, fitting, and residuals;
     * `<output_prefix>_fit_results.csv` -- the table of fitted parameters.
 
 Example data can be found [here](https://github.com/kussell-lab/mcorr_examples).
