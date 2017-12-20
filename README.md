@@ -47,7 +47,7 @@ The inference of recombination parameters requires two steps:
 2. Fit the Correlation Profile using `FitP.py`, which can be found in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
 
     ```sh
-    python3 $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <input (the .csv file)> <output prefix>
+    python3 $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <.csv file> <output_prefix>
     ```
 
     It will produce two files:
@@ -55,4 +55,4 @@ The inference of recombination parameters requires two steps:
     * `<output_prefix>_best_fit.svg` -- the plots of the Correlation Profile, fitting, and residuals;
     * `<output_prefix>_fit_results.csv` -- the table of fitted parameters.
 
-Example data can be found [here](https://github.com/kussell-lab/mcorr_examples).
+Example data can be found [https://github.com/kussell-lab/mcorr_examples](https://github.com/kussell-lab/mcorr_examples).
