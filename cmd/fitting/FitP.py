@@ -235,7 +235,7 @@ def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False):
     all_results = []
     if fitdatas.has("all"):
         fitdata = fitdatas.get("all")
-        best_fit_plot_file = prefix + "_best_fit.jpg"
+        best_fit_plot_file = prefix + "_best_fit.svg"
         fitres = fit_one(fitdata)
         if fitres:
             plot_fit(fitdata, fitres, best_fit_plot_file)
