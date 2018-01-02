@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/mingzhi/biogo/seq"
+	"github.com/kussell-lab/biogo/seq"
 	"github.com/kussell-lab/mcorr"
-	"github.com/mingzhi/ncbiftp/taxonomy"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
 )
 
 // Calculator define a interface for calculating correlations.

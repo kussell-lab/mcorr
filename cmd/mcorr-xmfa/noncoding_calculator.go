@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mingzhi/biogo/seq"
+	"github.com/kussell-lab/biogo/seq"
 	"github.com/kussell-lab/mcorr"
 )
 

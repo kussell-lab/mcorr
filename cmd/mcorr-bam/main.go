@@ -14,9 +14,9 @@ import (
 	"strings"
 
 	"github.com/biogo/hts/sam"
-	"github.com/mingzhi/biogo/seq"
+	"github.com/kussell-lab/biogo/seq"
 	"github.com/kussell-lab/mcorr"
-	"github.com/mingzhi/ncbiftp/taxonomy"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

@@ -7,10 +7,10 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/mingzhi/biogo/seq"
+	"github.com/kussell-lab/biogo/seq"
 	"github.com/kussell-lab/mcorr"
-	"github.com/mingzhi/ncbiftp/taxonomy"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func main() {
