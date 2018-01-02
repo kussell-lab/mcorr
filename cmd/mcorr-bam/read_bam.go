@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -106,90 +105,57 @@ func readPanGenomeBamFile(fileName string) (header *sam.Header, recordsChan chan
 }
 
 //readStrainBamFile read []sam.Record from a bam file of mapping reads to a strain genome file.
-func readStrainBamFile(fileName string, gffMap map[string][]*gff.Record) (header *sam.Header, recordsChan chan GeneSamRecords) {
+func readStrainBamFile(fileName string, gffMap map[string][]*gff.Record) (header *sam.Header, resultChan chan GeneSamRecords) {
 	headerChan, samRecChan := readSamRecords(fileName)
 	header = <-headerChan
-	recordsChan = make(chan GeneSamRecords)
+	resultChan = make(chan GeneSamRecords)
 	go func() {
-		defer close(recordsChan)
-
-		totalReads := 0
-		filteredReads := 0
-		inGeneReads := 0
-		var genes []GeneSamRecords
-		currentReference := ""
-		for record := range samRecChan {
-			totalReads++
-			passed := checkReadQuality(record)
-			if !passed {
-				filteredReads++
+		defer close(resultChan)
+		var currentRecord GeneSamRecords
+		var currentIdx int
+		var currentRef string
+		for read := range samRecChan {
+			// skip if read quality is low.
+			if !checkReadQuality(read) {
 				continue
 			}
-			if currentReference != record.Ref.Name() {
-				gffRecords, found := gffMap[record.Ref.Name()]
-				if !found {
-					continue
+
+			// skip if read is not in the reference genomes.
+			if _, found := gffMap[read.Ref.Name()]; !found {
+				continue
+			}
+
+			// update current reference and current idx
+			if currentRef != read.Ref.Name() {
+				currentRef = read.Ref.Name()
+				currentIdx = 0
+			}
+
+			// update current record.
+			if currentRecord.End <= read.Pos {
+				if currentRecord.Start < currentRecord.End && len(currentRecord.Records) > 0 {
+					resultChan <- currentRecord
 				}
-				currentReference = record.Ref.Name()
-				genes = make([]GeneSamRecords, len(gffRecords))
-				for i := range gffRecords {
-					genes[i].Start = gffRecords[i].Start - 1
-					genes[i].End = gffRecords[i].End
-					genes[i].ID = gffRecords[i].ID()
-					if gffRecords[i].Strand == gff.ReverseStrand {
-						genes[i].Strand = -1
-					}
+				records := gffMap[currentRef]
+				for currentIdx < len(records) && records[currentIdx].End <= read.Pos {
+					currentIdx++
+				}
+				if currentIdx < len(records) {
+					rec := records[currentIdx]
+					currentRecord = GeneSamRecords{Start: rec.Start - 1, End: rec.End, ID: rec.ID(), Strand: rec.Strand}
 				}
 			}
 
-			var maxIndex int
-			for i, gene := range genes {
-				if isReadInGene(record, gene) {
-					inGeneReads++
-					genes[i].Records = append(genes[i].Records, record)
-				} else {
-					if record.Pos > gene.End {
-						maxIndex = i
-					}
-
-					if record.Pos+record.Len() < gene.Start {
-						break
-					}
-				}
-			}
-
-			for i := 0; i < maxIndex; i++ {
-				if len(genes[i].Records) > 0 {
-					recordsChan <- genes[i]
-				}
-			}
-			genes = genes[maxIndex:]
-		}
-
-		fmt.Printf("Total reads: %d\n", totalReads)
-		fmt.Printf("Filtered reads: %d\n", filteredReads)
-		fmt.Printf("Reads in coding regions: %d\n", inGeneReads)
-
-		for i := 0; i < len(genes); i++ {
-			if len(genes[i].Records) > 0 {
-				recordsChan <- genes[i]
+			if read.Pos >= currentRecord.Start && read.Pos < currentRecord.End {
+				currentRecord.Records = append(currentRecord.Records, read)
 			}
 		}
+		if currentRecord.End > currentRecord.Start && len(currentRecord.Records) > 0 {
+			resultChan <- currentRecord
+		}
+
 	}()
 	return
-}
-
-func isReadInGene(record *sam.Record, gffRec GeneSamRecords) bool {
-	start := gffRec.Start - 1
-	if record.Pos > gffRec.Start {
-		start = record.Pos
-	}
-	end := record.Pos + record.Len()
-	if record.Pos+record.Len() > gffRec.End {
-		end = gffRec.End
-	}
-
-	return end > start
 }
 
 func readGffs(fileName string) map[string][]*gff.Record {
