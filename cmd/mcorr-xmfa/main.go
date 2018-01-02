@@ -15,14 +15,14 @@ import (
 
 func main() {
 	app := kingpin.New("mcorr-xmfa", "Calculate mutation correlation from bacterial sequence alignments in XMFA format.")
-	app.Version("v0.3")
+	app.Version("v20180102")
 
 	alnFile := app.Arg("in", "Alignment file in XMFA format.").Required().String()
 	outPrefix := app.Arg("out", "Output prefix.").Required().String()
 
 	mateFile := app.Flag("second-alignment", "Second alignment file in XMFA format.").Default("").String()
 	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
-	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
+	maxl := app.Flag("max-corr-length", "Maximum distance of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
 

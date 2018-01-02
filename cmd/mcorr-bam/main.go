@@ -51,12 +51,12 @@ func main() {
 
 	// Parse command arguments.
 	app := kingpin.New("mcorr-bam", "Calculate mutation correlation from bacterial metagenomic sequence in BAM read files.")
-	app.Version("v20170728")
+	app.Version("v20180102")
 	gffFileArg := app.Arg("gff", "Gff3 file").Required().String()
 	bamFileArg := app.Arg("in", "input file.").Required().String()
 	outPrefixArg := app.Arg("out-prefix", "output prefix.").Required().String()
 
-	maxlFlag := app.Flag("max-corr-length", "Max len of correlations (base pairs).").Default("300").Int()
+	maxlFlag := app.Flag("max-corr-length", "Maximum distance of correlations (base pairs).").Default("300").Int()
 	ncpuFlag := app.Flag("num-cpu", "Number of CPUs (default: using all available cores).").Default("0").Int()
 	minDepthFlag := app.Flag("min-depth", "Minimal depth at each position.").Default("2").Int()
 	minCoverageFlag := app.Flag("min-coverage", "Minimal coverage of a gene.").Default("0.5").Float64()
