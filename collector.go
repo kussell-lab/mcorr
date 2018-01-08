@@ -44,7 +44,7 @@ func (c *Collector) Vars(corrType string) (values []float64) {
 // Ns return variances of a particular type.
 func (c *Collector) Ns(corrType string) (nums []int) {
 	for _, mv := range c.MeanVars(corrType) {
-		nums = append(nums, mv.N)
+		nums = append(nums, mv.N())
 	}
 	return
 }
