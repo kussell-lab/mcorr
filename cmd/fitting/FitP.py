@@ -281,7 +281,7 @@ def main():
     parser.add_argument("output_prefix", type=str)
     parser.add_argument('--xmin', nargs='?', const=3, type=int, default=3)
     parser.add_argument('--xmax', nargs='?', const=300, type=int, default=300)
-    parser.add_argument('--fit_bootstraps', nargs='?', const="false", type=bool, default=False)
+    parser.add_argument('--fit_bootstraps', nargs='?', const="true", type=bool, default=True)
     opts = parser.parse_args()
     datafile = opts.corr_file
     prefix = opts.output_prefix
