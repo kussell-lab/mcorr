@@ -8,15 +8,22 @@ Using _Correlation Profile_ of mutations to infer the recombination rate from la
 * Install `pip3` from [https://pip.pypa.io/en/stable/installing/](https://pip.pypa.io/en/stable/installing/).
 * Use `pip3` to install the required Python packages: `numpy`, `matplotlib`, `lmfit`, and `tqdm`
 
-    `pip3 install --user numpy matplotlib lmfit tqdm`
+    `pip3 install --user numpy matplotlib lmfit tqdm mcorr`
 
 ## Installation
-1. Download and install `mcorr-xmfa` and `mcorr-bam` from your terminal:
+1. Install `mcorr-xmfa` and `mcorr-bam` from your terminal:
 ```sh
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 ```
-2. Both programs are installed in `$HOME/go/bin`. Add `$HOME/go/bin` to your `$PATH` environment.
+2. Install `mcorr-fit`:
+```sh
+pip3 install --user mcorr
+```
+3. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment:
+```sh
+export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
+```
 
 We have tested installation in Windows 10, Ubuntu 17.10, and MacOS High Sierra, using Python 3 and Go v1.9.2.
 
@@ -47,7 +54,7 @@ The inference of recombination parameters requires two steps:
 2. Fit the Correlation Profile using `FitP.py`, which can be found in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
 
     ```sh
-    python3 $HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/FitP.py <.csv file> <output_prefix>
+    mcorr-fit <.csv file> <output_prefix>
     ```
 
     It will produce two files:
