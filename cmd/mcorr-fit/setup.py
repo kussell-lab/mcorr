@@ -7,6 +7,7 @@ with open("requirements.txt", 'rU') as reader:
         requirements.append(line.strip())
 
 setup(name='mcorr',
+        python_requires='>=3',
         version='20180314',
         description='Inferring recombination rates from correlation profiles',
         url='https://github.com/kussell-lab/mcorr',
