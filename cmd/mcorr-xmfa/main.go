@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -11,8 +10,10 @@ import (
 	"github.com/kussell-lab/mcorr"
 	"github.com/kussell-lab/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/cheggaaa/pb.v2"
 )
 
+// global variables.
 func main() {
 	app := kingpin.New("mcorr-xmfa", "Calculate mutation correlation from bacterial sequence alignments in XMFA format.")
 	app.Version("v20180102")
@@ -20,11 +21,10 @@ func main() {
 	alnFile := app.Arg("in", "Alignment file in XMFA format.").Required().String()
 	outPrefix := app.Arg("out", "Output prefix.").Required().String()
 
-	mateFile := app.Flag("second-alignment", "Second alignment file in XMFA format.").Default("").String()
-	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
 	maxl := app.Flag("max-corr-length", "Maximum distance of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
+	showProgress := app.Flag("show-progress", "Show progress").Bool()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -33,31 +33,41 @@ func main() {
 	}
 	runtime.GOMAXPROCS(*ncpu)
 
+	// show progress bar?
+	var bar *pb.ProgressBar
+	if *showProgress {
+		max := getNumberOfAlignments(*alnFile)
+		bar = pb.StartNew(max)
+		defer bar.Finish()
+	}
+
 	// prepare calculator.
 	var calculator Calculator
 	codingTable := taxonomy.GeneticCodes()["11"]
 	maxCodonLen := *maxl / 3
 
-	synonymous := false
-	if *codonPos == 4 {
-		synonymous = true
-		*codonPos = 3
-	}
-	if *codonPos <= 0 || *codonPos > 4 {
-		log.Fatalln("--codon-position should be in the range of 1 to 4.")
-	}
+	synonymous := true
+	codonPos := 3
 	codonOffset := 0
 
-	alnChan := readAlignments(*alnFile)
-	var corrResChan chan mcorr.CorrResults
-	if *mateFile != "" {
-		calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, *codonPos-1, synonymous)
-		mateAlnChan := readAlignments(*mateFile)
-		corrResChan = calcTwoClade(alnChan, mateAlnChan, calculator)
+	var alnChan chan Alignment
+	if bar == nil {
+		alnChan = readAlignments(*alnFile)
 	} else {
-		calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, *codonPos-1, synonymous)
-		corrResChan = calcSingleClade(alnChan, calculator)
+		alnChan = make(chan Alignment)
+		go func() {
+			defer close(alnChan)
+			count := 0
+			c := readAlignments(*alnFile)
+			for a := range c {
+				alnChan <- a
+				bar.Add(1)
+				count++
+			}
+		}()
 	}
+	calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
+	corrResChan := calcSingleClade(alnChan, calculator)
 
 	resChan := mcorr.PipeOutCorrResults(corrResChan, *outPrefix+".json")
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
@@ -149,26 +159,63 @@ func setNumThreads(ncpu int) {
 // and return a channel of alignment, which is a list of seq.Sequence
 func readAlignments(file string) (alnChan chan Alignment) {
 	alnChan = make(chan Alignment)
-	read := func() {
+	go func() {
 		defer close(alnChan)
 
-		f := openFile(file)
+		c := readXMFA(file)
+		for alignment := range c {
+			alnID := strings.Split(alignment[0].Id, " ")[0]
+			alnChan <- Alignment{ID: alnID, Sequences: alignment}
+		}
+	}()
+
+	return
+}
+
+// getNumberOfAlignments return total number of alignments in a xmfa file.
+func getNumberOfAlignments(file string) (count int) {
+	c := readXMFA(file)
+	for a := range c {
+		if len(a) >= 2 {
+			count++
+		}
+	}
+	return
+}
+
+// readXMFA reads a xmfa format file and returns a channel of []seq.Sequence.
+func readXMFA(file string) chan []seq.Sequence {
+	c := make(chan []seq.Sequence)
+	go func() {
+		defer close(c)
+
+		f := mustOpen(file)
 		defer f.Close()
-		xmfaReader := seq.NewXMFAReader(f)
+
+		rd := seq.NewXMFAReader(f)
 		for {
-			alignment, err := xmfaReader.Read()
+			a, err := rd.Read()
 			if err != nil {
 				if err != io.EOF {
 					panic(err)
 				}
 				break
 			}
-			if len(alignment) > 0 {
-				alnID := strings.Split(alignment[0].Id, " ")[0]
-				alnChan <- Alignment{ID: alnID, Sequences: alignment}
+			if len(a) >= 2 {
+				c <- a
 			}
 		}
+	}()
+	return c
+}
+
+// mustOpen is a helper function to open a file.
+// and panic if error occurs.
+func mustOpen(file string) (f *os.File) {
+	var err error
+	f, err = os.Open(file)
+	if err != nil {
+		panic(err)
 	}
-	go read()
 	return
 }
