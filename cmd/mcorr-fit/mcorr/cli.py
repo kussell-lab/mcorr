@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from . import fit_p2, read_corr, FitDatas, write_fitting_results, plot_fit, plot_params
+from . import fit_p2, read_corr, FitDatas, write_fitting_results, plot_fit, plot_params, write_fitting_reports
 
 def main():
     """Run fitting using lmfit"""
@@ -40,6 +40,9 @@ def main():
             break
     if fitres is not None:
         plot_fit(fitdata, fitres, best_fit_file)
+    # write fitting report
+    report_file = prefix + "_fit_reports.txt"
+    write_fitting_reports(fit_results, model_params[1:7], report_file)
 
 if __name__ == "__main__":
     main()
