@@ -1,129 +1,9 @@
-#!/usr/bin/env python3
 """Infer recombination rates by fitting correlation profile"""
 from __future__ import print_function
-import numpy as np
+import numpy as numpy
 from lmfit import Parameters, Minimizer
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
 from tqdm import tqdm
-
-plt.rcParams['mathtext.fontset'] = 'cm'
-
-class CorrRes(object):
-    """One correlation result"""
-    def __init__(self, terms):
-        lag = float(terms[0])
-        value = float(terms[1])
-        variance = float(terms[2])
-        num = float(terms[3])
-        corrtype = terms[4]
-        group = terms[5]
-        self.lag = lag
-        self.value = value
-        self.variance = variance
-        self.num = num
-        self.corrtype = corrtype
-        self.group = group
-
-class FitData(object):
-    """Fitting data"""
-    def __init__(self, group, xvalues, yvalues, d_sample):
-        self.group = group
-        self.xvalues = xvalues
-        self.yvalues = yvalues
-        self.d_sample = d_sample
-
-class FitDatas(object):
-    """Fitting data"""
-    def __init__(self, corr_results, xmin, xmax):
-        corr_map = {}
-        groups = []
-        for row in corr_results:
-            rows = corr_map.get(row.group, [])
-            if len(rows) == 0:
-                groups.append(row.group)
-            rows.append(row)
-            corr_map[row.group] = rows
-        fitdata_map = {}
-        for group, items in corr_map.items():
-            xvalues, yvalues, d_sample = prepare_fitting_data(items, xmin, xmax)
-            fitdata_map[group] = FitData(group, xvalues, yvalues, d_sample)
-        self.fitdata_dict = fitdata_map
-        self.groups = groups
-    def has(self, group):
-        """return True if the group is in the data"""
-        return group in self.fitdata_dict
-
-    def get(self, group):
-        """return fit data"""
-        fitdata = self.fitdata_dict.get(group, None)
-        return fitdata
-    def getall(self):
-        """return all"""
-        return [self.fitdata_dict[group] for group in self.groups]
-
-class FitRes(object):
-    """Fitting results"""
-    def __init__(self, group, fit_res, d_sample):
-        self.group = group
-        self.d_sample = d_sample
-        params = fit_res.params.valuesdict()
-        if "theta" in params:
-            self.theta_pool = params['theta']
-        if 'phi' in params:
-            self.phi_pool = params['phi']
-        if 'fbar' in params:
-            self.fbar = params['fbar']
-        if 'phi' in params:
-            self.ratio = self.phi_pool / self.theta_pool
-            if 'fbar' in params:
-                self.rho = self.phi_pool * self.fbar
-        if 'c' in params:
-            self.c = params['c']
-        if 'dclonal' in params:
-            self.d_clonal = params['dclonal']
-        if 'dpool' in params:
-            self.d_pool = params['dpool']
-        if 'phi_clonal' in params:
-            self.phi_clonal = params['phi_clonal']
-        if 'theta_clonal' in params:
-            self.theta_clonal = params['theta_clonal']
-
-    def get_values(self, attributes):
-        """Get attribute values"""
-        values = []
-        for name in attributes:
-            if hasattr(self, name):
-                values.append(getattr(self, name))
-            else:
-                values.append("NA")
-        return values
-
-def read_corr(csv_file):
-    """Read corr results in a csv file"""
-    results = []
-    with open(csv_file, 'r') as infile:
-        for line in infile:
-            terms = line.rstrip().split(",")
-            if terms[0] == 'l':
-                continue
-            results.append(CorrRes(terms))
-    return results
-
-def prepare_fitting_data(fitdata, xmin, xmax):
-    """Prepare fitting xvalues and yvalues"""
-    xvalues = []
-    yvalues = []
-    diver = 0
-    for row in fitdata:
-        if row.corrtype == 'P2' and row.lag >= xmin and row.lag <= xmax:
-            xvalues.append(row.lag)
-            yvalues.append(row.value)
-        elif row.corrtype == 'Ks':
-            diver = row.value
-    xvalues = np.array(xvalues)
-    yvalues = np.array(yvalues)
-    return (xvalues, yvalues, diver)
+from . import FitRes
 
 def Power(a, b):
     """compute power"""
@@ -131,16 +11,16 @@ def Power(a, b):
 
 def const_r1(x, fBar, phiC):
     """calculate r1 assuming constant fragment size"""
-    return np.where(x < fBar, phiC*x, phiC*fBar)
+    return numpy.where(x < fBar, phiC*x, phiC*fBar)
 
 def exp_r1(x, fBar, phiC):
     """calculate r1 assuming exponetional decay of fragment size"""
-    return phiC*fBar*(1.0 - np.exp(-x/fBar))
+    return phiC*fBar*(1.0 - numpy.exp(-x/fBar))
 
 def geom_r1(x, fBar, phiC):
     """calculate r1 assuming geom distribution"""
     prob = 1.0/fBar
-    return phiC*fBar*(1.0 - np.power(1-prob, x))
+    return phiC*fBar*(1.0 - numpy.power(1-prob, x))
 
 def calcP2(fBar, thetaC, phiC, d, x):
     """
@@ -186,89 +66,15 @@ def fit_one(fitdata):
     yvalues = fitdata.yvalues
     dsample = fitdata.d_sample
     fitres = fit_model(xvalues, yvalues, dsample)
-    return fitres
+    return FitRes(fitdata.group, fitres, dsample)
 
-def plot_fit(fitdata, fitres, plot_file):
-    """Fit all row data and do ploting"""
-    xvalues = fitdata.xvalues
-    yvalues = fitdata.yvalues
-    fig = plt.figure(tight_layout=True)
-
-    fig.set_figheight(4)
-    fig.set_figwidth(6)
-    gs = gridspec.GridSpec(2, 2, height_ratios=[3, 1], width_ratios=[2, 1], hspace=0)
-    ax1 = plt.subplot(gs[0, 0])
-    ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
-    predictions = yvalues + fitres.residual
-    ax1.plot(xvalues, predictions, 'k')
-    ax1.set_ylabel(r'$P$')
-    ax1.set_ylim([np.min(yvalues)*0.9, np.max(yvalues)*1.1])
-    ax1.locator_params(axis='x', nbins=5)
-    ax1.locator_params(axis='y', nbins=5)
-    plt.setp(ax1.get_xticklabels(), visible=False)
-
-    ax2 = plt.subplot(gs[1, 0])
-    markerline, _, _ = ax2.stem(xvalues,
-                                fitres.residual,
-                                linefmt='k-',
-                                basefmt='r-',
-                                markerfmt='ko')
-    ax2.set_xlabel(r'$l$')
-    ax2.set_ylabel("Residual")
-    ax2.locator_params(axis='x', nbins=5)
-    plt.setp(markerline, "markersize", 4)
-    fig.tight_layout()
-
-    ax3 = plt.subplot(gs[1, 1])
-    ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
-    ax3.set_xlabel("Residual")
-    plt.setp(ax3.get_xticklabels(), rotation=10, horizontalalignment='right')
-    ax3.axes.get_yaxis().set_ticks([])
-    fig.savefig(plot_file)
-
-def fitp2(corr_file, prefix, xmin, xmax, fit_bootstraps=False):
+def fit_p2(fitdatas):
     """Fit p2"""
-    corr_results = read_corr(corr_file)
-    fitdatas = FitDatas(corr_results, xmin, xmax)
-
     all_results = []
-    if fitdatas.has("all"):
-        fitdata = fitdatas.get("all")
-        best_fit_plot_file = prefix + "_best_fit.svg"
+    for fitdata in tqdm(fitdatas.getall()):
         fitres = fit_one(fitdata)
-        if fitres:
-            plot_fit(fitdata, fitres, best_fit_plot_file)
-            all_results.append((fitdata.group, fitres))
+        if fitres is not None:
+            all_results.append(fitres)
+    return all_results
 
-    to_fit_groups = []
-    for fitdata in fitdatas.getall():
-        tofit = True
-        if fitdata.group == "all":
-            tofit = False
-        if "boot" in fitdata.group:
-            tofit = fit_bootstraps
-        if tofit:
-            to_fit_groups.append(fitdata.group)
-    num_groups = len(to_fit_groups)
-    if num_groups > 0:
-        for group in tqdm(to_fit_groups):
-            fitdata = fitdatas.get(group)
-            fitres = fit_one(fitdata)
-            if fitres:
-                all_results.append((fitdata.group, fitres))
-
-    # write fitting results.
-    model_params = ["group", "d_sample", "theta_pool",
-                    "phi_pool", "ratio", "fbar", "c", "d_pool",
-                    "d_clonal", 'theta_clonal', 'phi_clonal']
-    out_prefix = prefix + "_fit_results"
-    out_file = out_prefix + ".csv"
-    sep = ","
-    with open(out_file, 'w') as out:
-        out.write(sep.join(model_params)+"\n")
-        for (group, minres) in all_results:
-            d_sample = fitdatas.get(group).d_sample
-            fit_res = FitRes(group, minres, d_sample)
-            values = fit_res.get_values(model_params)
-            out.write(sep.join([str(x) for x in values])+"\n")
 

@@ -8,7 +8,7 @@ with open("requirements.txt", 'rU') as reader:
 
 setup(name='mcorr',
         python_requires='>=3',
-        version='20180314',
+        version='20180319',
         description='Inferring recombination rates from correlation profiles',
         url='https://github.com/kussell-lab/mcorr',
         author='Mingzhi Lin',
