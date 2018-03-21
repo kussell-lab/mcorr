@@ -9,7 +9,8 @@
 ```sh
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
-pip3 install --user mcorr
+cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit; && python3 setup.py
+install --user
 ```
 2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment:
 ```sh
