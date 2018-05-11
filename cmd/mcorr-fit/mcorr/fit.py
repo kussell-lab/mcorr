@@ -9,50 +9,58 @@ def Power(a, b):
     """compute power"""
     return a**b
 
-def const_r1(x, fBar, phiC):
+def const_r1(x, fBar, phiC, w):
     """calculate r1 assuming constant fragment size"""
-    return numpy.where(x < fBar, phiC*x, phiC*fBar)
+    return numpy.where(x < fBar, w*phiC*x, w*phiC*fBar)
 
-def exp_r1(x, fBar, phiC):
+def exp_r1(x, fBar, phiC, w):
     """calculate r1 assuming exponetional decay of fragment size"""
-    return phiC*fBar*(1.0 - numpy.exp(-x/fBar))
+    return w*phiC*fBar*(1.0 - numpy.exp(-x/fBar))
 
-def geom_r1(x, fBar, phiC):
+def geom_r1(x, fBar, phiC, w):
     """calculate r1 assuming geom distribution"""
     prob = 1.0/fBar
-    return phiC*fBar*(1.0 - numpy.power(1-prob, x))
+    return w*phiC*fBar*(1.0 - numpy.power(1-prob, x))
 
-def calcP2(fBar, thetaC, phiC, d, x):
+def calcP2(thetaS, r1, r2, ds, a):
     """
-    calcP2 using expression from Mathematica
-    Yes! The line is super long!
+    calcP2 using expression computed using Mathematica CForm
     """
-    r1 = const_r1(x, fBar, phiC)
-    r2 = phiC * fBar - r1
-    v = (4*(2*d*r1*(1 + r1 + r2) + (r1 + 3*d*r1 + 3*r2)*thetaC)*(Power(2*d*(1 + r1 + r2) + 3*d*thetaC,2)*(8*Power(r1,2) + 9*r1*(2*r2 + thetaC) + 9*r2*(1 + r2 + 3*thetaC)) + 2*Power(thetaC,2)*(-2*Power(r1,2) + 9*r1*(2*r2 - thetaC) + 9*r2*(2 + 2*r2 + 3*thetaC)) + d*thetaC*(2*(1 + r1 + r2) + 3*thetaC)*(4*Power(r1,2) - 9*r1*(2*r2 + thetaC) - 9*r2*(4 + 2*r2 + 9*thetaC))))/(Power(r1 + r2,2)*(3 + 4*r1 + 3*r2 + 9*thetaC)*(6 + 4*r1 + 6*r2 + 9*thetaC)*(d*(2*(1 + r1 + r2) + 3*thetaC)*(8*r1 + 9*thetaC) - 2*thetaC*(2*r1 - 6*r2 + 9*thetaC)))
+    v = (2*(r2*thetaS + ds*r1*(1 + r1 + r2 + a*thetaS))* \
+        (r2*Power(thetaS,2) + Power(ds,2)*(1 + r1 + r2 + a*thetaS)* \
+        (2*Power(r1,2) + r2 + 3*r1*r2 + Power(r2,2) + a*(r1 + 2*r2)*thetaS) - \
+        ds*thetaS*(2*r2 + Power(r1 + r2,2) + a*(r1 + 3*r2)*thetaS)))/ \
+        (Power(r1 + r2,2)*(1 + 2*r1 + r2 + 2*a*thetaS)* \
+        (-(thetaS*(r1 - r2 + a*thetaS)) + ds*(2*r1 + a*thetaS)*(1 + r1 + r2 + a*thetaS)))
     return v
 
 def fcn2min(params, xvalues, yvalues):
     """function 2 min"""
-    fbar = params['fbar']
-    dsample = params['dsample']
-    phi_clonal = params['phi_clonal']
-    theta_clonal = params['theta_clonal']
-    p2 = calcP2(fbar, theta_clonal, phi_clonal, dsample, xvalues) / dsample
+    thetaS = params['thetaS']
+    phiS = params['phiS']
+    f = params['f']
+    w = params['w']
+    r1 = const_r1(xvalues, f, phiS, w)
+    r2 = phiS * w * f - r1
+    ds = params['ds']
+    a = params['a']
+    p2 = calcP2(thetaS, r1, r2, ds, a) / ds
     return p2 - yvalues
 
 def fit_model(xvalues, yvalues, d_sample):
     """Do fitting using the Model 1"""
     params1 = Parameters()
-    params1.add('dsample', value=d_sample, vary=False)
-    params1.add('theta_clonal', value=0.00001, min=0, max=d_sample)
-    params1.add('fbar', value=1000, min=3, max=300000)
-    params1.add('phi_clonal', value=0.0005, min=0, max=1)
-    params1.add('theta', expr='(-theta_clonal + dsample*(1 + fbar*phi_clonal + (3*theta_clonal)/2.))/((-3*dsample)/2. + (1 - (3*dsample)/2.)*(fbar*phi_clonal + (3*theta_clonal)/2.))')
-    params1.add('phi', expr='(phi_clonal*(-theta_clonal + dsample*(1 + fbar*phi_clonal + (3*theta_clonal)/2.)))/(theta_clonal*((-3*dsample)/2. + (1 - (3*dsample)/2.)*(fbar*phi_clonal + (3*theta_clonal)/2.)))')
-    params1.add('c', expr='fbar*phi_clonal/(1+4/3*theta_clonal+fbar*phi_clonal)')
-    params1.add('dpool', expr='theta/(1+4/3*theta)')
-    params1.add('dclonal', expr='theta_clonal/(1+4/3*theta_clonal)')
+    params1.add('ds', value=d_sample, vary=False)
+    params1.add('thetaS', value=0.00001, min=0, max=d_sample)
+    params1.add('f', value=1000, min=3, max=300000)
+    params1.add('phiS', value=0.0005, min=0, max=1)
+    params1.add('w', value=2.0/3.0, vary=False)
+    params1.add('a', value=4.0/3.0, vary=False)
+    params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
+    params1.add('phiP', expr='phiS*thetaP/thetaS')
+    params1.add('c', expr='phiS*w*f/(1+thetaS*a+phiS*w*f)')
+    params1.add('dp', expr='thetaP/(1+a*thetaP)')
+    params1.add('dc', expr='thetaS/(1+a*thetaS)')
     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues))
     try:
         fitres1 = minner1.minimize()
