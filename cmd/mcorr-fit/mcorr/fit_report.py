@@ -60,6 +60,8 @@ class FitReport(object):
         value += "bootstrapping standard deviation = %g\n" % self.get_boot_std()
         value += "bootstrapping size = %d\n" % self.get_boot_size()
         value += "bootstrapping median = %g\n" % self.get_boot_median()
-        value += "bootstrapping lower bound (5%%) = %g\n" % self.get_boot_lower_bound()
-        value += "bootstrapping upper bound (95%%) = %g\n" % self.get_boot_upper_bound()
+        value += "bootstrapping lower bound (5%%) = %g\n" % \
+            self.get_boot_lower_bound()
+        value += "bootstrapping upper bound (95%%) = %g\n" % \
+            self.get_boot_upper_bound()
         return value

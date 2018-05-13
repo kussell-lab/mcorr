@@ -12,7 +12,8 @@ def plot_fit(fitdata, fitres, plot_file):
 
     fig.set_figheight(4)
     fig.set_figwidth(6)
-    gs = gridspec.GridSpec(2, 2, height_ratios=[3, 1], width_ratios=[2, 1], hspace=0)
+    gs = gridspec.GridSpec(2, 2, 
+        height_ratios=[3, 1], width_ratios=[2, 1], hspace=0)
     ax1 = plt.subplot(gs[0, 0])
     ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
     predictions = yvalues + fitres.residual
@@ -77,16 +78,11 @@ def plot_params(fit_results, param_names, plot_file):
                 else:
                     boot_values.append(value)
         if len(boot_values) > 0:
-            low_bound = numpy.percentile(boot_values, 5)
-            upp_bound = numpy.percentile(boot_values, 95)
-            #boot_values = [x for x in boot_values if x > low_bound and x < upp_bound]
             ax1 = fig.add_subplot(num_col * num_row, num_col, i+1)
             ax1.hist(boot_values, histtype='bar',
                     bins='auto', color="green")
             label = label_names.get(name, name)
             ax1.set_xlabel(label)
-            ax1.axvline(x=low_bound, color="blue", linestyle="dashed")
-            ax1.axvline(x=upp_bound, color="blue", linestyle="dashed")
             if raw_value is not None:
                 ax1.axvline(x=raw_value, color="red")
             ax1.locator_params(axis='x', nbins=6)

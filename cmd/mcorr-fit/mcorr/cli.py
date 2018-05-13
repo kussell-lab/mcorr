@@ -1,25 +1,32 @@
-from argparse import ArgumentParser
-from . import fit_p2, read_corr, FitDatas, write_fitting_results, plot_fit, plot_params, write_fitting_reports
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from . import fit_p2, read_corr, FitDatas, \
+    write_fitting_results, plot_fit, plot_params, write_fitting_reports
 
 def main():
-    """Run fitting using lmfit"""
-    parser = ArgumentParser(description="Infer recombination rates\
-                                         by fitting correlation profile of mutations.")
-    parser.add_argument("corr_file", type = str)
-    parser.add_argument("output_prefix", type=str)
-    parser.add_argument('--xmin', nargs='?', const=3, type=int, default=3)
-    parser.add_argument('--xmax', nargs='?', const=300, type=int, default=300)
+    """Run fitting using lmfit, and generate output files and plots"""
+    parser = ArgumentParser(
+        formatter_class=ArgumentDefaultsHelpFormatter,
+        description="Infer recombination rates\
+                    by fitting correlation profile of mutations.")
+    parser.add_argument("corr_file", type = str, help='correlation input file')
+    parser.add_argument("output_prefix", type=str, help='output file prefix')
+    parser.add_argument('--fit_start', type=int, default=3,
+                        help='fitting range starts at')
+    parser.add_argument('--fit_end', type=int, default=300,
+                        help='fitting range ends at')
+    parser.add_argument('--quiet', action="store_true")
     opts = parser.parse_args()
     corr_file = opts.corr_file
     prefix = opts.output_prefix
-    xmin = opts.xmin
-    xmax = opts.xmax
+    fit_start = opts.fit_start
+    fit_end = opts.fit_end
+    quiet = opts.quiet
 
     # read correlation results and prepare fitting data
     corr_results = read_corr(corr_file)
-    fitdatas = FitDatas(corr_results, xmin, xmax)
+    fitdatas = FitDatas(corr_results, fit_start, fit_end)
     # do fitting
-    fit_results = fit_p2(fitdatas)
+    fit_results = fit_p2(fitdatas, disable_progress_bar=quiet)
     # parameterms to report
     model_params = ["group", "d_sample", "theta_pool",
                     "phi_pool", "ratio", "fbar", "c", "d_pool",

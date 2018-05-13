@@ -10,7 +10,7 @@ class FitData(object):
 
 class FitDatas(object):
     """Fitting data"""
-    def __init__(self, corr_results, xmin, xmax):
+    def __init__(self, corr_results, fit_start, xmax):
         corr_map = {}
         groups = []
         for row in corr_results:
@@ -21,7 +21,8 @@ class FitDatas(object):
             corr_map[row.group] = rows
         fitdata_map = {}
         for group, items in corr_map.items():
-            xvalues, yvalues, d_sample = prepare_fitting_data(items, xmin, xmax)
+            xvalues, yvalues, d_sample = prepare_fitting_data(
+                items, fit_start, xmax)
             fitdata_map[group] = FitData(group, xvalues, yvalues, d_sample)
         self.fitdata_dict = fitdata_map
         self.groups = groups
@@ -37,13 +38,13 @@ class FitDatas(object):
         """return all"""
         return [self.fitdata_dict[group] for group in self.groups]
 
-def prepare_fitting_data(fitdata, xmin, xmax):
+def prepare_fitting_data(fitdata, fit_start, xmax):
     """Prepare fitting xvalues and yvalues"""
     xvalues = []
     yvalues = []
     diver = 0
     for row in fitdata:
-        if row.corrtype == 'P2' and row.lag >= xmin and row.lag <= xmax:
+        if row.corrtype == 'P2' and row.lag >= fit_start and row.lag <= xmax:
             xvalues.append(row.lag)
             yvalues.append(row.value)
         elif row.corrtype == 'Ks':

@@ -31,7 +31,8 @@ def calcP2(thetaS, r1, r2, ds, a):
         (2*Power(r1,2) + r2 + 3*r1*r2 + Power(r2,2) + a*(r1 + 2*r2)*thetaS) - \
         ds*thetaS*(2*r2 + Power(r1 + r2,2) + a*(r1 + 3*r2)*thetaS)))/ \
         (Power(r1 + r2,2)*(1 + 2*r1 + r2 + 2*a*thetaS)* \
-        (-(thetaS*(r1 - r2 + a*thetaS)) + ds*(2*r1 + a*thetaS)*(1 + r1 + r2 + a*thetaS)))
+        (-(thetaS*(r1 - r2 + a*thetaS)) + ds*(2*r1 + a*thetaS)* \
+        (1 + r1 + r2 + a*thetaS)))
     return v
 
 def fcn2min(params, xvalues, yvalues):
@@ -56,7 +57,8 @@ def fit_model(xvalues, yvalues, d_sample):
     params1.add('phiS', value=0.0005, min=0, max=1)
     params1.add('w', value=2.0/3.0, vary=False)
     params1.add('a', value=4.0/3.0, vary=False)
-    params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
+    params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
+                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
     params1.add('phiP', expr='phiS*thetaP/thetaS')
     params1.add('c', expr='phiS*f/(1+phiS*f)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
@@ -78,10 +80,10 @@ def fit_one(fitdata):
         return FitRes(fitdata.group, fitres, dsample)
     return None
 
-def fit_p2(fitdatas):
+def fit_p2(fitdatas, disable_progress_bar=False):
     """Fit p2"""
     all_results = []
-    for fitdata in tqdm(fitdatas.getall()):
+    for fitdata in tqdm(fitdatas.getall(), disable=disable_progress_bar):
         fitres = fit_one(fitdata)
         if fitres is not None:
             all_results.append(fitres)
