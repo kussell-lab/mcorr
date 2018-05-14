@@ -35,21 +35,21 @@ def calcP2(thetaS, r1, r2, ds, a):
         (1 + r1 + r2 + a*thetaS)))
     return v
 
-def fcn2min(params, xvalues, yvalues):
+def fcn2min(params, xvalues, yvalues, r1_func):
     """function 2 min"""
     thetaS = params['thetaS']
     phiS = params['phiS']
     f = params['f']
     w = params['w']
-    r1 = const_r1(xvalues, f, phiS, w)
+    r1 = r1_func(xvalues, f, phiS, w)
     r2 = phiS * w * f - r1
     ds = params['ds']
     a = params['a']
     p2 = calcP2(thetaS, r1, r2, ds, a) / ds
     return p2 - yvalues
 
-def fit_model(xvalues, yvalues, d_sample):
-    """Do fitting using the Model 1"""
+def fit_model(xvalues, yvalues, d_sample, r1_func):
+    """fitting correlation profile using lmfit"""
     params1 = Parameters()
     params1.add('ds', value=d_sample, vary=False)
     params1.add('thetaS', value=0.00001, min=0, max=d_sample)
@@ -63,30 +63,29 @@ def fit_model(xvalues, yvalues, d_sample):
     params1.add('c', expr='phiS*f/(1+phiS*f)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
-    minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues))
+    minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
     try:
         fitres1 = minner1.minimize()
     except:
         fitres1 = None
     return fitres1
 
-def fit_one(fitdata):
+def fit_one(fitdata, r1_func):
     """Fit one data set"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     dsample = fitdata.d_sample
-    fitres = fit_model(xvalues, yvalues, dsample)
+    fitres = fit_model(xvalues, yvalues, dsample, r1_func)
     if fitres is not None:
         return FitRes(fitdata.group, fitres, dsample)
     return None
 
-def fit_p2(fitdatas, disable_progress_bar=False):
+def fit_p2(fitdatas, r1_func=const_r1, disable_progress_bar=False):
     """Fit p2"""
     all_results = []
     for fitdata in tqdm(fitdatas.getall(), disable=disable_progress_bar):
-        fitres = fit_one(fitdata)
+        fitres = fit_one(fitdata, r1_func)
         if fitres is not None:
             all_results.append(fitres)
     return all_results
-
 

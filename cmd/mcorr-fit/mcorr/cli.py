@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from . import fit_p2, read_corr, FitDatas, \
-    write_fitting_results, plot_fit, plot_params, write_fitting_reports
+    write_fitting_results, plot_fit, plot_params, write_fitting_reports, \
+    geom_r1, const_r1
 
 def main():
     """Run fitting using lmfit, and generate output files and plots"""
@@ -14,6 +15,8 @@ def main():
                         help='fitting range starts at')
     parser.add_argument('--fit_end', type=int, default=300,
                         help='fitting range ends at')
+    parser.add_argument("--use_geom_frag", action="store_true",
+                        help='use geometric distribution for fragment sizes')
     parser.add_argument('--quiet', action="store_true")
     opts = parser.parse_args()
     corr_file = opts.corr_file
@@ -21,12 +24,16 @@ def main():
     fit_start = opts.fit_start
     fit_end = opts.fit_end
     quiet = opts.quiet
+    use_geom_frag = opts.use_geom_frag
 
     # read correlation results and prepare fitting data
     corr_results = read_corr(corr_file)
     fitdatas = FitDatas(corr_results, fit_start, fit_end)
     # do fitting
-    fit_results = fit_p2(fitdatas, disable_progress_bar=quiet)
+    r1_func = const_r1
+    if use_geom_frag:
+        r1_func = geom_r1
+    fit_results = fit_p2(fitdatas, r1_func=r1_func, disable_progress_bar=quiet)
     # parameterms to report
     model_params = ["group", "d_sample", "theta_pool",
                     "phi_pool", "ratio", "fbar", "c", "d_pool",
