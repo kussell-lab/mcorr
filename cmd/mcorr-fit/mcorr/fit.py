@@ -60,7 +60,7 @@ def fit_model(xvalues, yvalues, d_sample, r1_func):
     params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
                                 ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
     params1.add('phiP', expr='phiS*thetaP/thetaS')
-    params1.add('c', expr='phiS*f/(1+phiS*f)')
+    params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
