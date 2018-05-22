@@ -55,13 +55,15 @@ class FitReport(object):
     def report(self):
         value = ""
         value += "[%s]\n" % self.get_label_name()
-        value += "value = %g\n" % self.get_raw_value()
-        value += "bootstrapping mean = %g\n" % self.get_boot_mean()
-        value += "bootstrapping standard deviation = %g\n" % self.get_boot_std()
-        value += "bootstrapping size = %d\n" % self.get_boot_size()
-        value += "bootstrapping median = %g\n" % self.get_boot_median()
-        value += "bootstrapping lower bound (5%%) = %g\n" % \
-            self.get_boot_lower_bound()
-        value += "bootstrapping upper bound (95%%) = %g\n" % \
-            self.get_boot_upper_bound()
+        if self.get_raw_value():
+            value += "value = %g\n" % self.get_raw_value()
+        if len(self.boot_data) >= 10:
+            value += "bootstrapping mean = %g\n" % self.get_boot_mean()
+            value += "bootstrapping standard deviation = %g\n" % self.get_boot_std()
+            value += "bootstrapping size = %d\n" % self.get_boot_size()
+            value += "bootstrapping median = %g\n" % self.get_boot_median()
+            value += "bootstrapping lower bound (5%%) = %g\n" % \
+                self.get_boot_lower_bound()
+            value += "bootstrapping upper bound (95%%) = %g\n" % \
+                self.get_boot_upper_bound()
         return value
