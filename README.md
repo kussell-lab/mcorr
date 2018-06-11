@@ -12,10 +12,9 @@ Using _Correlation Profile_ of mutations to infer the recombination rate from la
 ```sh
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
-cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit; && python3 setup.py
-install --user
+cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit && python3 setup.py install --user
 ```
-2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment:
+2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment. In MacOS and Linux, you can do it in your terminal:
 ```sh
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
 ```
@@ -27,7 +26,7 @@ Typical installation time on an iMac is 10 minutes.
 ## Basic Usage
 The inference of recombination parameters requires two steps:
 
-1. Calculate Correlation Profile
+1. Calculate _Correlation Profile_
 
     For whole-genome alignments (multiple gene alignments), use `mcorr-xmfa`:
 
@@ -46,7 +45,7 @@ The inference of recombination parameters requires two steps:
     * a .csv file stores the calculated Correlation Profile, which will be used for fitting in the next step;
     * a .json file stores the (intermediate) Correlation Profile for each gene.
 
-2. Fit the Correlation Profile using `FitP.py`, which can be found in `$HOME/go/src/github.com/kussell-lab/mcorr/cmd/fitting/`:
+2. Fit the Correlation Profile using `mcorr-fit`:
 
     ```sh
     mcorr-fit <.csv file> <output_prefix>
@@ -54,6 +53,10 @@ The inference of recombination parameters requires two steps:
 
     It will produce two files:
 
-    * `<output_prefix>_best_fit.svg` -- the plots of the Correlation Profile, fitting, and residuals;
-    * `<output_prefix>_fit_results.csv` -- the table of fitted parameters.
+    * `<output_prefix>_best_fit.svg` shows the plots of the Correlation Profile, fitting, and residuals;
+    * `<output_prefix>_fit_reports.txt` shows the summary of the fitted parameters;
+    * `<output_prefix>_fit_results.csv` shows the table of fitted parameters;
+    * `<output_prefix>_parameter_histograms.svg` shows the distributions of the fitted parameters.
 
+## Examples
+1. [_Helicobacter pylori_ global strains](https://github.com/kussell-lab/mcorr_examples/tree/master/Helicobacter_pylori_global_population);
