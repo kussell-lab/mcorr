@@ -19,9 +19,9 @@ def read_corr(csv_file):
     results = []
     with open(csv_file, 'r') as infile:
         for line in infile:
+            if line.startswith('#'): continue
             terms = line.rstrip().split(",")
-            if terms[0] == 'l':
-                continue
+            if terms[0] == 'l': continue
             results.append(CorrRes(terms))
     return results
 

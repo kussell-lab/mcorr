@@ -1,19 +1,20 @@
 import numpy
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 plt.rcParams['mathtext.fontset'] = 'cm'
 
-def plot_fit(fitdata, fitres, plot_file):
+def plot_fit(fitdata, fitres, plot_file, title=None):
     """Fit all row data and do ploting"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
-    fig = plt.figure(tight_layout=True)
+    fig = plt.figure(tight_layout=False)
 
-    fig.set_figheight(4)
-    fig.set_figwidth(6)
-    gs = gridspec.GridSpec(2, 2, 
-        height_ratios=[3, 1], width_ratios=[2, 1], hspace=0)
+    figsize = 4
+    fig.set_figheight(figsize)
+    fig.set_figwidth(figsize)
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], hspace=0)
     ax1 = plt.subplot(gs[0, 0])
     ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
     predictions = yvalues + fitres.residual
@@ -23,6 +24,7 @@ def plot_fit(fitdata, fitres, plot_file):
     ax1.locator_params(axis='x', nbins=5)
     ax1.locator_params(axis='y', nbins=5)
     plt.setp(ax1.get_xticklabels(), visible=False)
+    if title: plt.title(title, loc="left")
 
     ax2 = plt.subplot(gs[1, 0])
     markerline, _, _ = ax2.stem(xvalues,
@@ -36,11 +38,12 @@ def plot_fit(fitdata, fitres, plot_file):
     plt.setp(markerline, "markersize", 4)
     fig.tight_layout()
 
-    ax3 = plt.subplot(gs[1, 1])
+    ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
     ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
     ax3.set_xlabel("Residual")
-    plt.setp(ax3.get_xticklabels(), rotation=10, horizontalalignment='right')
+    plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
     ax3.axes.get_yaxis().set_ticks([])
+
     fig.savefig(plot_file)
 
 def plot_params(fit_results, param_names, plot_file):

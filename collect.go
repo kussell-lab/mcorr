@@ -59,6 +59,13 @@ func CollectWrite(corrResChan chan CorrResults, outFile string, numBoot int) {
 	}
 	defer w.Close()
 
+	w.WriteString("# l: the distance between two genomic positions\n")
+	w.WriteString("# m: the mean value of correlatio profile\n")
+	w.WriteString("# v: the variance of correlation profile\n")
+	w.WriteString("# n: the total number of alignments used for calculation\n")
+	w.WriteString("# t: the type of result: Ks is for d_sample, and P2 is for correlation profile\n")
+	w.WriteString("# b: the bootstrap number (all means used all alignments).\n")
+
 	w.WriteString("l,m,v,n,t,b\n")
 	for _, bs := range bootstraps {
 		results := bs.Results()
