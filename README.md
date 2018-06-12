@@ -61,5 +61,5 @@ The inference of recombination parameters requires two steps:
     * `<output_prefix>_parameter_histograms.svg` shows the distributions of the fitted parameters.
 
 ## Examples
-1. [Inferring recombination rates of _Helicobacter pylori_ from whole genome sequences of a set of global strains](https://github.com/kussell-lab/mcorr_examples/tree/master/Helicobacter_pylori_global_population);
-2. [Inferring recombination rates of _Helicobacter pylori_ from reads sequenced from a transformation experiment](https://github.com/kussell-lab/mcorr_examples/tree/master/Helicobacter_pylori_transformation_experiments).
+1. [Inferring recombination rates of _Helicobacter pylori_ from whole genome sequences of a set of global strains](https://github.com/kussell-lab/Helicobacter_pylori_global_population);
+2. [Inferring recombination rates of _Helicobacter pylori_ from reads sequenced from a transformation experiment](https://github.com/kussell-lab/Helicobacter_pylori_transformation_experiments).
