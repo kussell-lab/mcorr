@@ -33,7 +33,9 @@ The inference of recombination parameters requires two steps:
     ```sh
     mcorr-xmfa <input XMFA file> <output prefix>
     ```
-    The XMFA files should contain only *coding* sequences. The description of XMFA file can be found in [http://darlinglab.org/mauve/user-guide/files.html](http://darlinglab.org/mauve/user-guide/files.html).
+    The XMFA files should contain only *coding* sequences. The description of XMFA file can be found in [http://darlinglab.org/mauve/user-guide/files.html](http://darlinglab.org/mauve/user-guide/files.html). We provide two useful pipelines to generate whole-genome alignments:
+    * from multiple assemblies: [https://github.com/kussell-lab/AssemblyAlignmentGenerator](https://github.com/kussell-lab/AssemblyAlignmentGenerator);
+    * from raw reads: [https://github.com/kussell-lab/ReferenceAlignmentGenerator](https://github.com/kussell-lab/ReferenceAlignmentGenerator)
 
     For read alignments, use `mcorr-bam`:
     ```sh
