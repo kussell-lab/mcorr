@@ -15,13 +15,18 @@ go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
 cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit
 python3 setup.py install
 ```
-or to install `mcorr-fit` in local directory (~/.local/bin in Linux):
+or to install `mcorr-fit` in local directory (~/.local/bin in Linux or ~/Library/Python/3.6/bin in MacOS):
 ```sh
 python3 setup.py install --user
 ```
-2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment. In MacOS and Linux, you can do it in your terminal:
+2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment. In Linux, you can do it in your terminal:
 ```sh
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
+```
+
+In MacOS, you can do it as follows:
+```sh
+export PATH=$PATH:$HOME/go/bin:$HOME/Library/Python/3.6/bin
 ```
 
 We have tested installation in Windows 10, Ubuntu 17.10, and MacOS High Sierra, using Python 3 and Go v1.9.2.
