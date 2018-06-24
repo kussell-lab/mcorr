@@ -12,11 +12,21 @@ Using _Correlation Profile_ of mutations to infer the recombination rate from la
 ```sh
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
 go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
-cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit && python3 setup.py install --user
+cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit
+python3 setup.py install
 ```
-2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment. In MacOS and Linux, you can do it in your terminal:
+or to install `mcorr-fit` in local directory (~/.local/bin in Linux or ~/Library/Python/3.6/bin in MacOS):
+```sh
+python3 setup.py install --user
+```
+2. Add `$HOME/go/bin` and `$HOME/.local/bin` to your `$PATH` environment. In Linux, you can do it in your terminal:
 ```sh
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
+```
+
+In MacOS, you can do it as follows:
+```sh
+export PATH=$PATH:$HOME/go/bin:$HOME/Library/Python/3.6/bin
 ```
 
 We have tested installation in Windows 10, Ubuntu 17.10, and MacOS High Sierra, using Python 3 and Go v1.9.2.
@@ -33,7 +43,9 @@ The inference of recombination parameters requires two steps:
     ```sh
     mcorr-xmfa <input XMFA file> <output prefix>
     ```
-    The XMFA files should contain only *coding* sequences. The description of XMFA file can be found in [http://darlinglab.org/mauve/user-guide/files.html](http://darlinglab.org/mauve/user-guide/files.html).
+    The XMFA files should contain only *coding* sequences. The description of XMFA file can be found in [http://darlinglab.org/mauve/user-guide/files.html](http://darlinglab.org/mauve/user-guide/files.html). We provide two useful pipelines to generate whole-genome alignments:
+    * from multiple assemblies: [https://github.com/kussell-lab/AssemblyAlignmentGenerator](https://github.com/kussell-lab/AssemblyAlignmentGenerator);
+    * from raw reads: [https://github.com/kussell-lab/ReferenceAlignmentGenerator](https://github.com/kussell-lab/ReferenceAlignmentGenerator)
 
     For read alignments, use `mcorr-bam`:
     ```sh
@@ -59,4 +71,5 @@ The inference of recombination parameters requires two steps:
     * `<output_prefix>_parameter_histograms.svg` shows the distributions of the fitted parameters.
 
 ## Examples
-1. [_Helicobacter pylori_ global strains](https://github.com/kussell-lab/mcorr_examples/tree/master/Helicobacter_pylori_global_population);
+1. [Inferring recombination rates of _Helicobacter pylori_ from whole genome sequences of a set of global strains](https://github.com/kussell-lab/Helicobacter_pylori_global_population);
+2. [Inferring recombination rates of _Helicobacter pylori_ from reads sequenced from a transformation experiment](https://github.com/kussell-lab/Helicobacter_pylori_transformation_experiments).
