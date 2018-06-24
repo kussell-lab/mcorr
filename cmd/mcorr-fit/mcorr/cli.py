@@ -39,7 +39,7 @@ def main():
     # parameterms to report
     model_params = ["group", "d_sample", "theta_pool",
                     "phi_pool", "ratio", "fbar", "c", "d_pool",
-                    "d_clonal", 'theta_clonal', 'phi_clonal']
+                    "d_clonal", 'theta_s', 'phi_s']
     # save fitting results into csv file
     csv_file = prefix + "_fit_results.csv"
     write_fitting_results(fit_results, model_params, csv_file)

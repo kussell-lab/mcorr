@@ -22,9 +22,9 @@ class FitRes(object):
         if 'dp' in params:
             self.d_pool = params['dp']
         if 'phiS' in params:
-            self.phi_clonal = params['phiS']
+            self.phi_s = params['phiS']
         if 'thetaS' in params:
-            self.theta_clonal = params['thetaS']
+            self.theta_s = params['thetaS']
 
     def get_values(self, attributes):
         """Get attribute values"""
