@@ -1,4 +1,4 @@
-from . import FitRes, FitReport
+from . import FitReport
 def write_fitting_results(all_results, model_params, out_file):
     """
     write fitting results into a .csv file.

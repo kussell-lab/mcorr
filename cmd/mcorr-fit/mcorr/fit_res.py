@@ -1,10 +1,9 @@
 class FitRes(object):
     """Fitting results"""
-    def __init__(self, group, fit_res, d_sample):
+    def __init__(self, group, residual, params, d_sample):
         self.group = group
         self.d_sample = d_sample
-        self.residual = fit_res.residual
-        params = fit_res.params.valuesdict()
+        self.residual = residual
         if "thetaP" in params:
             self.theta_pool = params['thetaP']
         if 'phiP' in params:

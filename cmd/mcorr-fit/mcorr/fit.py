@@ -77,7 +77,13 @@ def fit_one(fitdata, r1_func):
     dsample = fitdata.d_sample
     fitres = fit_model(xvalues, yvalues, dsample, r1_func)
     if fitres is not None:
-        return FitRes(fitdata.group, fitres, dsample)
+        try:
+            params = fitres.params.valuesdict()
+            residual = fitres.residual
+        except ZeroDivisionError as error:
+            print(error)
+            return None
+        return FitRes(fitdata.group, residual, params, dsample)
     return None
 
 def fit_p2(fitdatas, r1_func=const_r1, disable_progress_bar=False):
