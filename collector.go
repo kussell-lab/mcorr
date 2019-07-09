@@ -64,7 +64,11 @@ func (c *Collector) CorrTypes() (corrTypes []string) {
 
 // Results get results
 func (c *Collector) Results() (results []CorrResult) {
-	corrTypes := c.CorrTypes()
+	// Failed fitting.
+	if len(c.Means("P2")) == 0 {
+		return nil
+	}
+
 	// calculate ks first
 	ks := c.Means("P2")[0]
 	results = append(results,
@@ -79,7 +83,7 @@ func (c *Collector) Results() (results []CorrResult) {
 		return
 	}
 
-	for _, ctype := range corrTypes {
+	for _, ctype := range c.CorrTypes() {
 		means := c.Means(ctype)
 		vars := c.Vars(ctype)
 		ns := c.Ns(ctype)
