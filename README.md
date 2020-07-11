@@ -73,3 +73,23 @@ The inference of recombination parameters requires two steps:
 ## Examples
 1. [Inferring recombination rates of _Helicobacter pylori_ from whole genome sequences of a set of global strains](https://github.com/kussell-lab/Helicobacter_pylori_global_population);
 2. [Inferring recombination rates of _Helicobacter pylori_ from reads sequenced from a transformation experiment](https://github.com/kussell-lab/Helicobacter_pylori_transformation_experiments).
+
+## Testing new code locally
+
+To edit your project locally on your machine, create a GoLand project for mcorr that's actually on the GOPATH: $HOME/go/src/github.com/apsteinberg/mcorr/
+
+To create new go executables locally on  your machine use the following commands in zsh:
+            "go install github.com/apsteinberg/mcorr/cmd/xyz"
+Where the last line will be whatever package you want to create into an executable file, and will install whatever dependencies you need
+
+## Deploying to the NYU HPC
+
+When you deploy (say on the cluster for example) you can then use Mingzhi's commands to pull from your github onto the cluster:
+
+go get -u github.com/apsteinberg/mcorr/cmd/mcorr-xmfa
+go get -u github.com/apsteinberg/mcorr/cmd/mcorr-bam
+cd $HOME/go/src/github.com/apsteinberg/mcorr/cmd/mcorr-fit
+python3 setup.py install
+
+You may need to install go onto the cluster, unclear
+
