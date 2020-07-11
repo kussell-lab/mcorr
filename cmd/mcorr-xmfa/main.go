@@ -6,15 +6,17 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/kussell-lab/biogo/seq"
-	"github.com/kussell-lab/mcorr"
-	"github.com/kussell-lab/ncbiftp/taxonomy"
+	"fmt"
+	"github.com/apsteinberg/biogo/seq"
+	"github.com/apsteinberg/mcorr"
+	"github.com/apsteinberg/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/cheggaaa/pb.v2"
 )
 
 // global variables.
 func main() {
+	fmt.Println("It's a funky duck") //assuming fmt is imported
 	app := kingpin.New("mcorr-xmfa", "Calculate mutation correlation from bacterial sequence alignments in XMFA format.")
 	app.Version("v20180102")
 
@@ -219,3 +221,5 @@ func mustOpen(file string) (f *os.File) {
 	}
 	return
 }
+
+//print funky monkey

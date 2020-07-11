@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/kussell-lab/biogo/seq"
-	"github.com/kussell-lab/mcorr"
+	"github.com/apsteinberg/biogo/seq"
+	"github.com/apsteinberg/mcorr"
 )
 
 // NoncodingCalculator for calculating noncoding sequences.

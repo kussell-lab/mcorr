@@ -7,8 +7,8 @@ import (
 	"os"
 	"sort"
 
+	"github.com/apsteinberg/mcorr"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/kussell-lab/mcorr"
 )
 
 func main() {

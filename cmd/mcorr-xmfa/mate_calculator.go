@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/kussell-lab/mcorr"
-	"github.com/kussell-lab/ncbiftp/taxonomy"
+	"github.com/apsteinberg/mcorr"
+	"github.com/apsteinberg/ncbiftp/taxonomy"
 )
 
 // MateCalculator for calculating correlation for two clusters of sequences.

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kussell-lab/mcorr"
+	"github.com/apsteinberg/mcorr"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
