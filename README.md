@@ -10,9 +10,9 @@ Using _Correlation Profile_ of mutations to infer the recombination rate from la
 ## Installation
 1. Install `mcorr-xmfa`, `mcorr-bam`, and `mcorr-fit` from your terminal:
 ```sh
-go get -u github.com/kussell-lab/mcorr/cmd/mcorr-xmfa
-go get -u github.com/kussell-lab/mcorr/cmd/mcorr-bam
-cd $HOME/go/src/github.com/kussell-lab/mcorr/cmd/mcorr-fit
+go get -u github.com/apsteinberg/mcorr/cmd/mcorr-xmfa
+go get -u github.com/apsteinberg/mcorr/cmd/mcorr-bam
+cd $HOME/go/src/github.com/apsteinberg/mcorr/cmd/mcorr-fit
 python3 setup.py install
 ```
 or to install `mcorr-fit` in local directory (~/.local/bin in Linux or ~/Library/Python/3.6/bin in MacOS):
