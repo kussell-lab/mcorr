@@ -1,3 +1,9 @@
+##some edits added by Asher
+
+##test to try to fix X11 forwarding problem for server runs
+import matplotlib as mpl
+mpl.use('Agg')
+
 import numpy
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
