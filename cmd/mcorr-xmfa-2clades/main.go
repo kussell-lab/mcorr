@@ -16,11 +16,13 @@ import (
 
 // global variables.
 func main() {
-	fmt.Println("Singles only") //assuming fmt is imported
-	app := kingpin.New("mcorr-xmfa", "Calculate mutation correlation from bacterial sequence alignments in XMFA format.")
-	app.Version("v20180102")
+	fmt.Println("Couples dance") //assuming fmt is imported
+	app := kingpin.New("mcorr-xmfa-2clades", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
+	app.Version("v20200731")
 
-	alnFile := app.Arg("in", "Alignment file in XMFA format.").Required().String()
+	alnFile := app.Arg("in-1", "Alignment file in XMFA format.").Required().String()
+	//added by Asher
+	mateAlnFile := app.Arg("in-2", "Alignment file in XMFA format.").Required().String()
 	outPrefix := app.Arg("out", "Output prefix.").Required().String()
 
 	maxl := app.Flag("max-corr-length", "Maximum distance of correlation (base pairs)").Default("300").Int()
@@ -68,8 +70,31 @@ func main() {
 			}
 		}()
 	}
-	calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
-	corrResChan := calcSingleClade(alnChan, calculator)
+
+	//added by Asher
+	var mateAlnChan chan Alignment
+	if bar == nil {
+		mateAlnChan = readAlignments(*mateAlnFile)
+	} else {
+		mateAlnChan = make(chan Alignment)
+		go func() {
+			defer close(mateAlnChan)
+			count := 0
+			c := readAlignments(*mateAlnFile)
+			for a := range c {
+				mateAlnChan <- a
+				bar.Add(1)
+				count++
+			}
+		}()
+	}
+	// these are the lines that potentially need to change; mate calculator for mates
+	// calctwoclades for clades
+	//calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
+	//corrResChan := calcSingleClade(alnChan, calculator)
+
+	calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
+	corrResChan := calcTwoClade(alnChan, mateAlnChan, calculator)
 
 	resChan := mcorr.PipeOutCorrResults(corrResChan, *outPrefix+".json")
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
@@ -221,5 +246,3 @@ func mustOpen(file string) (f *os.File) {
 	}
 	return
 }
-
-//print funky monkey
