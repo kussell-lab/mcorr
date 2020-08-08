@@ -88,6 +88,34 @@ func (nc *NuclCov) P11(minAlleleNum int) (xy float64, n int) {
 	return
 }
 
+//I think what we actually want is the cross-covariance matrix for this
+//which is not symmetric, and we need all of the elements of this matrix
+//which represent each possible combination except the diagonal which is just the same position
+//https://en.wikipedia.org/wiki/Cross-covariance_matrix
+func (nc *NuclCov) MateP11APS(nc2 *NuclCov, minAlleleNum int) (xy float64, n int) {
+	//sizeOfAlphabet := len(nc.Alphabet)
+	n1 := 0
+	n2 := 0
+	for i := 0; i < len(nc.Doublets); i++ {
+		if nc.Doublets[i] > minAlleleNum {
+			for j := 0; j < len(nc2.Doublets); j++ {
+				if nc2.Doublets[j] > minAlleleNum {
+					c := float64(nc.Doublets[i] * nc2.Doublets[j])
+					xy += c
+				}
+				n2 += nc2.Doublets[j]
+			}
+		}
+		n1 += nc.Doublets[i]
+	}
+	//for i := 0; i < len(nc.Doublets); i++ {
+	//	n1 += nc.Doublets[i]
+	//	n2 += nc2.Doublets[i]
+	//}
+	n = n1 * n2
+	return
+}
+
 // MateP11 calculate covariance between two clusters.
 func (nc *NuclCov) MateP11(nc2 *NuclCov, minAlleleNum int) (xy float64, n int) {
 	sizeOfAlphabet := len(nc.Alphabet)

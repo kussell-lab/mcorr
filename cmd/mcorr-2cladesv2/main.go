@@ -16,9 +16,9 @@ import (
 
 // global variables.
 func main() {
-	fmt.Println("a new hope") //assuming fmt is imported
-	app := kingpin.New("mcorr-xmfa-2clades", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
-	app.Version("v20200808")
+	fmt.Println("Couples dance late night") //assuming fmt is imported
+	app := kingpin.New("mcorr-2clades-v2", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
+	app.Version("v20200807")
 
 	alnFile := app.Arg("in-1", "Alignment file in XMFA format.").Required().String()
 	//added by Asher
