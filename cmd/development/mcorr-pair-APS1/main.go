@@ -16,8 +16,8 @@ import (
 
 // global variables.
 func main() {
-	fmt.Println("a new hope") //assuming fmt is imported
-	app := kingpin.New("mcorr-xmfa-2clades", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
+	fmt.Println("boogie on") //assuming fmt is imported
+	app := kingpin.New("mcorr-pair-aps1", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
 	app.Version("v20200808")
 
 	alnFile := app.Arg("in-1", "Alignment file in XMFA format.").Required().String()
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// prepare calculator.
-	var calculator Calculator
+	var calculator PairCalculator
 	codingTable := taxonomy.GeneticCodes()["11"]
 	maxCodonLen := *maxl / 3
 
@@ -134,7 +134,7 @@ func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan
 }
 
 // calcTwoClade calculate correlation functions between two clades.
-func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (corrResChan chan mcorr.CorrResults) {
+func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator PairCalculator) (corrResChan chan mcorr.CorrResults) {
 	type job struct {
 		A, B Alignment
 	}
@@ -144,12 +144,8 @@ func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (c
 		for aln := range alnChan {
 			mateAln := <-mateAlnChan
 			if len(aln.Sequences) >= 1 && len(mateAln.Sequences) >= 1 {
-				//need this to make sure it's the same gene when you have two xmfa files
-				if aln.ID == mateAln.ID {
-					j := job{A: aln, B: mateAln}
-					jobChan <- j
-				}
-
+				j := job{A: aln, B: mateAln}
+				jobChan <- j
 			}
 		}
 	}()
@@ -232,8 +228,7 @@ func readXMFA(file string) chan []seq.Sequence {
 				}
 				break
 			}
-			//temporary change from 2 to 1
-			if len(a) >= 1 {
+			if len(a) >= 2 {
 				c <- a
 			}
 		}
