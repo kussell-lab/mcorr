@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=2cladeflex
+#SBATCH --job-name=2cladesCF
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=64GB
+#SBATCH --mem=32GB
 #SBATCH --time=24:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
@@ -32,14 +32,18 @@ export PATH=$PATH:~/opt/ReferenceAlignmentGenerator
 
 #The directory you want create serotype folders in. You need lots of space.
 WRKD=/scratch/aps376
+SERO=KentuckyNewport
 
 mkdir ${WRKD}/Archive/KentuckyNewport_OUT
 OUTDIR=${WRKD}/Archive/KentuckyNewport_OUT
 
 cd ${OUTDIR}
 
-mcorr-xmfa-2clades ${WRKD}/Archive/Kentucky_OUT/REFGEN_FLEX_Kentucky ${WRKD}/Archive/Newport_OUT/REFGEN_FLEX_Newport ${OUTDIR}/KentuckyNewport_FLEX_XMFA_OUT &&
-echo "time to FLEX"
-mcorr-fit ${OUTDIR}/KentuckyNewport_FLEX_XMFA_OUT.csv ${OUTDIR}/KentuckyNewport_FLEX_FIT_OUT || true
+for gt in 'CORE' 'FLEX'
+do
+echo $gt
+  mcorr-xmfa-2clades ${WRKD}/Archive/Kentucky_OUT/REFGEN_${gt}_Kentucky ${WRKD}/Archive/Newport_OUT/REFGEN_${gt}_Newport ${OUTDIR}/KentuckyNewport_${gt}_XMFA_OUT &&
+  mcorr-fit ${OUTDIR}/KentuckyNewport_${gt}_XMFA_OUT.csv ${OUTDIR}/KentuckyNewport_${gt}_FIT_OUT || true
+done
 
 echo "The party's over, go home"

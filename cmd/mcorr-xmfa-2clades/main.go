@@ -57,6 +57,7 @@ func main() {
 	var alnChan chan Alignment
 	if bar == nil {
 		alnChan = readAlignments(*alnFile)
+		//mateAlnChan = findMateAln(*mateAlnFile, aln.ID)
 	} else {
 		alnChan = make(chan Alignment)
 		go func() {
@@ -72,29 +73,30 @@ func main() {
 	}
 
 	//added by Asher
-	var mateAlnChan chan Alignment
-	if bar == nil {
-		mateAlnChan = readAlignments(*mateAlnFile)
-	} else {
-		mateAlnChan = make(chan Alignment)
-		go func() {
-			defer close(mateAlnChan)
-			count := 0
-			c := readAlignments(*mateAlnFile)
-			for a := range c {
-				mateAlnChan <- a
-				bar.Add(1)
-				count++
-			}
-		}()
-	}
+	/*	var mateAlnChan chan Alignment
+		if bar == nil {
+			mateAlnChan = readAlignments(*mateAlnFile)
+			//mateAlnChan = findMateAln(+mateAlnFile, aln.ID)
+		} else {
+			mateAlnChan = make(chan Alignment)
+			go func() {
+				defer close(mateAlnChan)
+				count := 0
+				c := readAlignments(*mateAlnFile)
+				for a := range c {
+					mateAlnChan <- a
+					bar.Add(1)
+					count++
+				}
+			}()
+		}*/
 	// these are the lines that potentially need to change; mate calculator for mates
 	// calctwoclades for clades
 	//calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
 	//corrResChan := calcSingleClade(alnChan, calculator)
 
 	calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
-	corrResChan := calcTwoClade(alnChan, mateAlnChan, calculator)
+	corrResChan := calcTwoClade(alnChan, calculator, mateAlnFile)
 
 	resChan := mcorr.PipeOutCorrResults(corrResChan, *outPrefix+".json")
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
@@ -134,7 +136,7 @@ func calcSingleClade(alnChan chan Alignment, calculator Calculator) (corrResChan
 }
 
 // calcTwoClade calculate correlation functions between two clades.
-func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (corrResChan chan mcorr.CorrResults) {
+func calcTwoClade(alnChan chan Alignment, calculator Calculator, mateAlnFile *string) (corrResChan chan mcorr.CorrResults) {
 	type job struct {
 		A, B Alignment
 	}
@@ -142,14 +144,17 @@ func calcTwoClade(alnChan, mateAlnChan chan Alignment, calculator Calculator) (c
 	go func() {
 		defer close(jobChan)
 		for aln := range alnChan {
+			//mateAln := <-mateAlnChan
+			//var mateAln Alignment
+			mateAlnChan := findMateAln(*mateAlnFile, aln.ID)
 			mateAln := <-mateAlnChan
 			if len(aln.Sequences) >= 1 && len(mateAln.Sequences) >= 1 {
 				//need this to make sure it's the same gene when you have two xmfa files
 				if aln.ID == mateAln.ID {
 					j := job{A: aln, B: mateAln}
 					jobChan <- j
+					//fmt.Printf("match")
 				}
-
 			}
 		}
 	}()
@@ -197,6 +202,23 @@ func readAlignments(file string) (alnChan chan Alignment) {
 		for alignment := range c {
 			alnID := strings.Split(alignment[0].Id, " ")[0]
 			alnChan <- Alignment{ID: alnID, Sequences: alignment}
+		}
+	}()
+
+	return
+}
+
+func findMateAln(file string, alnID string) (mateAln chan Alignment) {
+	mateAln = make(chan Alignment)
+	go func() {
+		defer close(mateAln)
+
+		c := readXMFA(file)
+		for alignment := range c {
+			mateAlnID := strings.Split(alignment[0].Id, " ")[0]
+			if mateAlnID == alnID {
+				mateAln <- Alignment{ID: mateAlnID, Sequences: alignment}
+			}
 		}
 	}()
 
