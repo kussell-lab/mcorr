@@ -58,7 +58,7 @@ core_genes = core_genes == len(get_mapped.columns)
 #Export get_mapped
 #This exported dataframe has a gene name index and a column for each serotype.
 #The values are what percentage of samples, for that serotype, had that gene.
-get_mapped.to_csv('gene_percentage_all', sep='\t')
+get_mapped.to_csv('gene_percentage_all.csv', sep='\t')
 
 #Create CORE and FLEX files for each serotype
 for sero_name in seros:

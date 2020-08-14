@@ -144,12 +144,11 @@ func calcTwoClade(alnChan chan Alignment, calculator Calculator, mateAlnFile *st
 	go func() {
 		defer close(jobChan)
 		for aln := range alnChan {
-			//mateAln := <-mateAlnChan
-			//var mateAln Alignment
+			//find the same gene in the second alignment file
 			mateAlnChan := findMateAln(*mateAlnFile, aln.ID)
 			mateAln := <-mateAlnChan
 			if len(aln.Sequences) >= 1 && len(mateAln.Sequences) >= 1 {
-				//need this to make sure it's the same gene when you have two xmfa files
+				//double-check that you have the same gene from both files!
 				if aln.ID == mateAln.ID {
 					j := job{A: aln, B: mateAln}
 					jobChan <- j
