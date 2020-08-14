@@ -3,13 +3,13 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32GB
 #SBATCH --array=1-8
-#SBATCH -t2-0
+#SBATCH --time=6:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
 
 ###
 #BACKGROUND
-#This script assumes you've already run the normal 'pipline' script and the 'RefGen_Core_Flex_Split.py' script.
+#This script assumes you've already run the normal 'pipeline' script and the 'RefGen_Core_Flex_Split.py' script.
 
 #NOTES
 #Minor untested edits have been made to this file to make it more readable.
@@ -54,6 +54,6 @@ pipe_dream () {
 }
 
 echo "SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
-sero=$(sed "${SLURM_ARRAY_TASK_ID}q;d" sero_list_8)
+sero=$(sed "${SLURM_ARRAY_TASK_ID}q;d" sero_list)
 echo "Running Serotype: " $sero
 pipe_dream $sero

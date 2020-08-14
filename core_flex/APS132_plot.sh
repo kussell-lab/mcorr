@@ -3,8 +3,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=APS132_plot
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16GB
-#SBATCH --time=0:30:00
+#SBATCH --mem=32GB
+#SBATCH --time=3:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
 #SBATCH --output=slurm_%j.out ##can be changed to "$OUTPUT" in the iterated code

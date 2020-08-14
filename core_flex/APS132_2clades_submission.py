@@ -18,7 +18,7 @@ mkdir_p(job_directory)
 mkdir_p(archive)
 
 'make all possible combos from sero_list file, and sort them alphabetically'
-sero_list_file = 'sero_list_7'
+sero_list_file = 'sero_list'
 
 #read the list of serotypes
 sero_list = []
@@ -32,12 +32,10 @@ combolist = []
 wrkd = '/scratch/aps376/Archive'
 for c in serocombs:
     combolist.append((c[0], c[1]))
-    print(c[0]+c[1])
+ #   print(c[0]+c[1])
 
 gene = ['CORE', 'FLEX']
 
-for g in gene:
-    print(g)
 for g in gene:
     for c in combolist:
         job_file = os.path.join(job_directory, "%s_%s.sh" % (g, c[0]+c[1]))
@@ -50,8 +48,8 @@ for g in gene:
             fh.writelines("#SBATCH --job-name=%s_%s\n" % (g, c[0]+c[1]))
             fh.writelines("#SBATCH --nodes=1\n")
             fh.writelines("#SBATCH --cpus-per-task=8\n")
-            fh.writelines("#SBATCH --time=3:00:00\n")
-            fh.writelines("#SBATCH --mem=16GB\n")
+            fh.writelines("#SBATCH --time=6:00:00\n")
+            fh.writelines("#SBATCH --mem=32GB\n")
             fh.writelines("#SBATCH --mail-type=END,FAIL\n")
             fh.writelines("#SBATCH --mail-user=aps376@nyu.edu\n")
             fh.writelines("#SBATCH --output=%s/%s_%s.out\n" % (job_directory, g, c[0]+c[1]))
@@ -84,4 +82,5 @@ for g in gene:
             fh.writelines("mcorr-fit %s/%s_%s_XMFA_OUT.csv %s/%s_%s_FIT_OUT || true"
                           % (outdir, c[0]+c[1], g, outdir, c[0]+c[1], g))
         os.system("sbatch %s" %job_file)
-        time.sleep(1)
+        print('submitted %s for %s' %(g, c[0]+c[1]))
+        time.sleep(2)
