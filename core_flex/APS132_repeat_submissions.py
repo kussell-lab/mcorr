@@ -11,33 +11,43 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 #define directories
-job_directory = "%s/APS132_v5" %os.getcwd()
+job_directory = "%s/APS132_v4" %os.getcwd()
 archive = "%s/Archive" %os.getcwd()
 #scratch = os.environ['SCRATCH']
 mkdir_p(job_directory)
 mkdir_p(archive)
 
-'make all possible combos from sero_list file, and sort them alphabetically'
-sero_list_file = 'sero_list'
+# combolist = [('Kentucky','Oranienburg','FLEX'),
+#              ('Newport', 'Virchow', 'FLEX'),
+#              ('Agona','Typhimurium','FLEX'),
+#              ('Braenderup','Typhimurium','FLEX'),
+#              ('Infantis','Typhimurium','FLEX'),
+#              ('Agona','Enteritidis','FLEX'),
+#              ('Kentucky','Typhimurium','FLEX'),
+#              ('Braenderup','Enteritidis','FLEX')]
 
-#read the list of serotypes
-sero_list = []
-with open(sero_list_file, 'r') as reader:
-    for line in reader:
-        sero_list.append(line.rstrip())
-sero_list = sorted(sero_list)
-serocombs = combinations(sero_list, 2)
-combolist = []
-
+# combolist = [('Enteritidis','Typhimurium','FLEX'),
+#              ('Newport','Typhimurium','FLEX'),
+#              ('Oranienburg','Typhimurium','FLEX'),
+#              ('Agona','Oranienburg','FLEX'),
+#              ('Braenderup','Oranienburg','FLEX'),
+#              ('Enteritidis','Infantis','FLEX'),
+#              ('Enteritidis','Kentucky','FLEX'),
+#              ('Enteritidis','Newport','FLEX'),
+#              ('Enteritidis','Stanley','FLEX'),
+#              ('Kentucky','Oranienburg','FLEX')
+#              ]
+combolist = [('Braenderup','Oranienburg','FLEX'),
+             ('Typhi','Typhimurium','FLEX'),
+             ('Kentucky','Oranienburg','FLEX')]
 wrkd = '/scratch/aps376/Archive'
-for c in serocombs:
-    combolist.append((c[0], c[1]))
- #   print(c[0]+c[1])
 
 gene = ['CORE', 'FLEX']
 
 for g in gene:
     for c in combolist:
+        if c[2] != g:
+            continue
         job_file = os.path.join(job_directory, "%s_%s.sh" % (g, c[0]+c[1]))
         outdir = "%s/Archive/%s_OUT" % (os.getcwd(), c[0]+c[1])
         mkdir_p(outdir)

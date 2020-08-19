@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=FIT_CORE_FLEX
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=32GB
-#SBATCH --array=1-8
-#SBATCH --time=6:00:00
+#SBATCH --array=1-11
+#SBATCH --time=24:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
 

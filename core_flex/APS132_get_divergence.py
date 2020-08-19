@@ -3,16 +3,18 @@ import sys
 from tqdm import tqdm
 import pandas as pd
 from itertools import combinations
-import seaborn as sns
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
+# import seaborn as sns
+# import matplotlib as mpl
+# mpl.use('Agg')
+# import matplotlib.pyplot as plt
 import os
 
 def main():
 
     sero_list_file = sys.argv[1]
     file_dir = sys.argv[2]
+    ##temp
+    #file_dir = '/Volumes/GoogleDrive/My Drive/200818_Archive/'
 
     #read the list of serotypes
     sero_list = []
@@ -27,9 +29,9 @@ def main():
 
     phi = []
     theta = []
+    d = []
     ##names
     genenames = []
-    flexnames = []
     type = []
     seronames = []
     i = 0
@@ -46,21 +48,33 @@ def main():
         ##core
         phi.append(core['phi_pool'][0])
         theta.append(core['theta_pool'][0])
+        d.append(core['d_sample'][0])
         genenames.append('core')
         seronames.append(str(sero))
         type.append('within serotype')
         ##flex
         phi.append(flex['phi_pool'][0])
         theta.append(flex['theta_pool'][0])
+        d.append(flex['d_sample'][0])
         genenames.append('flex')
         type.append('within serotype')
         seronames.append(str(sero))
-        i = i + 1
+        if os.path.exists(core_file) and os.path.exists(flex_file):
+            i = i + 2
+        else:
+            i = i + 1
     if i != 0:
-        all_values = list(zip(seronames, phi, theta, genenames, type))
-        within = pd.DataFrame(all_values, columns=['sero', 'phi', 'theta', 'gene', 'type'])
+        all_values = list(zip(seronames, phi, theta, d, genenames, type))
+        within = pd.DataFrame(all_values, columns=['sero', 'phi', 'theta', 'd_sample', 'gene', 'type'])
     #within.to_csv(file_dir + 'corevflex.csv') #, sep='\t')
 ####for between sero data
+    phi = []
+    theta = []
+    d = []
+    ##names
+    genenames = []
+    type = []
+    seronames = []
     j = 0
     for c in combolist:
         core_file = file_dir + c[0]+c[1]+'_OUT/'+c[0]+c[1]+'_CORE_FIT_OUT_fit_results.csv'
@@ -74,27 +88,33 @@ def main():
         ##core
         phi.append(core['phi_pool'][0])
         theta.append(core['theta_pool'][0])
+        d.append(core['d_sample'][0])
         genenames.append('core')
         type.append('between serotype')
         seronames.append(c[0]+c[1])
         ##flex
         phi.append(flex['phi_pool'][0])
         theta.append(flex['theta_pool'][0])
+        d.append(flex['d_sample'][0])
         genenames.append('flex')
         type.append('between serotype')
         seronames.append(c[0]+c[1])
-        j = j + 1
+        if os.path.exists(core_file) and os.path.exists(flex_file):
+            j = j + 2
+        else:
+            j = j + 1
     print('Ran ' + str(i+j) + ' samples so far')
+
     if j != 0:
-        all_values = list(zip(seronames, phi, theta, genenames, type))
-        between = pd.DataFrame(all_values, columns=['sero', 'phi', 'theta', 'gene', 'type'])
+        all_values = list(zip(seronames, phi, theta, d, genenames, type))
+        between = pd.DataFrame(all_values, columns=['sero', 'phi', 'theta', 'd_sample', 'gene', 'type'])
     if i != 0 and j != 0:
         both = within.append(between)
     if i != 0 and j == 0:
         both = within
     if i == 0 and j != 0:
         both = between
-    both.to_csv(file_dir + 'corevflex.csv') #, sep='\t')
+    both.to_csv(file_dir + 'corevflex_w_diversity.csv') #, sep='\t')
     ####
     #plotting currently not working on HPC (which is fine), will ask them to update
     #python 3.7 with the necessary packages
