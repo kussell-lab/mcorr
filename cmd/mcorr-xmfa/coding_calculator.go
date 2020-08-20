@@ -43,46 +43,48 @@ func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, co
 		codons := extractCodons(s, codonOffset)
 		codonSequences = append(codonSequences, codons)
 	}
-	ks := 1.0
-	nn := 0
+	//ks := 1.0
+	//nn := 0
 	for l := 0; l < maxCodonLen; l++ {
 		totalP2 := 0.0
 		totaln := 0
-		if l > 0 && ks == 0.0 {
-			totalP2 = 0.0
-			totaln = nn
-		} else {
-			for i := 0; i+l < len(codonSequences[0]); i++ {
-				codonPairs := []CodonPair{}
-				j := i + l
-				for _, cc := range codonSequences {
-					if i+l < len(cc) {
-						codonPairs = append(codonPairs, CodonPair{A: cc[i], B: cc[j]})
-					}
+		// while this speeds up the code slightly, causes a minor bug when there
+		//are identical sequences loaded
+		//if l > 0 && ks == 0.0 {
+		//	totalP2 = 0.0
+		//	totaln = nn
+		//} else {
+		for i := 0; i+l < len(codonSequences[0]); i++ {
+			codonPairs := []CodonPair{}
+			j := i + l
+			for _, cc := range codonSequences {
+				if i+l < len(cc) {
+					codonPairs = append(codonPairs, CodonPair{A: cc[i], B: cc[j]})
 				}
+			}
 
-				multiCodonPairs := [][]CodonPair{}
-				if synonymous {
-					multiCodonPairs = synonymousSplit(codonPairs, codingTable)
-				} else {
-					multiCodonPairs = append(multiCodonPairs, codonPairs)
-				}
+			multiCodonPairs := [][]CodonPair{}
+			if synonymous {
+				multiCodonPairs = synonymousSplit(codonPairs, codingTable)
+			} else {
+				multiCodonPairs = append(multiCodonPairs, codonPairs)
+			}
+			for _, codonPairs := range multiCodonPairs {
+				if len(codonPairs) >= 2 {
+					nc := doubleCodons(codonPairs, codonPosition)
+					xy, n := nc.P11(0)
+					totalP2 += xy
+					totaln += n
 
-				for _, codonPairs := range multiCodonPairs {
-					if len(codonPairs) >= 2 {
-						nc := doubleCodons(codonPairs, codonPosition)
-						xy, n := nc.P11(0)
-						totalP2 += xy
-						totaln += n
-					}
 				}
 			}
 		}
+		//}
 
-		if l == 0 {
-			ks = totalP2
-			nn = totaln
-		}
+		//if l == 0 {
+		//	ks = totalP2
+		//	nn = totaln
+		//}
 		if totaln > 0 {
 			res1 := mcorr.CorrResult{
 				Lag:  l * 3,
