@@ -29,7 +29,7 @@ sero_list = sorted(sero_list)
 serocombs = combinations(sero_list, 2)
 combolist = []
 
-wrkd = '/scratch/aps376/Archive'
+wrkd = '/scratch/aps376/APS135_Archive'
 for c in serocombs:
     combolist.append((c[0], c[1]))
  #   print(c[0]+c[1])
@@ -39,7 +39,7 @@ gene = ['CORE', 'FLEX']
 for g in gene:
     for c in combolist:
         job_file = os.path.join(job_directory, "%s_%s.sh" % (g, c[0]+c[1]))
-        outdir = "%s/Archive/%s_OUT" % (os.getcwd(), c[0]+c[1])
+        outdir = "%s/APS135_Archive/%s_OUT" % (os.getcwd(), c[0]+c[1])
         mkdir_p(outdir)
         os.system('cd %s' %outdir)
 
@@ -77,7 +77,7 @@ for g in gene:
             fh.writelines("\n")
             fh.writelines("cd %s\n" %outdir)
             fh.writelines("\n")
-            fh.writelines("mcorr-xmfa-2clades %s/%s_OUT/REFGEN_%s_%s %s/%s_OUT/REFGEN_%s_%s %s/%s_%s_XMFA_OUT &&\n"
+            fh.writelines("mcorr-xmfa-2clades %s/%s_OUT/MSA_%s_%s %s/%s_OUT/MSA_%s_%s %s/%s_%s_XMFA_OUT &&\n"
                           % (wrkd, c[0], g, c[0], wrkd, c[1], g, c[1], outdir, c[0]+c[1], g))
             fh.writelines("mcorr-fit %s/%s_%s_XMFA_OUT.csv %s/%s_%s_FIT_OUT || true"
                           % (outdir, c[0]+c[1], g, outdir, c[0]+c[1], g))

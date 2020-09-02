@@ -13,7 +13,7 @@ import errno
 #Specify where the file is that specififies the SRA reference (Ashton 2016 Paper)
 supp_path = '~/Desktop/code/peerj_salmonella/SupplementaryTable1.1.xlsx'
 #path for outputs
-output_path='/Users/asherpreskasteinberg/Desktop/code/recombo/salmonella/'
+output_path='/Users/asherpreskasteinberg/Desktop/code/recombo/200821_salmonella/'
 #generate sra file folder
 sra='SRA_files/'
 srapath = os.path.join(output_path, sra)

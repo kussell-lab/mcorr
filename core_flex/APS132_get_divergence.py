@@ -13,6 +13,7 @@ def main():
 
     sero_list_file = sys.argv[1]
     file_dir = sys.argv[2]
+    file_name = sys.argv[3]
     ##temp
     #file_dir = '/Volumes/GoogleDrive/My Drive/200818_Archive/'
 
@@ -114,7 +115,7 @@ def main():
         both = within
     if i == 0 and j != 0:
         both = between
-    both.to_csv(file_dir + 'corevflex_w_diversity.csv') #, sep='\t')
+    both.to_csv(file_dir + file_name + '.csv') #, sep='\t')
     ####
     #plotting currently not working on HPC (which is fine), will ask them to update
     #python 3.7 with the necessary packages

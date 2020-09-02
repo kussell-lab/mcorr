@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=FIT_CORE_FLEX
+#SBATCH --job-name=APS135within
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=32GB
-#SBATCH --array=1-11
-#SBATCH --time=24:00:00
+#SBATCH --mem=16GB
+#SBATCH --array=1-18
+#SBATCH --time=4:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
 
@@ -40,16 +40,17 @@ export PATH=$PATH:~/opt/ReferenceAlignmentGenerator
 ##INPUTS
 #The directory you want create serotype folders in. You need lots of space.
 WRKD=/scratch/aps376
+Archive=APS135_Archive
 
 pipe_dream () {
 	SERO=$1
-	cd ${WRKD}/Archive/${SERO}_OUT
+	cd ${WRKD}/${Archive}/${SERO}_OUT
 
 	for gt in {'CORE','FLEX'}
 	do
 	echo $gt
-        mcorr-xmfa ${WRKD}/Archive/${SERO}_OUT/REFGEN_${gt}_${SERO} ${WRKD}/Archive/${SERO}_OUT/${SERO}_${gt}_XMFA_OUT &&
-        mcorr-fit ${WRKD}/Archive/${SERO}_OUT/${SERO}_${gt}_XMFA_OUT.csv ${WRKD}/Archive/${SERO}_OUT/${SERO}_${gt}_FIT_OUT || true #Needs X11 forwarding. Can/should fix this.
+        mcorr-xmfa ${WRKD}/${Archive}/${SERO}_OUT/MSA_${gt}_${SERO} ${WRKD}/${Archive}/${SERO}_OUT/${SERO}_${gt}_XMFA_OUT &&
+        mcorr-fit ${WRKD}/${Archive}/${SERO}_OUT/${SERO}_${gt}_XMFA_OUT.csv ${WRKD}/${Archive}/${SERO}_OUT/${SERO}_${gt}_FIT_OUT || true #Needs X11 forwarding. Can/should fix this.
 	done
 }
 
