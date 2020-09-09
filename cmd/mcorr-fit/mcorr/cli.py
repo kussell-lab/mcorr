@@ -56,9 +56,11 @@ def main():
     # write fitting report
     report_file = prefix + "_fit_reports.txt"
     write_fitting_reports(fit_results, model_params[1:7], report_file)
+
     # plot histogram of fitted parameters
-    params_hist_file = prefix + "_parameter_histograms.svg"
-    plot_params(fit_results, model_params[1:7], params_hist_file)
+    # temporarily taking this out because it seems to be problematic
+    # params_hist_file = prefix + "_parameter_histograms.svg"
+    # plot_params(fit_results, model_params[1:7], params_hist_file)
 
 if __name__ == "__main__":
     main()

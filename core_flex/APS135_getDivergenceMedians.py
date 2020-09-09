@@ -17,8 +17,10 @@ def main():
     file_dir = sys.argv[2]
     file_name = sys.argv[3]
     ##temp
-    file_dir = '/Volumes/GoogleDrive/My Drive/hpc/APS135/APS135_200825_Archive/'
-    file_name = 'APS135_0828_coreflex'
+    sero_list_file = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS136_staph/cc_list'
+    file_dir = '/Volumes/GoogleDrive/My Drive/hpc/APS136_staph/APS136_200904_Archive/'
+    file_name = 'APS136_0904_coreflex'
+    out_dir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS136/'
 
     #read the list of serotypes
     sero_list = []
@@ -264,7 +266,7 @@ def main():
         both = within
     if i == 0 and j != 0:
         both = between
-    both.to_csv(file_dir + file_name + '.csv') #, sep='\t')
+    both.to_csv(out_dir + file_name + '.csv') #, sep='\t')
 
 if __name__ == "__main__":
     main()

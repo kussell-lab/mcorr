@@ -13,4 +13,4 @@ SRC=/home/aps376/recombo
 module purge
 module load python3/intel/3.6.3 ##do 3.7.3!
 
-python3 $SRC/RefGen_Core_Flex_Split_APS1.py
+python3 $SRC/APS137MSA_Core_Flex_Split.py

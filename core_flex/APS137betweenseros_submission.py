@@ -11,14 +11,14 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 #define directories
-job_directory = "%s/APS136_btwnclades" %os.getcwd()
-archive = "%s/APS136_Archive" %os.getcwd()
+job_directory = "%s/APS137_btwnclades" %os.getcwd()
+archive = "%s/APS137_Archive" %os.getcwd()
 #scratch = os.environ['SCRATCH']
 mkdir_p(job_directory)
 mkdir_p(archive)
 
 'make all possible combos from sero_list file, and sort them alphabetically'
-sero_list_file = '/home/aps376/APS136_staph/cc_list'
+sero_list_file = '/home/aps376/APS137_ngs/ST_list'
 
 #read the list of serotypes
 sero_list = []
@@ -29,30 +29,32 @@ sero_list = sorted(sero_list)
 serocombs = combinations(sero_list, 2)
 combolist = []
 
-wrkd = '/scratch/aps376/APS136_Archive'
+wrkd = '/scratch/aps376/APS137_Archive'
 for c in serocombs:
-    combolist.append((c[0], c[1]))
+    combolist.append((str(c[0]), str(c[1])))
  #   print(c[0]+c[1])
+
+#combolist = [(str(11172), str(1588))]
 
 gene = ['CORE', 'FLEX']
 
 for g in gene:
     for c in combolist:
-        job_file = os.path.join(job_directory, "%s_%s.sh" % (g, c[0]+c[1]))
-        outdir = "%s/APS136_Archive/%s_OUT" % (os.getcwd(), c[0]+c[1])
+        job_file = os.path.join(job_directory, "%s_%s.sh" % (g, 'ST-'+c[0]+'_ST-'+c[1]))
+        outdir = "%s/APS137_Archive/%s_OUT" % (os.getcwd(), 'ST-'+c[0]+'_ST-'+c[1])
         mkdir_p(outdir)
         os.system('cd %s' %outdir)
 
         with open(job_file, "w+") as fh:
             fh.writelines("#!/bin/bash\n")
-            fh.writelines("#SBATCH --job-name=%s_%s\n" % (g, c[0]+c[1]))
+            fh.writelines("#SBATCH --job-name=%s_%s\n" % (g, 'ST-'+c[0]+'_ST-'+c[1]))
             fh.writelines("#SBATCH --nodes=1\n")
-            fh.writelines("#SBATCH --cpus-per-task=16\n")
-            fh.writelines("#SBATCH --time=6:00:00\n")
+            fh.writelines("#SBATCH --cpus-per-task=8\n")
+            fh.writelines("#SBATCH --time=3:00:00\n")
             fh.writelines("#SBATCH --mem=16GB\n")
             fh.writelines("#SBATCH --mail-type=END,FAIL\n")
             fh.writelines("#SBATCH --mail-user=aps376@nyu.edu\n")
-            fh.writelines("#SBATCH --output=%s/%s_%s.out\n" % (job_directory, g, c[0]+c[1]))
+            fh.writelines("#SBATCH --output=%s/%s_%s.out\n" % (job_directory, g, 'ST-'+c[0]+'_ST-'+c[1]))
             fh.writelines("#SBATCH --mail-user=aps376@nyu.edu\n")
             fh.writelines("\n")
             #load modules
@@ -78,9 +80,9 @@ for g in gene:
             fh.writelines("cd %s\n" %outdir)
             fh.writelines("\n")
             fh.writelines("mcorr-xmfa-2clades %s/%s_OUT/MSA_%s_%s %s/%s_OUT/MSA_%s_%s %s/%s_%s_XMFA_OUT &&\n"
-                          % (wrkd, c[0], g, c[0], wrkd, c[1], g, c[1], outdir, c[0]+c[1], g))
+                          % (wrkd, 'NGS_'+c[0], g, 'ST-'+c[0], wrkd, 'NGS_'+c[1], g, 'ST-'+c[1], outdir, 'ST-'+c[0]+'_ST-'+c[1], g))
             fh.writelines("mcorr-fit %s/%s_%s_XMFA_OUT.csv %s/%s_%s_FIT_OUT || true"
-                          % (outdir, c[0]+c[1], g, outdir, c[0]+c[1], g))
+                          % (outdir, 'ST-'+c[0]+'_ST-'+c[1], g, outdir, 'ST-'+c[0]+'_ST-'+c[1], g))
         os.system("sbatch %s" %job_file)
-        print('submitted %s for %s' %(g, c[0]+c[1]))
+        print('submitted %s for %s' %(g, 'ST-'+c[0]+'_ST-'+c[1]))
         time.sleep(2)

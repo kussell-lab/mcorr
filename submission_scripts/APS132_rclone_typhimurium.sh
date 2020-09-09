@@ -10,7 +10,7 @@ SCRATCH=$SCRATCH/Typhimurium
 mkdir -p $JOBDIR
 mkdir -p $SAVEDIR
 ##make it pause a second in between submissions so we don't break the cluster
-for y in 'SRR1957724-SRR1959727' 'SRR1969400-500' 'SRR1969700-SRR1970000' 'SRR1963318-SRR1966998' 'SRR1969500-600' 'SRR1970000-SRR1970327' 'SRR1967022-SRR1969387' 'SRR1969600-700' 'SRR3048518-3049975'
+for y in 'SRR1963318-SRR1966998' 'SRR1967022-SRR1969387' 'SRR1969400-500' 'SRR1969500-600' 'SRR1969600-700' 'SRR1969700-SRR1970000' 'SRR1970000-SRR1970327' 'SRR3048518-3049975'
 do
   jobfile=$JOBDIR/compress_$y.sh
 
@@ -28,9 +28,9 @@ do
 module load rclone/1.38
 
 echo \"let's rock\"
-tar zcvf $SCRATCH/$y.tar.gz $SCRATCH/$y
-rclone copy $y.tar.gz googledrive:hpc/APS132_salmonella_coreflex/Typhimurium
-mv $SCRATCH/$y.tar.gz $SAVEDIR/$y.tar.gz" > $jobfile
+cd $SCRATCH
+rclone copy $y.tar.gz googledrive:hpc/APS132_salmonella_coreflex/Typhimurium/$y.tar.gz
+mv /scratch/aps376/Typhimurium/$y.tar.gz /archive/a/aps376/$y.tar.gz" > $jobfile
   sbatch "$jobfile"
   echo "I'm taking a 1 second break"
   sleep 1 #pause the script for a second so we don't break the cluster with our magic
