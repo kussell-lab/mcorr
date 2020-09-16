@@ -25,7 +25,7 @@ func main() {
 	mateFile := app.Flag("second-alignment", "Second alignment file in XMFA format").Default("").String()
 	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synoumous at third codon position.").Default("4").Int()
+	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synonymous at third codon position.").Default("4").Int()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *ncpu == 0 {
@@ -33,9 +33,9 @@ func main() {
 	}
 	runtime.GOMAXPROCS(*ncpu)
 
-	synoumous := false
+	synonymous := true
 	if *codonPos == 4 {
-		synoumous = true
+		synonymous = true
 		*codonPos = 3
 	}
 	if *codonPos <= 0 || *codonPos > 4 {
@@ -83,7 +83,7 @@ func main() {
 						mateSequence = s
 					}
 				}
-				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synoumous, *codonPos-1, mateSequence)
+				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
 				for _, res := range corrRes {
 					resChan <- res
 				}

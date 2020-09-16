@@ -17,26 +17,7 @@ archive = "%s/APS135_Archive" %os.getcwd()
 mkdir_p(job_directory)
 mkdir_p(archive)
 
-# combolist = [('Kentucky','Oranienburg','FLEX'),
-#              ('Newport', 'Virchow', 'FLEX'),
-#              ('Agona','Typhimurium','FLEX'),
-#              ('Braenderup','Typhimurium','FLEX'),
-#              ('Infantis','Typhimurium','FLEX'),
-#              ('Agona','Enteritidis','FLEX'),
-#              ('Kentucky','Typhimurium','FLEX'),
-#              ('Braenderup','Enteritidis','FLEX')]
 
-# combolist = [('Enteritidis','Typhimurium','FLEX'),
-#              ('Newport','Typhimurium','FLEX'),
-#              ('Oranienburg','Typhimurium','FLEX'),
-#              ('Agona','Oranienburg','FLEX'),
-#              ('Braenderup','Oranienburg','FLEX'),
-#              ('Enteritidis','Infantis','FLEX'),
-#              ('Enteritidis','Kentucky','FLEX'),
-#              ('Enteritidis','Newport','FLEX'),
-#              ('Enteritidis','Stanley','FLEX'),
-#              ('Kentucky','Oranienburg','FLEX')
-#              ]
 combolist = [('Agona-EBG54','Newport-EBG3','FLEX'),
              ('Agona-EBG54','Oranienburg-EBG41','FLEX'),
              ('Agona-EBG54','Stanley-EBG29','FLEX'),
