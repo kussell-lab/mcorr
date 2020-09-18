@@ -13,12 +13,13 @@ import (
 	"github.com/apsteinberg/biogo/seq"
 	"github.com/apsteinberg/mcorr"
 	"github.com/apsteinberg/ncbiftp/taxonomy"
+	"github.com/tobgu/qframe"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func main() {
-	app := kingpin.New("mcorr-pair", "Calculate mutation correlation for each pair of isolates")
-	app.Version("v20170728")
+	app := kingpin.New("mcorr-pair-specific", "Calculate mutation correlation for each pair of isolates")
+	app.Version("v20200917")
 
 	alnFile := app.Arg("in", "Alignment file in XMFA format").Required().String()
 	outFile := app.Arg("out", "Output file in CSV format").Required().String()
@@ -27,9 +28,8 @@ func main() {
 	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synonymous at third codon position.").Default("4").Int()
+	pairList := app.Flag("pair-list", "list of isolate pairs you want to run").Default("").String()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-	//timer
-
 	start := time.Now()
 
 	if *ncpu == 0 {
@@ -67,6 +67,14 @@ func main() {
 		f.Close()
 	}
 
+	//define the list of isolate pairs
+	/*	csvfile, err := os.Open(*pairList)
+		if err != nil {
+			log.Fatal(err)
+		}
+		isoPairs := qframe.ReadCSV(csvfile)
+		fmt.Println(isoPairs)*/
+
 	alnChan := readAlignments(*alnFile)
 
 	codingTable := taxonomy.GeneticCodes()["11"]
@@ -87,7 +95,7 @@ func main() {
 						mateSequence = s
 					}
 				}
-				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+				corrRes := calcP2Coding(aln, pairList, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
 				for _, res := range corrRes {
 					resChan <- res
 				}
@@ -141,7 +149,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				numAln++
 				alnID := strings.Split(alignment[0].Id, " ")[0]
 				alnChan <- Alignment{ID: alnID, Sequences: alignment}
-				fmt.Printf("\rRead %d alignments.", numAln)
+				// fmt.Printf("\rRead %d alignments.", numAln)
 			}
 		}
 		fmt.Printf(" Total alignments %d\n", numAln)
@@ -150,7 +158,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 	return
 }
 
-func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []mcorr.CorrResults) {
+func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []mcorr.CorrResults) {
 	codonSequences := [][]Codon{}
 	sequences := []seq.Sequence{}
 	if mateSequence != nil {
@@ -162,12 +170,51 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 		codonSequences = append(codonSequences, codons)
 	}
 
+	//define the list of isolate pairs
+	csvfile, err := os.Open(*pairList)
+	if err != nil {
+		log.Fatal(err)
+	}
+	isoPairs := qframe.ReadCSV(csvfile)
+	//fmt.Println(isoPairs)
+
+	count := 0
+	//breaks := 0
 	for i, seq1 := range codonSequences {
+		_, genomeName1 := getNames(aln.Sequences[i].Id)
+		totPairs := isoPairs.Len()
+
+		//if neither of the columns has one of the isolates, skip the whole
+		//inner loop
+		check := isoPairs.Filter(qframe.Or(
+			qframe.Filter{Column: "pair_0", Comparator: "=", Arg: genomeName1},
+			qframe.Filter{Column: "pair_1", Comparator: "=", Arg: genomeName1}))
+		if check.Len() == 0 {
+			continue
+		}
+
 		for j := i + 1; j < len(codonSequences); j++ {
 			_, genomeName1 := getNames(aln.Sequences[i].Id)
 			_, genomeName2 := getNames(aln.Sequences[j].Id)
-			if genomeName1 > genomeName2 {
-				genomeName1, genomeName2 = genomeName2, genomeName1
+
+			//alpha-numerically order the genome names
+			//genomeNames := []string{genomeName1, genomeName2}
+			//sort.Strings(genomeNames)
+			//genomeName1, genomeName2 = genomeNames[0], genomeNames[1]
+			//genomeName1 = sortedNames[0]
+			//genomeName2 = sortedNames[1]
+
+			// check if this pair is part of our list, in either order
+			check1 := isoPairs.Filter(qframe.And(
+				qframe.Filter{Column: "pair_0", Comparator: "=", Arg: genomeName1},
+				qframe.Filter{Column: "pair_1", Comparator: "=", Arg: genomeName2}))
+			check2 := isoPairs.Filter(qframe.And(
+				qframe.Filter{Column: "pair_0", Comparator: "=", Arg: genomeName2},
+				qframe.Filter{Column: "pair_1", Comparator: "=", Arg: genomeName1}))
+
+			if check1.Len()+check2.Len() == 0 {
+				//fmt.Printf("I'm skipping again")
+				continue
 			}
 			id := genomeName1 + "_vs_" + genomeName2
 			seq2 := codonSequences[j]
@@ -220,12 +267,20 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 				crRes.Results = append(crRes.Results, cr)
 			}
 			results = append(results, crRes)
+			// break the loop if we've gotten all isolate pairs
+			count = count + 1
+			//fmt.Printf("\rCurrent count is %d pairs.", count)
+			if totPairs == count {
+				//breaks = breaks + 1
+				//fmt.Printf("\ronly broke %d times.", breaks)
+				break
+			}
 		}
 		if mateSequence != nil {
 			break
 		}
 	}
-
+	fmt.Printf("\rFinal count is %d pairs.", count)
 	return
 }
 
