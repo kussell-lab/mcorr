@@ -12,8 +12,10 @@ def parse_description_line(line):
     """
     line = line.rstrip()[1:] # ignore '>'
     words = line.split(' ')
-    alignment_name = words[len(words)-1]
-    strain_name = words[0].split(':')[0]
+    #alignment_name = words[len(words)-1]
+    alignment_name = words[0]
+    strain_name = words[1]
+    #strain_name = words[0].split(':')[0]
     return (strain_name, alignment_name)
 
 def read_fasta(filename):
@@ -50,7 +52,7 @@ numsplits = 80
 outdir = '/Users/asherpreskasteinberg/Desktop/code/recombo/Helicobacter_pylori_global_population/'
 csvname = 'strain_lists/0918_hpylori'
 ##xmfa file
-xmfa = outdir+'BIGSdb_gene-by-gene_alignment.xmfa'
+xmfa = outdir+'0919_HP_401strains.xmfa'
 
 sequence_list = read_fasta(xmfa)
 strain_set = set()

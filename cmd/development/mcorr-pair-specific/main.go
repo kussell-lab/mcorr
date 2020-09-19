@@ -68,12 +68,12 @@ func main() {
 	}
 
 	//define the list of isolate pairs
-	/*	csvfile, err := os.Open(*pairList)
-		if err != nil {
-			log.Fatal(err)
-		}
-		isoPairs := qframe.ReadCSV(csvfile)
-		fmt.Println(isoPairs)*/
+	var isoPairs qframe.QFrame
+	csvfile, err := os.Open(*pairList)
+	if err != nil {
+		log.Fatal(err)
+	}
+	isoPairs = qframe.ReadCSV(csvfile)
 
 	alnChan := readAlignments(*alnFile)
 
@@ -95,7 +95,8 @@ func main() {
 						mateSequence = s
 					}
 				}
-				corrRes := calcP2Coding(aln, pairList, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+
+				corrRes := calcP2Coding(aln, isoPairs, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
 				for _, res := range corrRes {
 					resChan <- res
 				}
@@ -149,7 +150,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				numAln++
 				alnID := strings.Split(alignment[0].Id, " ")[0]
 				alnChan <- Alignment{ID: alnID, Sequences: alignment}
-				// fmt.Printf("\rRead %d alignments.", numAln)
+				fmt.Printf("\rRead %d alignments.", numAln)
 			}
 		}
 		fmt.Printf(" Total alignments %d\n", numAln)
@@ -158,7 +159,8 @@ func readAlignments(file string) (alnChan chan Alignment) {
 	return
 }
 
-func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []mcorr.CorrResults) {
+// isoPairs was pairList before
+func calcP2Coding(aln Alignment, isoPairs qframe.QFrame, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence *seq.Sequence) (results []mcorr.CorrResults) {
 	codonSequences := [][]Codon{}
 	sequences := []seq.Sequence{}
 	if mateSequence != nil {
@@ -171,21 +173,20 @@ func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen 
 	}
 
 	//define the list of isolate pairs
-	csvfile, err := os.Open(*pairList)
-	if err != nil {
-		log.Fatal(err)
-	}
-	isoPairs := qframe.ReadCSV(csvfile)
-	//fmt.Println(isoPairs)
+	//csvfile, err := os.Open(*pairList)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//isoPairs := qframe.ReadCSV(csvfile)
+	////fmt.Println(isoPairs)
 
 	count := 0
 	//breaks := 0
 	for i, seq1 := range codonSequences {
-		_, genomeName1 := getNames(aln.Sequences[i].Id)
 		totPairs := isoPairs.Len()
-
-		//if neither of the columns has one of the isolates, skip the whole
+		////if neither of the columns has one of the isolates, skip the whole
 		//inner loop
+		_, genomeName1 := getNames(aln.Sequences[i].Id)
 		check := isoPairs.Filter(qframe.Or(
 			qframe.Filter{Column: "pair_0", Comparator: "=", Arg: genomeName1},
 			qframe.Filter{Column: "pair_1", Comparator: "=", Arg: genomeName1}))
@@ -196,13 +197,6 @@ func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen 
 		for j := i + 1; j < len(codonSequences); j++ {
 			_, genomeName1 := getNames(aln.Sequences[i].Id)
 			_, genomeName2 := getNames(aln.Sequences[j].Id)
-
-			//alpha-numerically order the genome names
-			//genomeNames := []string{genomeName1, genomeName2}
-			//sort.Strings(genomeNames)
-			//genomeName1, genomeName2 = genomeNames[0], genomeNames[1]
-			//genomeName1 = sortedNames[0]
-			//genomeName2 = sortedNames[1]
 
 			// check if this pair is part of our list, in either order
 			check1 := isoPairs.Filter(qframe.And(
@@ -270,7 +264,7 @@ func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen 
 			// break the loop if we've gotten all isolate pairs
 			count = count + 1
 			//fmt.Printf("\rCurrent count is %d pairs.", count)
-			if totPairs == count {
+			if count == totPairs {
 				//breaks = breaks + 1
 				//fmt.Printf("\ronly broke %d times.", breaks)
 				break
@@ -279,9 +273,13 @@ func calcP2Coding(aln Alignment, pairList *string, codonOffset int, maxCodonLen 
 		if mateSequence != nil {
 			break
 		}
+		if count == totPairs {
+			break
+		}
 	}
 	fmt.Printf("\rFinal count is %d pairs.", count)
 	return
+
 }
 
 // Codon is a byte list of length 3
@@ -328,9 +326,18 @@ func countAlignments(file string) (count int) {
 }
 
 func getNames(s string) (geneName, genomeName string) {
+	//double check this for the sra files
 	terms := strings.Split(s, " ")
 	geneName = terms[0]
 	genomeName = terms[1]
+
+	// for h pylori BIGSdb file
+	//	terms := strings.Split(s, " ")
+	//	geneName = terms[2]
+	//	temp := terms[0]
+	//	strainTerms := strings.Split(temp, ":")
+	//	genomeName = strainTerms[0]
+
 	return
 }
 
