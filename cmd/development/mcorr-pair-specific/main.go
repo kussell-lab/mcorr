@@ -151,6 +151,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				alnID := strings.Split(alignment[0].Id, " ")[0]
 				alnChan <- Alignment{ID: alnID, Sequences: alignment}
 				fmt.Printf("\rRead %d alignments.", numAln)
+				fmt.Printf("\r alignment ID: %s", alnID)
 			}
 		}
 		fmt.Printf(" Total alignments %d\n", numAln)
@@ -329,7 +330,9 @@ func getNames(s string) (geneName, genomeName string) {
 	//double check this for the sra files
 	terms := strings.Split(s, " ")
 	geneName = terms[0]
-	genomeName = terms[1]
+	//genomeName = terms[1]
+	//for the output of referencealignmentgenerator
+	genomeName = terms[2]
 
 	// for h pylori BIGSdb file
 	//	terms := strings.Split(s, " ")

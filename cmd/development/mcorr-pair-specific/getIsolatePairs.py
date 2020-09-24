@@ -47,18 +47,21 @@ def read_fasta(filename):
 begin making pairs
 """
 ##number of splits you want to make
-numsplits = 80
+numsplits = 100
 ##what you want to name the csv
-outdir = '/Users/asherpreskasteinberg/Desktop/code/recombo/Helicobacter_pylori_global_population/'
-csvname = 'strain_lists/0918_hpylori'
-##xmfa file
-xmfa = outdir+'0919_HP_401strains.xmfa'
+outdir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS139_ngs/'
+csvname = 'strain_lists/0924_ngs'
+# ##xmfa file
+# xmfa = outdir+'0919_HP_401strains.xmfa'
+#
+# sequence_list = read_fasta(xmfa)
+# strain_set = set()
+# for strain, _, _ in sequence_list:
+#     strain_set.add(strain)
 
-sequence_list = read_fasta(xmfa)
-strain_set = set()
-for strain, _, _ in sequence_list:
-    strain_set.add(strain)
-strains = list(strain_set)
+MLSTpath = "/Users/asherpreskasteinberg/Desktop/code/recombo/APS137_ngs/MLST_profiles_APS1.csv"
+MLST = pd.read_csv(MLSTpath)
+strains = list(MLST['Sample'])
 print(len(strains))
 combos = combinations(strains, 2)
 list0 = []

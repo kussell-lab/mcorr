@@ -4,29 +4,31 @@
 
 ##make job directory
 SCRATCH=/scratch/aps376
-JOBDIR=${SCRATCH}/APS139_ngs_mp
-OUTDIR=${SCRATCH}/APS139_Archive
+JOBDIR=${SCRATCH}/APS139_ngs_mps
+OUTDIR=${SCRATCH}/APS139_mps_Archive
 MSA=${SCRATCH}/MSA_CORE_Master_Sorted
+names=${SCRATCH}/APS139_ngs_strain_lists/0924_ngs
 
+mkdir -p $SCRATCH
 mkdir -p $JOBDIR
 mkdir -p $OUTDIR
-##eventually do 0 to 79
+##eventually do 0 to 99
 
-for line in 'CORE' #{0..79}
+for line in {0..3}
 do
   echo "submitting job #${line}"
   #add $JOBDIR
-  jobfile=$JOBDIR/APS139_ngs_mp_${line}.sh
+  jobfile=$JOBDIR/APS139_ngs_mps_${line}.sh
 
     echo "#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=12:00:00
+#SBATCH --time=4:00:00
 #SBATCH --mem=16GB
 #SBATCH --job-name=NGS_$line
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=$JOBDIR/slurm%j_ngs_mp_$line.out
+#SBATCH --output=$JOBDIR/slurm%j_ngs_mps_$line.out
 
 module load git/gnu/2.16.2
 module load go/1.13.6 #try go/1.13.6
@@ -52,7 +54,7 @@ export PATH=\$PATH:~/opt/ReferenceAlignmentGenerator
 cd $OUTDIR
 
 echo \"let's rock\"
-mcorr-pair $MSA $OUTDIR/NGS_mp_${line}_XMFA_OUT.csv  --max-corr-length=3" > $jobfile
+mcorr-pair-specific $MSA $OUTDIR/HP_mps_CORE_${line}_XMFA_OUT.csv --pair-list=${names}_${line}.csv" > $jobfile
     sbatch "$jobfile"
     echo "I'm taking a 1 second break"
     sleep 1 #pause the script for a second so we don't break the cluster with our magic
