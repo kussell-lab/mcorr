@@ -275,7 +275,9 @@ func countAlignments(file string) (count int) {
 func getNames(s string) (geneName, genomeName string) {
 	terms := strings.Split(s, " ")
 	geneName = terms[0]
-	genomeName = terms[1]
+	//genomeName = terms[1]
+	//this is the genomeName for the MSA files assembled from ReferenceAlignmentGenerator
+	genomeName = terms[2]
 	return
 }
 
