@@ -9,7 +9,6 @@ OUTDIR=${SCRATCH}/APS139_mps_Archive
 MSA=${SCRATCH}/MSA_CORE_Master_Sorted
 names=${SCRATCH}/APS139_ngs_strain_lists/0924_ngs
 
-mkdir -p $SCRATCH
 mkdir -p $JOBDIR
 mkdir -p $OUTDIR
 ##eventually do 0 to 99

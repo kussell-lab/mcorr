@@ -142,6 +142,7 @@ func readAlignments(file string) (alnChan chan Alignment) {
 				alnID := strings.Split(alignment[0].Id, " ")[0]
 				alnChan <- Alignment{ID: alnID, Sequences: alignment}
 				fmt.Printf("\rRead %d alignments.", numAln)
+				fmt.Printf("\r alignment ID: %s", alnID)
 			}
 		}
 		fmt.Printf(" Total alignments %d\n", numAln)
