@@ -3,33 +3,33 @@
 ##then write for multiple
 
 ##make job directory
-JOBDIR=$SCRATCH/APS138_cjejuni_MSA
-WRKDIR=$SCRATCH/cjejuni
-OUTDIR=$SCRATCH/APS138_Archive
-SRC=$HOME/APS138_cjejuni
-FASTA=$SRC/Reference/GCF_000009085.1_ASM908v1_genomic.fna
-GFF=$SRC/Reference/GCF_000009085.1_ASM908v1_genomic.gff
-SRA=$HOME/APS138_cjejuni/filereport_read_run_PRJEB31119_tsv.txt
+JOBDIR=$SCRATCH/APS140_singleclade
+OUTDIR=$SCRATCH/APS140_ngs_Archive
+SRC=$HOME/APS137_ngs
+MSADIR=$SCRATCH/APS140_0929_CF_MSA
 
 mkdir -p $JOBDIR
 mkdir -p $OUTDIR
-mkdir -p $WRKDIR
 ##list of clades
-for line in 'APS138_cjejuni'
-do
-  echo "submitting $line"
-  jobfile=$JOBDIR/${line}.sh
 
-  echo "#!/bin/bash
+##will get to 10 ... in due time
+for line in {1..10}
+do
+  for gt in 'CORE' 'FLEX'
+  do
+    echo "submitting $gt for cluster ${line}"
+    jobfile=$JOBDIR/${gt}_cluster_${line}.sh
+
+    echo "#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --time=48:00:00
-#SBATCH --mem=16GB
-#SBATCH --job-name=${line}
+#SBATCH --time=6:00:00
+#SBATCH --mem=8GB
+#SBATCH --job-name=${gt}_cluster$line
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=$JOBDIR/slurm%j_${line}.out
+#SBATCH --output=$JOBDIR/slurm%j_${gt}_cluster_$line.out
 
 module load git/gnu/2.16.2
 module load go/1.10.2 #try go/1.13.6
@@ -52,13 +52,14 @@ export PATH=\$PATH:\$HOME/go/bin:\$HOME/.local/bin
 export PATH=\$PATH:~/opt/AssemblyAlignmentGenerator/
 export PATH=\$PATH:~/opt/ReferenceAlignmentGenerator
 
-mkdir $OUTDIR/${line}_OUT
-cd $WRKDIR
+cd $OUTDIR
 
 echo \"let's rock\"
-ReferenceAlignmentGenerateENA ${SRA} $WRKDIR $FASTA $GFF $OUTDIR/${line}_OUT/MSA_$line" > $jobfile
-  sbatch "$jobfile"
-  echo "I'm taking a 1 second break"
-  sleep 1 #pause the script for a second so we don't break the cluster with our magic
+mcorr-xmfa $MSADIR/MSA_${gt}_cluster${line} $OUTDIR/cluster${line}_${gt}_XMFA_OUT &&
+mcorr-fit $OUTDIR/cluster${line}_${gt}_XMFA_OUT.csv $OUTDIR/cluster${line}_${gt}_FIT_OUT || true" > $jobfile
+    sbatch "$jobfile"
+    echo "I'm taking a 1 second break"
+    sleep 1 #pause the script for a second so we don't break the cluster with our magic
+    done
 done
 

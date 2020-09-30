@@ -6,13 +6,13 @@
 SCRATCH=/scratch/aps376
 JOBDIR=${SCRATCH}/APS139_ngs_mp
 OUTDIR=${SCRATCH}/APS139_Archive
-MSA=${SCRATCH}/MSA_CORE_Master_Sorted
+MSA=${SCRATCH}/MSA_Master_Sorted
 
 mkdir -p $JOBDIR
 mkdir -p $OUTDIR
 ##eventually do 0 to 79
 
-for line in 'CORE' #{0..79}
+for line in '200925' #{0..79}
 do
   echo "submitting job #${line}"
   #add $JOBDIR
@@ -52,7 +52,7 @@ export PATH=\$PATH:~/opt/ReferenceAlignmentGenerator
 cd $OUTDIR
 
 echo \"let's rock\"
-mcorr-pair $MSA $OUTDIR/NGS_mp_${line}_XMFA_OUT.csv  --max-corr-length=3" > $jobfile
+mcorr-pair $MSA $OUTDIR/NGS_mp_pangenome_XMFA_OUT.csv  --max-corr-length=3" > $jobfile
     sbatch "$jobfile"
     echo "I'm taking a 1 second break"
     sleep 1 #pause the script for a second so we don't break the cluster with our magic

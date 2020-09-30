@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	app := kingpin.New("mcorr-pair-specific", "Calculate mutation correlation for each pair of isolates")
+	app := kingpin.New("mcorr-pair-specific", "Calculate mutation correlation for each pair of isolates from a specific list. THIS IS A TEST")
 	app.Version("v20200917")
 
 	alnFile := app.Arg("in", "Alignment file in XMFA format").Required().String()
