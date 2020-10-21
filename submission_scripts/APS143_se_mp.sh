@@ -12,7 +12,7 @@ mkdir -p $JOBDIR
 mkdir -p $OUTDIR
 ##eventually do 0 to 79
 
-for line in 'se_mp_1013' #{0..79}
+for line in 'se_mp_1015' #{0..79}
 do
   echo "submitting job #${line}"
   #add $JOBDIR

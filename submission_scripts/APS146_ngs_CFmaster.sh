@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=1:00:00
-#SBATCH --mem=32GB
-#SBATCH --job-name=APS143funny
+#SBATCH --cpus-per-task=8
+#SBATCH --time=0:30:00
+#SBATCH --mem=16GB
+#SBATCH --job-name=APS146ngsMSA
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=APS143_genesurgery_slurm%j.out
-
+#SBATCH --output=APS146_CF_MSA_slurm%j.out
 
 projectdir=/scratch/aps376/recombo
 cd ${projectdir}
@@ -20,9 +19,10 @@ source venv/bin/activate;
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
 
 ## job directory
-jobdir=/scratch/aps376/recombo/APS143_se_funnygenes
+jobdir=/scratch/aps376/recombo/APS146_PCA
 
 cd ${jobdir}
 
 echo "let's rock"
-python3 APS143_findFunnyGenes4.py
+python3 APS146_ngs_CF_MSA.py
+

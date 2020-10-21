@@ -41,32 +41,47 @@ with open(MSA, 'r') as master_file:
 
 ###delete the funny gene
 ##store line numbers for future deletion
-funnygenes = []
+#funnygenes = []
 
-with open(MSA, 'r') as master_file:
-    ##line number count
-    i = 0
-    for ln in master_file:
-        if ln.startswith(">"):
-            genename = ln.split(' ')[0]
-            if genename == '>NC_003197.2|cds-YP_009325922.1':
-                ##get that extra equals sign, which may screw things up
-                if lastline.startswith("="):
-                    funnygenes.append(i-1)
-                #grab the gene name line, and the next line which is the gene
-                funnygenes.append(i)
-                funnygenes.append(i+1)
-        lastline = ln
-        i = i + 1
+# with open(MSA, 'r') as master_file:
+#     ##line number count
+#     i = 0
+#     for ln in master_file:
+#         if ln.startswith(">"):
+#             genename = ln.split(' ')[0]
+#             if genename == '>NC_003197.2|cds-YP_009325922.1':
+#                 ##get that extra equals sign, which may screw things up
+#                 if lastline.startswith("="):
+#                     funnygenes.append(i-1)
+#                 #grab the gene name line, and the next line which is the gene
+#                 funnygenes.append(i)
+#                 funnygenes.append(i+1)
+#             ##get our other culprit
+#             elif genename == '>NC_003197.2|cds-NP_459150.1':
+#                 if lastline.startswith("="):
+#                     funnygenes.append(i-1)
+#                 funnygenes.append(i)
+#                 funnygenes.append(i+1)
+#         lastline = ln
+#         i = i + 1
 
 ##remove the gene lines
 
-MSA_file = open(MSA, 'r')
-lines = MSA_file.readlines()
-MSA_file.close()
-
-for gene in funnygenes:
-    del lines[gene]
+# MSA_file = open(MSA, 'r')
+# lines = MSA_file.readlines()
+# MSA_file.close()
+#
+# for gene in funnygenes:
+#     print(str(gene))
+#     del lines[gene]
+#
+# ##re-write the file minus this line
+# new_file = open(MSA, 'w+')
+#
+# for line in lines:
+#     new_file.write(line)
+#
+# new_file.close()
 
 ## double check we gucci now
 
@@ -89,6 +104,7 @@ with open(MSA, 'r') as master_file:
             ##greater than the total number of strains + 1
             ##print the genename
             if genelen > 4710*2+1:
+                print('long gene')
                 print(str(i))
                 print(genename)
             ##reset the genename for this gene
@@ -98,6 +114,6 @@ with open(MSA, 'r') as master_file:
         lastline = ln
         i = i + 1
 
-print(funnygenes)
+#print(funnygenes)
 
 

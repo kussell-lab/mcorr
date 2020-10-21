@@ -9,7 +9,19 @@
 #SBATCH --mail-user=aps376@nyu.edu
 #SBATCH --output=APS143se_MSA_slurm%j.out
 
-module load python3/intel/3.6.3 ##do 3.7.3!
+projectdir=/scratch/aps376/recombo
+cd ${projectdir}
+
+###activate venv
+
+module purge;
+source venv/bin/activate;
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
+
+## job directory
+jobdir=/scratch/aps376/recombo/APS143_se_MSA
+
+cd ${jobdir}
 
 echo "let's rock"
 python3 aps143_sentericaMSA.py
