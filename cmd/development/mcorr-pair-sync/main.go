@@ -96,14 +96,14 @@ func main() {
 					s, found := mateMap[geneid]
 					if found {
 						mateSequence = s
-						corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
-						for _, res := range corrRes {
-							resChan <- res
-						}
+						//corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+						//for _, res := range corrRes {
+						//	resChan <- res
 					}
-					//corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
-					//for _, res := range corrRes {
-					//	resChan <- res
+				}
+				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+				for _, res := range corrRes {
+					resChan <- res
 				}
 			}
 			done <- true
@@ -189,17 +189,20 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 		codonSequences = append(codonSequences, codons)
 	}
 
+	//for i := 0; i < len(mateCodonSequences); i++ {
 	for i, seq1 := range mateCodonSequences {
+		//seq1 := mateCodonSequences[i]
 		//mateName := strings.Split(mateSequences[i].Name, " ")
 		//genomeName1 := mateName[2]
-		_, genomeName1 := getNames(mateSequences[i].Id)
 
-		for j := i + 1; j < len(codonSequences); j++ {
+		for j := 0; j < len(codonSequences); j++ {
+			//for j := i + 1; j < len(codonSequences); j++ {
 			//_, genomeName1 := getNames(aln.Sequences[i].Id)
-			_, genomeName2 := getNames(aln.Sequences[j].Id)
-			//if genomeName1 > genomeName2 {
-			//	genomeName1, genomeName2 = genomeName2, genomeName1
-			//}
+			_, genomeName1 := getNames(mateSequences[i].Id)
+			_, genomeName2 := getNames(sequences[j].Id)
+			if genomeName1 > genomeName2 {
+				genomeName1, genomeName2 = genomeName2, genomeName1
+			}
 			id := genomeName1 + "_vs_" + genomeName2
 			seq2 := codonSequences[j]
 			crRes := mcorr.CorrResults{ID: id}
@@ -252,9 +255,10 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 			}
 			results = append(results, crRes)
 		}
-		if mateSequence != nil {
-			break
-		}
+		//take out again if problems arise!
+		//if mateSequence != nil {
+		//	break
+		//}
 	}
 
 	return
