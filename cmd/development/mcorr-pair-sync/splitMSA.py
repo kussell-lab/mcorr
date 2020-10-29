@@ -20,7 +20,8 @@ this is pretty sweet for building help and parsing commandline arguments can be 
 via python3 splitMSA.py -h
 check out here https://docs.python.org/3/howto/argparse.html#id1
 """
-parser = argparse.ArgumentParser(description='Splits MSA files containing all sequences into smaller MSA files for use with mcorr-pair-sync.')
+parser = argparse.ArgumentParser(description='Splits MSA files containing all sequences into smaller MSA files and re-writes'
+                                             'original MSA file for use with mcorr-pair-sync.')
 ##Inputs##
 parser.add_argument('MSApath', help='path to MSA file to be split')
 parser.add_argument('MSAname', help='Name of MSA file to be split')
@@ -55,6 +56,34 @@ print("%s splits performed" %str(len(split_strains)))
 with open(MSA_file, 'r') as master:
     master_full = master.readlines()
 
+print('re-writing the original MSA ...')
+##remake the original MSA file in the same format
+with open(MSA_file, "r") as MSA:
+    jeans = []
+    for position, ln in enumerate(MSA):
+        if ln.startswith(">"):
+            strain = str.rstrip(ln.split(' ')[2])
+            if strain in strains:
+                gene = ln.split(' ')[0].split('|')[1]
+                jeans.append((position, gene, strain))
+outputMSA = os.path.join(outdir, MSA_name)
+with open(outputMSA, 'w+') as cluster_MSA:
+    lastgene = jeans[0]
+    for gene in tqdm(jeans):
+        if gene[1] != lastgene[1]:
+            cluster_MSA.write('=\n')
+            lastgene = gene
+        header = master_full[gene[0]]
+        seq = master_full[gene[0]+1]
+        cluster_MSA.write(header)
+        cluster_MSA.write(seq)
+    cluster_MSA.write('=')
+
+
+##now split everything else
+
+print('splitting the MSA ...')
+
 for i in tqdm(np.arange(0, len(split_strains))):
     # cluster = cluster_df[cluster_df['cluster_ID'] == i]
     # clusterstrains = cluster['strain'].tolist()
@@ -79,3 +108,4 @@ for i in tqdm(np.arange(0, len(split_strains))):
             seq = master_full[gene[0]+1]
             cluster_MSA.write(header)
             cluster_MSA.write(seq)
+        cluster_MSA.write('=')

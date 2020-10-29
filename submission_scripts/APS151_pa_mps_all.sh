@@ -1,10 +1,11 @@
 #!/bin/bash
 
 #paths
-MSA1=/scratch/aps376/recombo/APS148_PA_Archive/PA_MASTER_OUT/MSA_PA_MASTER
+DATE=1028_v2
+MSA1=/scratch/aps376/recombo/APS148_PA_Archive/PA_split_MSA/MSA_PA_MASTER
 MSA2DIR=/scratch/aps376/recombo/APS148_PA_Archive/PA_split_MSA
-OUTDIR=/scratch/aps376/recombo/APS148_PA_Archive/PA_mps_dists
-SUBMITDIR=/scratch/aps376/recombo/APS151_pa_mps/submissions
+OUTDIR=/scratch/aps376/recombo/APS148_PA_Archive/1028_PA_mps_dists
+SUBMITDIR=/scratch/aps376/recombo/APS151_pa_mps/1028_submissions
 
 mkdir -p $OUTDIR
 mkdir -p $SUBMITDIR
@@ -16,13 +17,13 @@ do
   MSA2=${MSA2DIR}/MSA_PA_MASTER_split${i}
   echo "#!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=0:30:00
-#SBATCH --mem=8GB
+#SBATCH --cpus-per-task=8
+#SBATCH --time=1:30:00
+#SBATCH --mem=4GB
 #SBATCH --job-name=PA_MPS_$i
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=slurm%j_PA_MPS.out
+#SBATCH --output=slurm%j_${DATE}_PA_MPS.out
 
 module load git/gnu/2.16.2
 module load go/1.13.6 #try go/1.13.6
