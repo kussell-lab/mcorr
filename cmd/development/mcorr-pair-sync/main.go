@@ -14,6 +14,7 @@ import (
 	"github.com/apsteinberg/mcorr"
 	"github.com/apsteinberg/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/cheggaaa/pb.v2"
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 	maxl := app.Flag("max-corr-length", "Maximum length of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	codonPos := app.Flag("codon-position", "Codon position (1: first codon position; 2: second codon position; 3: third codon position; 4: synonymous at third codon position.").Default("4").Int()
+	showProgress := app.Flag("show-progress", "Show progress").Default("true").Bool()
+
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	//timer
 
@@ -47,18 +50,16 @@ func main() {
 		log.Fatalln("--codon-position should be in the range of 1 to 4.")
 	}
 
-	var mateMap map[string][]seq.Sequence
+	//var mateMap map[string]Alignment
+	var mateMap map[Key]Alignment
 	f, err := os.Open(*mateFile)
 	if err != nil {
 		panic(err)
 	}
-	//rd := seq.NewFastaReader(f)
-	//sequences, err := rd.ReadAll()
-	//if err != nil {
-	//	panic(err)
-	//}
+	defer f.Close() //MIGHT NEED TO REMOVE!
 	xmfaReader := seq.NewXMFAReader(f)
-	mateMap = make(map[string][]seq.Sequence)
+	//mateMap = make(map[string]Alignment)
+	mateMap = make(map[Key]Alignment)
 	NumSeq := 0
 	for {
 		s, err := xmfaReader.Read()
@@ -70,13 +71,34 @@ func main() {
 		}
 		if len(s) > 0 {
 			NumSeq++
-			geneid := strings.Split(s[0].Id, " ")[0]
-			mateMap[geneid] = s
+			//grab the header for the gene alignment
+			header := strings.Split(s[0].Id, " ")
+			//here, we need both the gene name AND the genome position in
+			//case there are duplicate genes on the genome
+			//geneid := header[0]+"_"+header[1]
+			geneid := header[0]
+			genomePos := header[1]
+			mateMap[Key{geneid, genomePos}] = Alignment{ID: geneid, Pos: genomePos, Sequences: s}
 
 		}
 	}
+	//fmt.Print("length of mate map is %s", NumSeq)
 
-	f.Close()
+	// show progress bar
+	var bar *pb.ProgressBar
+	if *showProgress {
+		max := NumSeq
+		bar = pb.StartNew(max)
+		defer bar.Finish()
+	}
+
+	//special error log
+	//If the file doesn't exist, create it or append to the file
+	//file, err := os.OpenFile("201030-1523-mps_logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//log.SetOutput(file)
 
 	alnChan := readAlignments(*alnFile)
 
@@ -90,21 +112,29 @@ func main() {
 	for i := 0; i < numJob; i++ {
 		go func() {
 			for aln := range alnChan {
-				var mateSequence []seq.Sequence
+				var mateSequence Alignment
 				if mateMap != nil {
-					geneid, _ := getNames(aln.Sequences[0].Id)
-					s, found := mateMap[geneid]
+					geneid, pos, _ := getNames(aln.Sequences[0].Id)
+					s, found := mateMap[Key{geneid, pos}]
 					if found {
 						mateSequence = s
-						//corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
-						//for _, res := range corrRes {
-						//	resChan <- res
+						corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+						for _, res := range corrRes {
+							resChan <- res
+						}
 					}
+					if !found {
+						fmt.Print("gotcha gotcha")
+					}
+					//if geneid == "NZ_LN854556.1|cds-WP_100793797.1" {
+					//	fmt.Print("gotcha")
+					//}
 				}
-				corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
-				for _, res := range corrRes {
-					resChan <- res
-				}
+				//corrRes := calcP2Coding(aln, codonOffset, maxCodonLen, codingTable, synonymous, *codonPos-1, mateSequence)
+				//for _, res := range corrRes {
+				//	resChan <- res
+				//}
+				bar.Add(1)
 			}
 			done <- true
 		}()
@@ -125,8 +155,15 @@ func main() {
 
 // Alignment is an array of multiple sequences with same length
 type Alignment struct {
-	ID        string
+	//was originally string
+	ID        string // gene ID
+	Pos       string //this is new; the position on the genome, so we don't compare alleles
 	Sequences []seq.Sequence
+}
+
+//this is for the key map
+type Key struct {
+	ID, Pos string
 }
 
 // readAlignments reads sequence alignment from a extended Multi-FASTA file,
@@ -153,19 +190,26 @@ func readAlignments(file string) (alnChan chan Alignment) {
 			}
 			if len(alignment) > 0 {
 				numAln++
-				alnID := strings.Split(alignment[0].Id, " ")[0]
-				alnChan <- Alignment{ID: alnID, Sequences: alignment}
-				fmt.Printf("\rRead %d alignments.", numAln)
-				fmt.Printf("\r alignment ID: %s", alnID)
+				//alnID := strings.Split(alignment[0].Id, " ")[0]
+				header := strings.Split(alignment[0].Id, " ")
+				//here, we need both the gene name AND the genome position in
+				//case there are duplicate genes on the genome
+				//alnID := header[0]+"_"+header[1]
+				geneID := header[0]
+				genomePos := header[1]
+				alnChan <- Alignment{ID: geneID, Pos: genomePos, Sequences: alignment}
+				//bar.Add(1)
+				//fmt.Printf("\rRead %d alignments.", numAln)
+				//fmt.Printf("\r alignment ID: %s", alnID)
 			}
 		}
-		fmt.Printf(" Total alignments %d\n", numAln)
+		//fmt.Printf(" Total alignments %d\n", numAln)
 	}
 	go read()
 	return
 }
 
-func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence []seq.Sequence) (results []mcorr.CorrResults) {
+func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *taxonomy.GeneticCode, synonymous bool, codonPos int, mateSequence Alignment) (results []mcorr.CorrResults) {
 	codonSequences := [][]Codon{}
 	sequences := []seq.Sequence{}
 	//for the mate file
@@ -177,7 +221,8 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 	//}
 
 	//define the sequences of the mate file
-	mateSequences = append(mateSequences, mateSequence...)
+	mateSequences = append(mateSequences, mateSequence.Sequences...)
+	//mateSequences = mateSequence
 	for _, s := range mateSequences {
 		mateCodons := extractCodons(s, codonOffset)
 		mateCodonSequences = append(mateCodonSequences, mateCodons)
@@ -189,27 +234,52 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 		codonSequences = append(codonSequences, codons)
 	}
 
-	//for i := 0; i < len(mateCodonSequences); i++ {
-	for i, seq1 := range mateCodonSequences {
-		//seq1 := mateCodonSequences[i]
+	//make sure that we don't run a pair of genomes where the genome
+	//from the aln.Sequences is also part of
+	//mateSequence list; this will result in a duplicate
+	var mates []string
+	for i, _ := range mateCodonSequences {
+		var mate string
+		_, _, mate = getNames(mateSequence.Sequences[i].Id)
+		mates = append(mates, mate)
+	}
+
+	for i := 0; i < len(mateCodonSequences); i++ {
+		//for i, seq1 := range mateCodonSequences {
+
 		//mateName := strings.Split(mateSequences[i].Name, " ")
 		//genomeName1 := mateName[2]
 
 		for j := 0; j < len(codonSequences); j++ {
 			//for j := i + 1; j < len(codonSequences); j++ {
 			//_, genomeName1 := getNames(aln.Sequences[i].Id)
-			_, genomeName1 := getNames(mateSequences[i].Id)
-			_, genomeName2 := getNames(sequences[j].Id)
-			if genomeName1 > genomeName2 {
-				genomeName1, genomeName2 = genomeName2, genomeName1
+			//_, genomeName1 := getNames(mateSequence.Sequences[i].Id)
+			seq1 := mateCodonSequences[i]
+			_, _, genomeName1 := getNames(mateSequence.Sequences[i].Id)
+			_, _, genomeName2 := getNames(aln.Sequences[j].Id)
+
+			//don't run self vs self
+			if genomeName1 == genomeName2 {
+				continue
 			}
+			//make sure we don't run a genome pair twice
+			if genomeName1 > genomeName2 {
+				_, found := Find(mates, genomeName2)
+				if found {
+					continue
+				} else {
+					genomeName1, genomeName2 = genomeName2, genomeName1
+				}
+			}
+
 			id := genomeName1 + "_vs_" + genomeName2
 			seq2 := codonSequences[j]
 			crRes := mcorr.CorrResults{ID: id}
 			for l := 0; l < maxCodonLen; l++ {
 				d := 0.0
 				t := 0
-				for k := 0; k < len(seq1)-l; k++ {
+				//took out constraint of k+l < len(seq2)
+				for k := 0; k+l < len(seq1) && k+l < len(seq2); k++ {
 					c1 := seq1[k]
 					c2 := seq2[k]
 					a1, found1 := codingTable.Table[string(c1)]
@@ -250,15 +320,12 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 				cr.Lag = l * 3
 				cr.Mean = d / float64(t)
 				cr.N = t
+				//log.Printf("%s %d", aln.ID, t)
 				cr.Type = "P2"
 				crRes.Results = append(crRes.Results, cr)
 			}
 			results = append(results, crRes)
 		}
-		//take out again if problems arise!
-		//if mateSequence != nil {
-		//	break
-		//}
 	}
 
 	return
@@ -307,13 +374,15 @@ func countAlignments(file string) (count int) {
 	return
 }
 
-func getNames(s string) (geneName, genomeName string) {
+func getNames(s string) (geneName, genomePos, genomeName string) {
 	terms := strings.Split(s, " ")
 	//this is for the helicobacter test files
 	//geneName = terms[0]
 	//genomeName = terms[1]
 	//this is the genomeName for the MSA files assembled from ReferenceAlignmentGenerator
+	//geneName = terms[0]+"_"+terms[1]
 	geneName = terms[0]
+	genomePos = terms[1]
 	genomeName = terms[2]
 	return
 }
@@ -348,5 +417,23 @@ func CollectWrite(corrResChan chan mcorr.CorrResults, outFile string) {
 		for _, res := range results {
 			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
 		}
+	}
+}
+
+// Find takes a slice and looks for an element in it. If found it will
+// return it's key, otherwise it will return -1 and a bool of false.
+func Find(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+//check error log
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
 }

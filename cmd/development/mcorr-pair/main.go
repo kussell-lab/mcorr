@@ -67,6 +67,14 @@ func main() {
 		f.Close()
 	}
 
+	//special error log -- if you want to log to a text file
+	// If the file doesn't exist, create it or append to the file
+	//file, err := os.OpenFile("201030-1538-mcp_logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//log.SetOutput(file)
+
 	alnChan := readAlignments(*alnFile)
 
 	codingTable := taxonomy.GeneticCodes()["11"]
@@ -170,6 +178,9 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 			if genomeName1 > genomeName2 {
 				genomeName1, genomeName2 = genomeName2, genomeName1
 			}
+			//error log
+			//log.Println(aln.ID)
+
 			id := genomeName1 + "_vs_" + genomeName2
 			seq2 := codonSequences[j]
 			crRes := mcorr.CorrResults{ID: id}
@@ -217,6 +228,8 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 				cr.Lag = l * 3
 				cr.Mean = d / float64(t)
 				cr.N = t
+				//error log
+				//log.Printf("%s %d", aln.ID, t)
 				cr.Type = "P2"
 				crRes.Results = append(crRes.Results, cr)
 			}
@@ -275,9 +288,11 @@ func countAlignments(file string) (count int) {
 
 func getNames(s string) (geneName, genomeName string) {
 	terms := strings.Split(s, " ")
-	geneName = terms[0]
+	//this is for the helicobacter test files
+	//geneName = terms[0]
 	//genomeName = terms[1]
 	//this is the genomeName for the MSA files assembled from ReferenceAlignmentGenerator
+	geneName = terms[0]
 	genomeName = terms[2]
 	return
 }
