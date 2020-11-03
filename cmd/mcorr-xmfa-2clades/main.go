@@ -28,7 +28,7 @@ func main() {
 	maxl := app.Flag("max-corr-length", "Maximum distance of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
-	showProgress := app.Flag("show-progress", "Show progress").Bool()
+	showProgress := app.Flag("show-progress", "Show progress").Default("true").Bool()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -102,9 +102,10 @@ func main() {
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
 }
 
-// Alignment is an array of mutliple sequences with same length.
+// Alignment is an array of multiple sequences with same length.
 type Alignment struct {
-	ID        string
+	ID        string //gene ID
+	Pos       string // position on the genome to differentiate alleles
 	Sequences []seq.Sequence
 }
 
@@ -145,7 +146,7 @@ func calcTwoClade(alnChan chan Alignment, calculator Calculator, mateAlnFile *st
 		defer close(jobChan)
 		for aln := range alnChan {
 			//find the same gene in the second alignment file
-			mateAlnChan := findMateAln(*mateAlnFile, aln.ID)
+			mateAlnChan := findMateAln(*mateAlnFile, aln.ID, aln.Pos)
 			mateAln := <-mateAlnChan
 			if len(aln.Sequences) >= 1 && len(mateAln.Sequences) >= 1 {
 				//double-check that you have the same gene from both files!
@@ -199,24 +200,28 @@ func readAlignments(file string) (alnChan chan Alignment) {
 
 		c := readXMFA(file)
 		for alignment := range c {
-			alnID := strings.Split(alignment[0].Id, " ")[0]
-			alnChan <- Alignment{ID: alnID, Sequences: alignment}
+			header := strings.Split(alignment[0].Id, " ")
+			alnID := header[0]
+			genomePos := header[1]
+			alnChan <- Alignment{ID: alnID, Pos: genomePos, Sequences: alignment}
 		}
 	}()
 
 	return
 }
 
-func findMateAln(file string, alnID string) (mateAln chan Alignment) {
+func findMateAln(file, alnID, alnGenomePos string) (mateAln chan Alignment) {
 	mateAln = make(chan Alignment)
 	go func() {
 		defer close(mateAln)
 
 		c := readXMFA(file)
 		for alignment := range c {
-			mateAlnID := strings.Split(alignment[0].Id, " ")[0]
-			if mateAlnID == alnID {
-				mateAln <- Alignment{ID: mateAlnID, Sequences: alignment}
+			header := strings.Split(alignment[0].Id, " ")
+			mateAlnID := header[0]
+			mateGenomePos := header[1]
+			if mateAlnID == alnID && mateGenomePos == alnGenomePos {
+				mateAln <- Alignment{ID: mateAlnID, Pos: mateGenomePos, Sequences: alignment}
 			}
 		}
 	}()
