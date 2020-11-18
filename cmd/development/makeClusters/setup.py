@@ -14,9 +14,9 @@ setup(name='makeClusters',
         license='MIT',
         author='Asher Preska Steinberg',
         author_email='apsteinberg@nyu.edu',
-        packages=['makeClusters'],
+        packages=['seqClusters'],
         install_requires=requirements,
         entry_points = {
-            'console_scripts' : ['makeClusters=makeClusters.cli:main'],
+            'console_scripts' : ['makeClusters=seqClusters.cli:main'],
             }
       )
