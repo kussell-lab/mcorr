@@ -11,8 +11,8 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 #define directories
-job_directory = "/scratch/aps376/recombo/APS144_sa_btwnclades" %os.getcwd()
-archive = "/scratch/aps376/recombo/APS151_saureus_Archive" %os.getcwd()
+job_directory = "/scratch/aps376/recombo/APS151_sa_btwnclades_v1"
+archive = "/scratch/aps376/recombo/APS151_saureus_Archive"
 #scratch = os.environ['SCRATCH']
 mkdir_p(job_directory)
 mkdir_p(archive)
@@ -40,7 +40,7 @@ for g in gene:
         combolist = complete_combolist[(i*9):((i+1)*9)]
         job_file = os.path.join(job_directory, "%s_%s-%s.sh" % (g, str(i*9), str((i+1)*9)))
         for c in combolist:
-            outdir = os.path.join(archive, c)
+            outdir = os.path.join(archive, c[0]+'_'+c[1])
             mkdir_p(outdir)
             count = count + 1
         os.system('cd %s' %job_directory)
@@ -78,7 +78,7 @@ for g in gene:
             fh.writelines("export PATH=$PATH:~/opt/ReferenceAlignmentGenerator\n")
             fh.writelines("\n")
             for c in combolist:
-                outdir = os.path.join(archive, c)
+                outdir = os.path.join(archive, c[0]+'_'+c[1])
                 fh.writelines("cd %s\n" %outdir)
                 fh.writelines("\n")
                 fh.writelines("mcorr-xmfa-2clades %s/cutoff_10pt/MSA_%s_%s %s/cutoff_10pt/MSA_%s_%s %s/%s_%s_XMFA_OUT &&\n"

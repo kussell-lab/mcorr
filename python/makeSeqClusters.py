@@ -1,4 +1,6 @@
+import numba
 import numpy as np
+import argparse
 from scipy.cluster.hierarchy import fcluster, linkage, cophenet
 import pandas as pd
 from tqdm import tqdm
@@ -13,22 +15,30 @@ WGS dataset into flat sequence clusters using pairwise distances
 """
 """"
 Inputs
+Note: for help, type python3 makeSeqClusters_numba.py -h into commandline
 """
+parser = argparse.ArgumentParser(description='This code splits MSA files containing all sequences in a'+
+                                             'WGS dataset into flat sequence clusters using pairwise distances.'
+                                 +' It outputs MSA files for the core and flexible genomes of each cluster.')
 ##mcorr-pair output csv
-mcp = '/scratch/aps376/APS138_Archive/cj_mp_MASTER_XMFA_OUT.csv'
-##choose what percentile cutoff of the pairwise distances
-# you'll use to make flat clusters
-cutoff = 10
-#Where the MSA master file is
-##MAKE SURE TO USE THE SORTED ONE!!
-MSA_file = '/scratch/aps376/APS138_Archive/APS138_CJ_MASTER_MSA'
-
-archive = '/scratch/aps376/APS138_Archive/'
-
-###output directory if you so please (but you should please)
-
-outdir = '/scratch/aps376/APS144_1008_cj_Archive/cutoff_10pt/'
-
+parser.add_argument('mcorr_dists', help='Output from mcorr-pair as a .csv file')
+##choose what percentile cutoff of the pairwise distances (was using 10 for many)
+parser.add_argument('cutoff', type=int, help='Choose cutoff percentile of distances to use for making clusters (%)')
+parser.add_argument('MSA', type=str, help='Path to MSA file')
+parser.add_argument('outdir', type=str, help='Output directory path for cluster MSAs')
+args = parser.parse_args()
+##define commandline args as variables
+mcp = args.mcorr_dists
+cutoff = args.cutoff
+MSA_file = args.MSA
+outdir = args.outdir
+###stores the distance matrix
+archive = os.path.join(outdir, 'distm/')
+##TEMP FOR TROUBLESHOOTING!!!
+# mcp = '/Volumes/GoogleDrive/My Drive/hpc/recombo/APS150_SP_distances/APS150_201106_SP_all_dists.csv'
+# cutoff = 10
+# MSA_file = '/Volumes/GoogleDrive/My Drive/hpc/recombo/APS150_SP_Archive/SP_MASTER_OUT/MSA_SP_MASTER'
+# outdir = '/scratch/aps376/recombo/APS150_SP_Archive/cluster_MSAs'
 """
 function for converting mcorr-pair output to a distance matrix
 returns a list of strain names and the distance matrix
@@ -37,10 +47,7 @@ def mptodm(csv):
     #returns two distance matrices from an mcorr-pair .csv output file
     ##one is a distance matrix using pairwise diversity or d_sample
     #called dm_d. The other is a distance matrix using theta_pool
-    import pandas as pd
-    import numpy as np
-    from tqdm import tqdm
-    ##read in mcorr-pair output
+    ##input: mcorr-pair output as a dataframe
     dat = pd.read_csv(csv)
     dat = dat[dat['b']!= 'all']
     #first make full matrices of both parameters that are
@@ -50,11 +57,12 @@ def mptodm(csv):
     firstpair = pairs[0]
     pairname1 = firstpair.split("_vs_")
     firstrowname = pairname1[0]
+    ##gets the first row of values
     firstrow = dat[dat['b'].str.contains(firstrowname)]
     firstrow = firstrow.reset_index(drop = True)
     rownames = []
     rownames.append(firstrowname)
-    ## this makes a list of all the strains
+    # this makes a strain list
     for i in np.arange(0, len(firstrow)):
         pair = firstrow['b'][i]
         pairname = pair.split("_vs_")
@@ -62,8 +70,8 @@ def mptodm(csv):
             rownames.append(pairname[0])
         else:
             rownames.append(pairname[1])
-    ##get d_sample
-    firstrow_d = np.append([0.0], firstrow['m'], axis = 0)
+    ##get d_sample for everything in the first row
+    firstrow_d =  np.append([0.0], firstrow['m'], axis = 0)
     #store the names
     names = rownames
     ##store the first row of the distance matrix
@@ -71,12 +79,14 @@ def mptodm(csv):
 
     ##now get the rest of the rows
     #j = 1
-    for j in tqdm(np.arange(1,len(rownames))):
+    for j in tqdm(np.arange(1, len(rownames))):
+        ##gets a row of values
         row = dat[dat['b'].str.contains(rownames[j])]
         row = row.reset_index(drop = True)
         ##second row first element
         row_element1 = row[row['b'].str.contains(rownames[0])]
         row_d = row_element1['m']
+        ##gets the rest of the row values in same order as first row
         for rowname in rownames:
             if rowname == rownames[0]:
                 continue
@@ -86,7 +96,6 @@ def mptodm(csv):
                 row_element = row[row['b'].str.contains(rowname)]
                 row_d = np.append(row_d, row_element['m'])
         fullm_d = np.row_stack((fullm_d, row_d))
-
 
     ##return dm_d and dm_theta
     return names, fullm_d
@@ -108,8 +117,6 @@ convert distance matrices to flat dist matrices
 (returns flat dist matrix)
 """
 def dm2flatdm(fullm_d):
-    import numpy as np
-    from tqdm import tqdm
     ##make flat distance matrices for scipy
     flatdm_d = []
     for i in tqdm(np.arange(0, len(fullm_d))):
@@ -181,8 +188,8 @@ for i in tqdm(set(clusters)):
                 if strain in clusterstrains:
                     gene = ln.split(' ')[0].split('|')[1]
                     jeans.append((position, gene, strain))
-
-    with open(outdir+'MSA_cluster'+str(i), 'w+') as cluster_MSA:
+    outputMSA = os.path.join(outdir, 'MSA_cluster'+str(i))
+    with open(outputMSA, 'w+') as cluster_MSA:
         lastgene = jeans[0]
         for gene in jeans:
             if gene[1] != lastgene[1]:

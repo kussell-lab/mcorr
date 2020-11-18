@@ -11,7 +11,7 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 #define directories
-job_directory = "/scratch/aps376/recombo/APS148_btwnclusters"
+job_directory = "/scratch/aps376/recombo/APS148_1104_btwnclusters"
 archive = "/scratch/aps376/recombo/APS148_PA_Archive"
 #scratch = os.environ['SCRATCH']
 #mkdir_p(job_directory)
