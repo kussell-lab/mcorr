@@ -23,15 +23,15 @@ module load go/1.13.6
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
 
 ## job directory
-jobdir=/scratch/aps376/recombo/APS150_sp_go_clusters
+jobdir=/scratch/aps376/recombo/APS153_sa_go_clusters
 ##mcp output
-mcp=/scratch/aps376/recombo/APS150_sp_clusters/APS150_201106_SP_all_dists.csv
+mcp=/scratch/aps376/recombo/APS141_1008_Archive/saureus_mp_MASTER_XMFA_OUT.csv
 ##cutoff
 cutoff=10
 ##path to MSA
-MSA=/scratch/aps376/recombo/APS150_SP_Archive/SP_MASTER_OUT/MSA_SP_MASTER
+MSA=/scratch/aps376/recombo/APS141_1008_Archive/APS141_saureus_MASTER_MSA
 ##outdir
-outdir=/scratch/aps376/recombo/APS150_SP_Archive
+outdir=/scratch/aps376/recombo/APS153_saureus_Archive
 cd ${jobdir}
 
 echo "let's rock"
