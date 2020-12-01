@@ -24,6 +24,7 @@ func main() {
 	alnFile := app.Arg("master_MSA", "multi-sequence alignment file containing all sequences in the dataset").Required().String()
 	splits := app.Arg("splits", "number of MSA file chunks to split the Master MSA file into").Required().Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
+	chunkpath := app.Flag("chunk-folder", "folder name for chunked MSAs").Default("chunkedMSA").String()
 	showProgress := app.Flag("show-progress", "Show progress").Default("false").Bool()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
@@ -72,13 +73,12 @@ func main() {
 	}
 
 	//make the folder and files for chunked MSAs
-	chunkpath := "chunkedMSA"
-	if _, err := os.Stat(chunkpath); os.IsNotExist(err) {
-		os.Mkdir(chunkpath, 0755)
+	if _, err := os.Stat(*chunkpath); os.IsNotExist(err) {
+		os.Mkdir(*chunkpath, 0755)
 	}
 	//make MSAs
 	for _, chunk := range chunks {
-		MSA := filepath.Join(chunkpath, "MSA_chunk"+chunk)
+		MSA := filepath.Join(*chunkpath, "MSA_chunk"+chunk)
 		f, err := os.Create(MSA)
 		check(err)
 		f.Close()
