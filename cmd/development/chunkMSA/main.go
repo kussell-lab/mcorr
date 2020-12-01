@@ -124,7 +124,7 @@ func main() {
 		}
 	}()
 
-	WriteClusterMSA(chunkChan)
+	WriteClusterMSA(chunkChan, *chunkpath)
 
 	duration := time.Since(start)
 	fmt.Println("Time to write chunked MSA files:", duration)
@@ -228,8 +228,7 @@ func countAlignments(file string) (count int) {
 }
 
 //write the MSA file for the cluster
-func WriteClusterMSA(chunkChan chan cAlignment) {
-	chunkpath := "chunkedMSA"
+func WriteClusterMSA(chunkChan chan cAlignment, chunkpath string) {
 	for c := range chunkChan {
 		MSA := filepath.Join(chunkpath, "MSA_chunk"+c.chunkID)
 		//f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
