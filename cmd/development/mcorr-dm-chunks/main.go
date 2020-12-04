@@ -87,11 +87,15 @@ func main() {
 	var wg sync.WaitGroup
 	var m sync.Mutex
 	//create a map to store distance matrix values in
-	dmMap := make(map[pos_key]float64)
+	//dmMap := make(map[pos_key]float64)
+	//dmMap := make(map[string]float64)
+	size := len(strainMap)
+	distmatrix := mat.NewDense(size, size, nil)
 
 	for i := 1; i < len(files); i++ {
 		wg.Add(1)
-		go csvtomap(i, &wg, &m, files[i], strainMap, dmMap)
+		//go csvtomap(i, &wg, &m, files[i], strainMap, dmMap)
+		go csvtodistmatrix(i, &wg, &m, files[i], strainMap, distmatrix)
 	}
 
 	wg.Wait()
@@ -102,37 +106,26 @@ func main() {
 	}
 	defer res.Close()
 
-	size := len(strainMap)
-	distmatrix := mat.NewDense(size, size, nil)
+	//size := len(strainMap)
+	//distmatrix := mat.NewDense(size, size, nil)
 	//dims := size*size
 	//count := 0
-	fmt.Printf("creating matrix ...")
+	//fmt.Printf("creating matrix ...")
 	//loop over all rows in the matrix
 	//set starting column for each row
-	col_init := 1
-	for i := 0; i < size; i++ {
-		//loop over the columns
-		for j := col_init; j < size; j++ {
-			//get the dist
-			dist := dmMap[pos_key{i, j}]
-			distmatrix.Set(i, j, dist)
-			distmatrix.Set(j, i, dist)
-		}
-		//iterate the starting column
-		col_init++
-	}
-	//for k, dist := range dmMap {
-	//	if k.pos_i != k.pos_j {
-	//		distmatrix.Set(k.pos_i, k.pos_j, dist)
-	//		distmatrix.Set(k.pos_j, k.pos_i, dist)
-	//		count = count + 2
-	//	}else{
-	//		distmatrix.Set(k.pos_i, k.pos_j, dist)
-	//		count = count + 1
+	//col_init := 1
+	//for i := 0; i < size; i++ {
+	//	//loop over the columns
+	//	for j := col_init; j < size; j++ {
+	//		//get the dist
+	//		dmkey := strconv.Itoa(i)+strconv.Itoa(j)
+	//		//dist := dmMap[pos_key{i, j}]
+	//		dist := dmMap[dmkey]
+	//		distmatrix.Set(i, j, dist)
+	//		distmatrix.Set(j, i, dist)
 	//	}
-	//	if count == dims {
-	//		break
-	//	}
+	//	//iterate the starting column
+	//	col_init++
 	//}
 	fmt.Printf("writing matrix ...")
 	err = npyio.Write(res, distmatrix)
@@ -241,7 +234,7 @@ type pos_key struct {
 	pos_j int
 }
 
-func csvtomap(id int, wg *sync.WaitGroup, m *sync.Mutex, file string, strainMap map[string]int, dmMap map[pos_key]float64) {
+func csvtomap(id int, wg *sync.WaitGroup, m *sync.Mutex, file string, strainMap map[string]int, dmMap map[string]float64) {
 	defer wg.Done()
 	fmt.Printf("Worker %d starting\n", id)
 	f, err := os.Open(file)
@@ -279,7 +272,56 @@ func csvtomap(id int, wg *sync.WaitGroup, m *sync.Mutex, file string, strainMap 
 	m.Lock()
 	//add the values from the fileMap to the distance matrix map
 	for k, dist := range fileMap {
-		dmMap[k] = dist
+		//dmMap[k] = dist
+		dmkey := strconv.Itoa(k.pos_i) + strconv.Itoa(k.pos_j)
+		dmMap[dmkey] = dist
+	}
+	m.Unlock()
+
+	fmt.Printf("Worker %d done\n", id)
+}
+
+func csvtodistmatrix(id int, wg *sync.WaitGroup, m *sync.Mutex, file string, strainMap map[string]int, distmatrix *mat.Dense) {
+	defer wg.Done()
+	fmt.Printf("Worker %d starting\n", id)
+	f, err := os.Open(file)
+	defer f.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	r := csv.NewReader(f)
+	//skip the header
+	if _, err := r.Read(); err != nil {
+		panic(err)
+	}
+	//initialize a map for this file
+	fileMap := make(map[pos_key]float64)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		if record[5] == "all" {
+			continue
+		} else {
+			strain1, strain2, dist := getRecord(record)
+			pos_i, _ := strainMap[strain1]
+			pos_j, _ := strainMap[strain2]
+			fileMap[pos_key{pos_i, pos_j}] = dist
+			fileMap[pos_key{pos_j, pos_i}] = dist
+		}
+
+	}
+	//lock the map so only one thread at a time can add to the distance matrix map
+	m.Lock()
+	//add the values from the fileMap to the distance matrix map
+	for k, dist := range fileMap {
+		//dmMap[k] = dist
+		distmatrix.Set(k.pos_i, k.pos_j, dist)
+		distmatrix.Set(k.pos_j, k.pos_i, dist)
 	}
 	m.Unlock()
 
