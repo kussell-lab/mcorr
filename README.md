@@ -82,6 +82,8 @@ To create new go executables locally on  your machine use the following commands
             "go install github.com/apsteinberg/mcorr/cmd/xyz"
 Where the last line will be whatever package you want to create into an executable file, and will install whatever dependencies you need
 
+If the package isn't on the gopath navigate to the directory on commandline and execute the shell command "go install ."
+
 ## Deploying to the NYU HPC
 
 When you deploy (say on the cluster for example) you can then use Mingzhi's commands to pull from your github onto the cluster:
