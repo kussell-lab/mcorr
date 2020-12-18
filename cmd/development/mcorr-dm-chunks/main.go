@@ -228,14 +228,6 @@ func mapAll(root string, strainMap map[string]int, numDigesters int) (map[pos_ke
 	// Start a fixed number of goroutines to read and digest files.
 	c := make(chan result) // HLc
 	var wg sync.WaitGroup
-	//const numDigesters = 20
-	//wg.Add(numDigesters)
-	//for i := 0; i < numDigesters; i++ {
-	//	go func() {
-	//		digester(done, paths, c, strainMap, i) // HLc
-	//		wg.Done()
-	//	}()
-	//}
 
 	for i := 0; i < numDigesters; i++ {
 		wg.Add(1)
