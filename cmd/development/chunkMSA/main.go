@@ -7,6 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/cheggaaa/pb.v2"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -22,6 +23,7 @@ func main() {
 		"for use with mcorr-pair-sync.")
 	app.Version("v20201123")
 	alnFile := app.Arg("master_MSA", "multi-sequence alignment file containing all sequences in the dataset").Required().String()
+	strainList := app.Arg("strain_list", "list of all strains").Required().String()
 	splits := app.Arg("splits", "number of MSA file chunks to split the Master MSA file into").Required().Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	chunkpath := app.Flag("chunk-folder", "folder name for chunked MSAs").Default("chunkedMSA").String()
@@ -47,7 +49,8 @@ func main() {
 		defer bar.Finish()
 	}
 
-	strains := generateStrainSlice(*alnFile)
+	strains := readSamples(*strainList)
+	fmt.Printf("\r %d total strains\n", len(strains))
 
 	// chunk the strain slice into the desired number of strains
 	// per split MSA
@@ -344,4 +347,27 @@ func chunkSlice(slice []string, chunkSize int) [][]string {
 	}
 
 	return chunks
+}
+
+// readSamples return a list of samples from a sample file.
+func readSamples(filename string) (samples []string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Error when reading file %s:%v", filename, err)
+	}
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+	for {
+		line, err := r.ReadString('\n')
+
+		if err != nil {
+			if err != io.EOF {
+				log.Fatalf("Error when reading file %s: %v", filename, err)
+			}
+			break
+		}
+		samples = append(samples, strings.TrimSpace(line))
+	}
+	return
 }

@@ -2,13 +2,13 @@
 import os
 import numpy as np
 
-dir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS156_SP_analysis/'
-outdir = dir+'SRA_tbc5/'
+dir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS158_SP_multirefgen/'
+outdir = dir+'SRA_tbc1/'
 complete = set()
-piles = open(dir + 'APS156_completepiles_tars', 'r')
-for _, pile in enumerate(piles):
-    pile = str.rstrip(pile)
-    complete.add(pile)
+# piles = open(dir + 'APS156_full_SRA_list', 'r')
+# for _, pile in enumerate(piles):
+#     pile = str.rstrip(pile)
+#     complete.add(pile)
 
 all_fastqs = set()
 
@@ -23,7 +23,7 @@ tbc = all_fastqs.difference(complete)
 
 tbc = list(tbc)
 
-split_tbc = np.array_split(tbc, 10)
+split_tbc = np.array_split(tbc, 20)
 
 if not os.path.exists(outdir):
     os.makedirs(outdir)
