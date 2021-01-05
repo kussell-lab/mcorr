@@ -12,6 +12,7 @@
 projectdir=/scratch/aps376/recombo
 cd ${projectdir}
 
+
 ###activate venv and get other dependencies
 
 module purge;
@@ -27,14 +28,17 @@ jobdir=/scratch/aps376/recombo/APS158makeclusters
 strains=/scratch/aps376/recombo/APS158_spneumoniae/APS156_completepiles
 ##mcp output folder
 mcp=/scratch/aps376/recombo/APS158_SP_Archive/0104_SP_mps_dists/
-##cutoff
-cutoff=10
 ##path to MSA
 MSA=/scratch/aps376/recombo/APS158_SP_Archive/SP_MASTER_OUT/MSA_SP_PANGENOME_MASTER
 ##outdir
 outdir=/scratch/aps376/recombo/APS158_SP_Archive
+##outfile
+out="APS158_SP_10thpercentile_cutoff"
+##cutoff
+cutoff=10
+
 cd ${outdir}
 
 echo "let's rock"
-clusterSequences APS158distancematrix.npy ${strains}
+clusterSequences APS158distancematrix.npy ${strains} ${out} --percentile=${cutoff}
 

@@ -8,7 +8,7 @@ with open("requirements.txt", 'rU') as reader:
 
 setup(name='clusterSequences',
         python_requires='>=3',
-        version='201203',
+        version='210105',
         description='cluster sequences based on pairwise distances from mcorr-pair/mcorr-pair-sync',
         url='https://github.com/apsteinberg/mcorr',
         license='MIT',

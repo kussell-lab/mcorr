@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from scipy.spatial.distance import squareform
 import matplotlib as mpl
+mpl.use('Agg')
 from matplotlib import pyplot as plt
 import seaborn as sns
 
