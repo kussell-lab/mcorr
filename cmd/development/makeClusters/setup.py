@@ -8,7 +8,7 @@ with open("requirements.txt", 'rU') as reader:
 
 setup(name='makeClusters',
         python_requires='>=3',
-        version='201117',
+        version='210105',
         description='Building sequence clusters and core/flexible genomes',
         url='https://github.com/apsteinberg/mcorr',
         license='MIT',

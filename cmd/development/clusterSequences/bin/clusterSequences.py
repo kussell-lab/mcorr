@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 import time
 import numpy as np
+import scipy
 import argparse
-from scipy.cluster.hierarchy import fcluster, linkage, cophenet
+from scipy.cluster.hierarchy import fcluster, linkage, cophenet, dendrogram
 import os
 import pandas as pd
 from scipy.spatial.distance import squareform
+import matplotlib as mpl
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 def main():
     parser = argparse.ArgumentParser(description="Takes a distance matrix, clusters sequences, and outputs a cluster list\
                                                     for use with write-cluster-msa ")
     parser.add_argument("distance_matrix", help="symmetric distance matrix as .npy file")
     parser.add_argument("strains", help="list of strains")
+    parser.add_argument("dendrogram", help="prefix for dendogram output file")
     parser.add_argument("--percentile", type=float, default=10, help="cutoff percentile of pairwise distances to use for making flat clusters (Default: 10)")
     ##define commandline args as variables
     args = parser.parse_args()
     distance_matrix = args.distance_matrix
     strains = args.strains
     cutoff = args.percentile
+    outfile = args.dendrogram
     ####
     start_time = time.time()
     fullm_d = np.load(distance_matrix,
@@ -83,6 +89,31 @@ def main():
     filtered_df = filtered_df[['strain', 'cluster_ID']]
     saveclusters = os.path.join(archive, "cluster_list")
     filtered_df.to_csv(path_or_buf=saveclusters, sep=",", header=False, index=False)
+    ##get colors for the dendrogram
+    colors = sns.color_palette("nipy_spectral", totclusters)
+    accents = []
+    for color in colors:
+        this = mpl.colors.to_hex(color)
+        accents.append(this)
+    scipy.cluster.hierarchy.set_link_color_palette(accents)
+    ##make a dendrogram plot as a pdf
+    percentage = "{:.4f}".format(np.percentile(flatdm_d, cutoff))
+    mpl.rcParams['lines.linewidth'] = 0.5
+    fig, ax = plt.subplots(figsize=(10, 30))
+    title = "%sth percentile cutoff ($P_{10}=%s$)" % (str(int(cutoff)), percentage)
+    plt.title(title, fontsize=16)
+    plt.ylabel('')
+    plt.xlabel('distance')
+    dendrogram(
+        Zavg_d,
+        no_labels=True,
+        color_threshold=np.percentile(flatdm_d, cutoff),
+        orientation='left',
+    )
+
+    plt.axvline(x=np.percentile(flatdm_d, cutoff), c='k', alpha=0.7, linestyle='--')
+
+    plt.savefig(outfile+'.pdf')
 
     print("Time to cluster sequences: %s s" % str(time.time() - start_time))
 
