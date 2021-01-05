@@ -67,7 +67,7 @@ def main():
         totclusters = totclusters + 1
         analyzedstrains = analyzedstrains+clusterlist[i]
         submissionlist.append(i)
-    stats = os.path.join(archive, "stats.txt")
+    stats = os.path.join(archive, str(int(cutoff))+"th_percentile_stats.txt")
     f = open(stats, "w+")
     f.write('Cophenetic: '+str(c)+'\n')
     f.write('Clusters with more than one sequence: '+str(totclusters)+'\n')
