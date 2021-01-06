@@ -70,12 +70,6 @@ def main():
         totclusters = totclusters + 1
         analyzedstrains = analyzedstrains+clusterlist[i]
         submissionlist.append(i)
-    ##test csv
-    with open('eggs.csv', 'w+', newline='') as csvfile:
-        spamwriter = csv.writer(csvfile, delimiter=',',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
-        spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
     stats = os.path.join(archive, str(int(cutoff))+"th_percentile_stats.csv")
     with open(stats, "w+", newline='') as f:
         statswriter = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
