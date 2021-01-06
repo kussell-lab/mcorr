@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import time
+import csv
 import numpy as np
 import scipy
 import argparse
@@ -19,12 +20,14 @@ def main():
     parser.add_argument("strains", help="list of strains")
     parser.add_argument("dendrogram", help="prefix for dendogram output file")
     parser.add_argument("--percentile", type=float, default=10, help="cutoff percentile of pairwise distances to use for making flat clusters (Default: 10)")
+    parser.add_argument("--min_size", type=int, default=10, help="minimum number of sequences for a sequence cluster to be considered in analysis (Default: 10)")
     ##define commandline args as variables
     args = parser.parse_args()
     distance_matrix = args.distance_matrix
     strains = args.strains
     cutoff = args.percentile
     outfile = args.dendrogram
+    min_size = args.min_size
     ####
     start_time = time.time()
     fullm_d = np.load(distance_matrix,
@@ -62,30 +65,41 @@ def main():
     submissionlist = []
     for i in unique:
         allstrains = allstrains+clusterlist[i]
-        if clusterlist[i] == 1:
+        if clusterlist[i] < min_size:
             continue
         totclusters = totclusters + 1
         analyzedstrains = analyzedstrains+clusterlist[i]
         submissionlist.append(i)
-    stats = os.path.join(archive, str(int(cutoff))+"th_percentile_stats.txt")
-    f = open(stats, "w+")
-    f.write('Cophenetic: '+str(c)+'\n')
-    f.write('Clusters with more than one sequence: '+str(totclusters)+'\n')
-    f.write('All strains: '+str(allstrains)+'\n')
-    f.write('Analyzed strains: '+str(analyzedstrains)+'\n')
-    f.write('Submission list:\n')
-    s = ", ".join(map(str, submissionlist))
-    f.write(s+'\n')
-    f.write('Submission list sans commas:\n')
-    s = " ".join(map(str, submissionlist))
-    f.write(s)
-    f.close()
+    ##test csv
+    with open('eggs.csv', 'w+', newline='') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+        spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+    stats = os.path.join(archive, str(int(cutoff))+"th_percentile_stats.csv")
+    with open(stats, "w+", newline='') as f:
+        statswriter = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        statswriter.writerow(['Cophenetic', str(c)])
+        statswriter.writerow(['Clusters with at least ' + str(min_size) + ' sequences', str(totclusters)])
+        statswriter.writerow(['Total # of sequences', str(allstrains)])
+        statswriter.writerow(['# of analyzed sequences', str(analyzedstrains)])
+        s = ", ".join(map(str, submissionlist))
+        statswriter.writerow(['Clusters to be analyzed', s])
+        s = " ".join(map(str, submissionlist))
+        statswriter.writerow(['Clusters to be analyzed (sans commas)', s])
+        statswriter.writerow([''])
+        statswriter.writerow(['below is a list of all clusters and the number of sequences associated with each'])
+        statswriter.writerow(['Cluster ID', '# of sequences'])
+        for cluster in unique:
+            statswriter.writerow([cluster, clusterlist[cluster]])
+
+    #f.close()
 
     cluster_df = pd.DataFrame(list(zip(clusters, names)),
                               columns = ['cluster_ID', 'strain'])
     grouped = cluster_df.groupby("cluster_ID")
 
-    filtered_df = grouped.filter(lambda x: len(x) > 1.)
+    filtered_df = grouped.filter(lambda x: len(x) >= min_size)
     filtered_df = filtered_df.reset_index(drop=True)
     filtered_df = filtered_df[['strain', 'cluster_ID']]
     saveclusters = os.path.join(archive, "cluster_list")
