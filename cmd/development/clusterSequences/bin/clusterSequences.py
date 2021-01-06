@@ -74,6 +74,8 @@ def main():
     with open(stats, "w+", newline='') as f:
         statswriter = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         statswriter.writerow(['Cophenetic', str(c)])
+        percentage = "{:.4f}".format(np.percentile(flatdm_d, cutoff))
+        statswriter.writerow([str(int(cutoff))+'percentile cutoff', percentage])
         statswriter.writerow(['Clusters with at least ' + str(min_size) + ' sequences', str(totclusters)])
         statswriter.writerow(['Total # of sequences', str(allstrains)])
         statswriter.writerow(['# of analyzed sequences', str(analyzedstrains)])
