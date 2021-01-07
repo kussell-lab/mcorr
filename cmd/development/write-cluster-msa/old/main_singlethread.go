@@ -1,49 +1,39 @@
-package main
+package old
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/kussell-lab/biogo/seq"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/apsteinberg/biogo/seq"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 func main() {
-	app := kingpin.New("write-cluster-msa", "Write MSA for sequence clusters; option to split into core and flexible genomes")
-	app.Version("v20210107")
-	alnFile := app.Arg("master_MSA", "multi-sequence alignment file containing all sequences in the dataset").Required().String()
-	clusterdict := app.Arg("cluster_dict", "hash table from makeCluster.py as a text file, relating cluster # to sequence name").Required().String()
-	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	CFsplit := app.Flag("core-flex-split", "If you want to split genomes into core and flexible genes").Default("true").Bool()
-	threshold := app.Flag("core-cutoff", "Percentage above which to be considered a core gene").Default("90").Int()
-
-	kingpin.MustParse(app.Parse(os.Args[1:]))
-	if *ncpu == 0 {
-		*ncpu = runtime.NumCPU()
-	}
-
-	runtime.GOMAXPROCS(*ncpu)
+	dir := "/Volumes/aps_timemachine/recombo/APS158_pangenomealignmentgenerator/write_msa_test"
+	xmfa := "test_xmfa"
+	xmfa = "1224_properheader"
+	alnFile := filepath.Join(dir, xmfa)
+	clusterdict := filepath.Join(dir, "clusterlist")
+	CFsplit := true
+	threshold := 90
 
 	start := time.Now()
 	//convert clusterdict to a golang map and a slice of strings
-	clustermap, clusters := makeClusterMap(*clusterdict)
+	clustermap, clusters := makeClusterMap(clusterdict)
 
 	//make cluster folders and blank MSA files for writing
 	initClusterMSAs(clusters)
 	//prepare for splitting into core and flexible genomes
 	var t float64
 	var seqMap map[string][]string
-	if *CFsplit {
-		t, seqMap = splitPrep(*threshold, *clusterdict, clusters)
+	if CFsplit {
+		t, seqMap = splitPrep(threshold, clusterdict, clusters)
 	}
 	//define alignment channel
 	var alnChan chan Alignment
@@ -51,7 +41,7 @@ func main() {
 	go func() {
 		defer close(alnChan)
 		count := 0
-		c := readAlignments(*alnFile)
+		c := readAlignments(alnFile)
 		for a := range c {
 			alnChan <- a
 			count++
@@ -64,50 +54,26 @@ func main() {
 
 	for aln := range alnChan {
 		alnMap := AssembleAlignments(aln, clustermap)
-		if *CFsplit {
+		if CFsplit {
 			_, CFgenes, geneFrac = coreflexSplit(t, seqMap, alnMap, clusters)
 			GetGenePercentages(aln.ID, geneFrac, clusters)
-			var wg sync.WaitGroup
-			// Tell the 'wg' WaitGroup how many threads/goroutines that are about to run concurrently.
-			wg.Add(len(clusters))
-			for i := 0; i < len(clusters); i++ {
-				// Spawn a thread for each iteration in the loop. Pass 'i' into the goroutine's function
-				//   in order to make sure each goroutine uses a different value for 'i'.
-				go func(i int) {
-					// At the end of the goroutine, tell the WaitGroup that another thread has completed.
-					defer wg.Done()
-					//define the cluster ID
-					ID := clusters[i]
-					//get the cluster alignment
-					cAln, found := alnMap[ID]
-					if found {
-						cluster := cAlignment{clusterID: ID, geneID: aln.ID, genetype: CFgenes[ID],
-							fraction: geneFrac[ID], Sequences: cAln}
-						WriteClusterMSA(cluster, *CFsplit)
-					}
-
-				}(i)
+			for ID, cAln := range alnMap {
+				cluster := cAlignment{clusterID: ID,
+					geneID:    aln.ID,
+					genetype:  CFgenes[ID],
+					fraction:  geneFrac[ID],
+					Sequences: cAln}
+				WriteClusterMSA(cluster, CFsplit)
 			}
-			wg.Wait()
 		} else {
-			//same as above, but for the CFsplit = False case
-			var wg sync.WaitGroup
-			wg.Add(len(clusters))
-			for i := 0; i < len(clusters); i++ {
-				go func(i int) {
-					defer wg.Done()
-					//define the cluster ID
-					ID := clusters[i]
-					//get the cluster alignment
-					cAln, found := alnMap[ID]
-					if found {
-						cluster := cAlignment{clusterID: ID, geneID: aln.ID, genetype: CFgenes[ID],
-							fraction: geneFrac[ID], Sequences: cAln}
-						WriteClusterMSA(cluster, *CFsplit)
-					}
-				}(i)
+			for ID, cAln := range alnMap {
+				cluster := cAlignment{clusterID: ID,
+					geneID:    aln.ID,
+					genetype:  "n/a",
+					fraction:  float64(0),
+					Sequences: cAln}
+				WriteClusterMSA(cluster, CFsplit)
 			}
-			wg.Wait()
 		}
 	}
 	duration := time.Since(start)
@@ -289,20 +255,4 @@ func WriteClusterMSA(c cAlignment, CFsplit bool) {
 	if CFsplit {
 		WriteCFMSA(c)
 	}
-}
-
-//writer receives cluster alignments and writes clusterMSAs until c
-func writer(aln Alignment, alnMap map[string][]seq.Sequence, CFgenes map[string]string, geneFrac map[string]float64, CFsplit bool) {
-
-	for ID, cAln := range alnMap {
-		fmt.Printf("writer %s starting\n", ID)
-		cluster := cAlignment{clusterID: ID,
-			geneID:    aln.ID,
-			genetype:  CFgenes[ID],
-			fraction:  geneFrac[ID],
-			Sequences: cAln}
-		WriteClusterMSA(cluster, CFsplit)
-		fmt.Printf("writer %s finishing\n", ID)
-	}
-
 }

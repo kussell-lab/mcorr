@@ -1,10 +1,10 @@
-package main
+package old
 
 import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"github.com/kussell-lab/biogo/seq"
+	"github.com/apsteinberg/biogo/seq"
 	"io"
 	"log"
 	"os"
