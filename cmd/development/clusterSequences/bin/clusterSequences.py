@@ -70,7 +70,7 @@ def main():
         totclusters = totclusters + 1
         analyzedstrains = analyzedstrains+clusterlist[i]
         submissionlist.append(i)
-    statsfile = str(int(cutoff))+'th_percentile_>=' + str(min_size)+'strains_stats.csv'
+    statsfile = str(int(cutoff))+'th_percentile_min' + str(min_size)+'strains_stats.csv'
     stats = os.path.join(archive, statsfile)
     with open(stats, "w+", newline='') as f:
         statswriter = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

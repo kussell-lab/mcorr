@@ -19,28 +19,38 @@ def mkdir_p(dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Collect results for many sequence clusters from mcorr-fit")
-    parser.add_argument("file_dir", help="directory with output from mcorr")
-    parser.add_argument("out_dir", help="output directory, will be made if it doesn't exist")
-    parser.add_argument("file_name", help="name for result csv file")
+    parser.add_argument("--file_dir", default="current", help="specify directory with output from mcorr if not current directory")
+    parser.add_argument("out_dir", default="current", help="optional output directory for divergence csv")
+    parser.add_argument("stats_sheet", help=" name of stats csv file from clusterSequences.py which has the list of clusters")
+    parser.add_argument("file_name", help="prefix for result csv file")
 
     ##define commandline args as variables
     args = parser.parse_args()
     file_dir = args.file_dir
     file_name = args.file_name
+    stats_sheet = args.stats_sheet
     out_dir = args.out_dir
 
     # file_dir = '/Volumes/GoogleDrive/My Drive/hpc/recombo/APS150_SP_Archive'
     # out_dir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS150_SP_analysis'
+    # file_dir = out_dir
     # file_name = 'APS150_201119_mcorr_res'
+    # stats_sheet = "20th_percentile_>=10strains_stats.csv"
+
+    if file_dir == "current":
+        file_dir = os.getcwd()
+    if out_dir == "current":
+        out_dir = os.getcwd()
 
     ##make the out directory if it doesn't exist
     mkdir_p(out_dir)
 
     ##get cluster names from the stats file
-    stats = os.path.join(file_dir, "stats.txt")
-    #stats = fn.make_tempfile(statspath)
-    #stats = os.open(statspath)
+    stats = os.path.join(file_dir, stats_sheet)
     clusterlist = linecache.getline(stats, 6).rstrip()
+    with open(stats) as csvDataFile:
+        statsdat=[row for row in csv.reader(csvDataFile)]
+    clusterlist = statsdat[5][1]
     clusters = [int(s) for s in clusterlist.split(',')]
 
     ##i am going to refer to these as serotypes bc i'm too lazy to edit this, but know ...
