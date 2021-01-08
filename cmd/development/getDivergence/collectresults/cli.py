@@ -20,7 +20,7 @@ def mkdir_p(dir):
 def main():
     parser = argparse.ArgumentParser(description="Collect results for many sequence clusters from mcorr-fit")
     parser.add_argument("--file_dir", default="current", help="specify directory with output from mcorr if not current directory")
-    parser.add_argument("out_dir", default="current", help="optional output directory for divergence csv")
+    parser.add_argument("--out_dir", default="current", help="optional output directory for divergence csv")
     parser.add_argument("stats_sheet", help=" name of stats csv file from clusterSequences.py which has the list of clusters")
     parser.add_argument("file_name", help="prefix for result csv file")
 
