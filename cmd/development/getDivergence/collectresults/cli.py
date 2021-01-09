@@ -39,6 +39,16 @@ def main():
     # file_dir = out_dir
     # file_name = 'APS150_201119_mcorr_res'
     # stats_sheet = "20th_percentile_>=10strains_stats.csv"
+    #
+    # ##print a list of incomplete clusters
+    # repeats = [('c[0]', 'c[1]', 'CORE')]
+    # now = datetime.datetime.now()
+    # repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
+    # # with open(repeats, 'w+') as f:
+    # #     write = csv.writer(f)
+    # #     write.writerows(repeats)
+    # repeatdf = pd.DataFrame(repeats, columns=['mate1', 'mate2','gene_type'])
+    # repeatdf.to_csv(repeatpath)
 
     if file_dir == "current":
         file_dir = os.getcwd()
@@ -274,11 +284,15 @@ def main():
         both = between
     outpath = os.path.join(out_dir, file_name+'.csv')
     both.to_csv(outpath)
-    repeats = os.join(out_dir, datetime.today()+'incomplete.txt')
-    with open(repeats, 'w') as f:
-        write = csv.writer(f)
-        write.writerows(repeats)
- #repeats.to_csv(out_dir + 'repeats')
+
+    ##print a list of incomplete clusters
+    now = datetime.datetime.now()
+    repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
+    # with open(repeats, 'w+') as f:
+    #     write = csv.writer(f)
+    #     write.writerows(repeats)
+    repeatdf = pd.DataFrame(repeats, columns=['mate1', 'mate2','gene_type'])
+    repeatdf.to_csv(repeatpath)
 
 if __name__ == "__main__":
     main()
