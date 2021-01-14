@@ -286,7 +286,7 @@ def main():
         both = between
 
     now = datetime.datetime.now()
-    outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")++'_divergences.csv')
+    outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_divergences.csv')
     both.to_csv(outpath)
     ##print a list of incomplete clusters
     repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
