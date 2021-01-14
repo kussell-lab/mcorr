@@ -25,12 +25,12 @@ def main():
     parser.add_argument("--file_dir", default="current", help="specify directory with output from mcorr if not current directory")
     parser.add_argument("--out_dir", default="current", help="optional output directory for divergence csv")
     parser.add_argument("stats_sheet", help=" name of stats csv file from clusterSequences.py which has the list of clusters")
-    #parser.add_argument("file_name", help="prefix for result csv file")
+    parser.add_argument("file_name", help="prefix for resultant csv file (timestamp will be included)")
 
     ##define commandline args as variables
     args = parser.parse_args()
     file_dir = args.file_dir
-    #file_name = args.file_name
+    file_name = args.file_name
     stats_sheet = args.stats_sheet
     out_dir = args.out_dir
 
@@ -286,7 +286,7 @@ def main():
         both = between
 
     now = datetime.datetime.now()
-    outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_divergences.csv')
+    outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_'+file_name+'.csv')
     both.to_csv(outpath)
     ##print a list of incomplete clusters
     repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
