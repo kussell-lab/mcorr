@@ -105,9 +105,9 @@ def main():
         flex_file = os.path.join(file_dir, str(sero), str(sero)+'_FLEX_FIT_OUT_fit_results.csv')
         if not os.path.exists(core_file):
             repeats.append((sero, sero, 'CORE'))
-            continue
-        elif not os.path.exists(flex_file):
+        if not os.path.exists(flex_file):
             repeats.append((sero, sero, 'FLEX'))
+        if not os.path.exists(core_file) or not os.path.exists(flex_file):
             continue
         core = pd.read_csv(core_file)
         flex = pd.read_csv(flex_file)
@@ -209,9 +209,9 @@ def main():
         flex_file = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_FLEX_FIT_OUT_fit_results.csv')
         if not os.path.exists(core_file):
             repeats.append((c[0], c[1], 'CORE'))
-            continue
-        elif not os.path.exists(flex_file):
+        if not os.path.exists(flex_file):
             repeats.append((c[0], c[1], 'FLEX'))
+        if not os.path.exists(core_file) or not os.path.exists(flex_file):
             continue
         core = pd.read_csv(core_file)
         flex = pd.read_csv(flex_file)
