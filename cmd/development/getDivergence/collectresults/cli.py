@@ -129,7 +129,7 @@ def main():
             d.append(core['d_sample'][0])
             genenames.append('core')
             seronames.append(str(sero))
-            type.append('within serotype')
+            type.append('within cluster')
 
             ##get bootstrap medians and CIs
             phi_pool = core['phi_pool'][1:]
@@ -160,7 +160,7 @@ def main():
             theta.append(flex['theta_pool'][0])
             d.append(flex['d_sample'][0])
             genenames.append('flex')
-            type.append('within serotype')
+            type.append('within cluster')
             seronames.append(str(sero))
 
             ##get bootstrap medians
