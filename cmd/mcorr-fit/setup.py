@@ -17,6 +17,6 @@ setup(name='mcorr',
         packages=['mcorr'],
         install_requires=requirements,
         entry_points = {
-            'console_scripts' : ['mcorr-fit=mcorr.cli:main'],
+            'console_scripts' : ['mcorr-fit=mcorr.cli:main', 'fit-stats=mcorr.lmfit_report:main'],
             },
         zip_safe=False)
