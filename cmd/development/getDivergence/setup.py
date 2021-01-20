@@ -6,7 +6,7 @@ with open("requirements.txt", 'rU') as reader:
     for line in reader:
         requirements.append(line.strip())
 
-setup(name='getDivergence',
+setup(name='collectresults',
         python_requires='>=3',
         version='201117',
         description='Collect results for many sequence clusters from mcorr-fit',

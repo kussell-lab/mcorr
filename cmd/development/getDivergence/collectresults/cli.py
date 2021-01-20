@@ -9,14 +9,15 @@ import pandas as pd
 from itertools import combinations
 import numpy as np
 import linecache
+from collectresults.functions import mkdir_p, get_fitstats
 """
 Commandline program for collecting divergence and bootstrap interval outputs from mcorr-fit
 """
 
-def mkdir_p(dir):
-    'make a directory if doesnt exist'
-    if not os.path.exists(dir):
-        os.mkdir(dir)
+# def mkdir_p(dir):
+#     'make a directory if doesnt exist'
+#     if not os.path.exists(dir):
+#         os.mkdir(dir)
 
 def main():
     parser = argparse.ArgumentParser(description="Collect results for many sequence clusters from mcorr-fit\n"+
@@ -34,21 +35,12 @@ def main():
     stats_sheet = args.stats_sheet
     out_dir = args.out_dir
 
-    # file_dir = '/Volumes/GoogleDrive/My Drive/hpc/recombo/APS150_SP_Archive'
-    # out_dir = '/Users/asherpreskasteinberg/Desktop/code/recombo/APS150_SP_analysis'
-    # file_dir = out_dir
-    # file_name = 'APS150_201119_mcorr_res'
+    ##for local testing
+    #file_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
+    #out_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
+    #file_name = 'APS160.5_mcorr_res_test'
+    #clusters = [8, 221]
     # stats_sheet = "20th_percentile_>=10strains_stats.csv"
-    #
-    # ##print a list of incomplete clusters
-    # repeats = [('c[0]', 'c[1]', 'CORE')]
-    # now = datetime.datetime.now()
-    # repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
-    # # with open(repeats, 'w+') as f:
-    # #     write = csv.writer(f)
-    # #     write.writerows(repeats)
-    # repeatdf = pd.DataFrame(repeats, columns=['mate1', 'mate2','gene_type'])
-    # repeatdf.to_csv(repeatpath)
 
     if file_dir == "current":
         file_dir = os.getcwd()
@@ -59,12 +51,14 @@ def main():
     mkdir_p(out_dir)
 
     ##get cluster names from the stats file
+    ##remove this if you want to do a local test
     stats = os.path.join(file_dir, stats_sheet)
-    clusterlist = linecache.getline(stats, 6).rstrip()
     with open(stats) as csvDataFile:
         statsdat=[row for row in csv.reader(csvDataFile)]
     clusterlist = statsdat[5][1]
     clusters = [int(s) for s in clusterlist.split(',')]
+
+
 
     ##i am going to refer to these as serotypes bc i'm too lazy to edit this, but know ...
     ##they are sequence clusters!
@@ -95,6 +89,11 @@ def main():
     genenames = []
     type = []
     seronames = []
+    ##fit statistics
+    datapoints = []
+    variables = []
+    chisquare = []
+    reducedchisquare = []
 
     i = 0
     ##check if any runs didn't finish
@@ -134,6 +133,13 @@ def main():
         theta16.append(np.percentile(theta_pool, 16))
         theta84.append(np.percentile(theta_pool, 84))
 
+        ##get fitstats
+        points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "CORE")
+        datapoints.append(points)
+        variables.append(vars)
+        chisquare.append(chi)
+        reducedchisquare.append(redchi)
+
         ##flex
         phi.append(flex['phi_pool'][0])
         theta.append(flex['theta_pool'][0])
@@ -156,6 +162,13 @@ def main():
         theta16.append(np.percentile(theta_pool, 16))
         theta84.append(np.percentile(theta_pool, 84))
 
+        ##get fitstats
+        points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "FLEX")
+        datapoints.append(points)
+        variables.append(vars)
+        chisquare.append(chi)
+        reducedchisquare.append(redchi)
+
 
         ##count how many you've done so far
         if os.path.exists(core_file) and os.path.exists(flex_file):
@@ -167,13 +180,13 @@ def main():
                               phi16, phi84,
                               theta, thetab, theta2pt5, theta97pt5,
                               theta16, theta84,
-                              d, genenames, type))
+                              d, datapoints, variables, chisquare, reducedchisquare, genenames, type))
         within = pd.DataFrame(all_values,
-                              columns=['ST', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
+                              columns=['cluster', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
                                        'phi16', 'phi84',
                                        'theta', 'theta_median', 'theta_2.5%', 'theta_97.5%',
-                                       'theta16', 'theta84',
-                                       'd_sample', 'gene', 'type'])
+                                       'theta16', 'theta84', 'd_sample', 'bp analyzed', 'variables',
+                                       'chi-square', 'reduced chi-square', 'gene', 'type'])
 
 
     "for between sero data"
@@ -198,9 +211,11 @@ def main():
     theta16 = []
     theta84 = []
 
-    ##confidence level for the interval 0 to 1
-    # gamma_theta = []
-    # gamma_phi = []
+    ##fit statistics
+    datapoints = []
+    variables = []
+    chisquare = []
+    reducedchisquare = []
 
     j = 0
 
@@ -237,6 +252,12 @@ def main():
         theta16.append(np.percentile(theta_pool, 16))
         theta84.append(np.percentile(theta_pool, 84))
 
+        ##get goodness of fit statistics
+        points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "CORE")
+        datapoints.append(points)
+        variables.append(vars)
+        chisquare.append(chi)
+        reducedchisquare.append(redchi)
         ##flex
         phi.append(flex['phi_pool'][0])
         theta.append(flex['theta_pool'][0])
@@ -259,6 +280,13 @@ def main():
         theta16.append(np.percentile(theta_pool, 16))
         theta84.append(np.percentile(theta_pool, 84))
 
+        ##get goodness of fit statistics
+        points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "FLEX")
+        datapoints.append(points)
+        variables.append(vars)
+        chisquare.append(chi)
+        reducedchisquare.append(redchi)
+
         if os.path.exists(core_file) and os.path.exists(flex_file):
             j = j + 2
         else:
@@ -271,13 +299,13 @@ def main():
                               phi16, phi84,
                               theta, thetab, theta2pt5, theta97pt5,
                               theta16, theta84,
-                              d, genenames, type))
+                              d, datapoints, variables, chisquare, reducedchisquare, genenames, type))
         between = pd.DataFrame(all_values,
-                               columns=['ST', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
-                                        'phi16', 'phi84',
-                                        'theta', 'theta_median', 'theta_2.5%', 'theta_97.5%',
-                                        'theta16', 'theta84',
-                                        'd_sample', 'gene', 'type'])
+                              columns=['cluster', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
+                                       'phi16', 'phi84',
+                                       'theta', 'theta_median', 'theta_2.5%', 'theta_97.5%',
+                                       'theta16', 'theta84', 'd_sample', 'bp analyzed', 'variables',
+                                       'chi-square', 'reduced chi-square', 'gene', 'type'])
     if i != 0 and j != 0:
         both = within.append(between)
     if i != 0 and j == 0:
@@ -290,9 +318,6 @@ def main():
     both.to_csv(outpath)
     ##print a list of incomplete clusters
     repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
-    # with open(repeats, 'w+') as f:
-    #     write = csv.writer(f)
-    #     write.writerows(repeats)
     repeatdf = pd.DataFrame(repeats, columns=['mate1', 'mate2','gene_type'])
     repeatdf.to_csv(repeatpath)
 
