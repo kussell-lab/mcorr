@@ -98,15 +98,28 @@ def main():
     i = 0
     ##check if any runs didn't finish
     repeats = []
+    ##ones that weren't fit by curve-fitting
+    misfits = []
     ##for just within sero data
     for sero in tqdm(sero_list):
+        missing = False
         core_file = os.path.join(file_dir, str(sero), str(sero)+'_CORE_FIT_OUT_fit_results.csv')
         flex_file = os.path.join(file_dir, str(sero), str(sero)+'_FLEX_FIT_OUT_fit_results.csv')
+        corestats = os.path.join(file_dir, str(sero), str(sero)+'_CORE_FIT_OUT_lmfit_report.txt')
+        flexstats = os.path.join(file_dir, str(sero), str(sero)+'_FLEX_FIT_OUT_lmfit_report.txt')
         if not os.path.exists(core_file):
             repeats.append((sero, sero, 'CORE'))
+            missing = True
         if not os.path.exists(flex_file):
             repeats.append((sero, sero, 'FLEX'))
-        if not os.path.exists(core_file) or not os.path.exists(flex_file):
+            missing = True
+        if not os.path.exists(corestats):
+            misfits.append((sero, sero, 'CORE'))
+            missing = True
+        if not os.path.exists(flexstats):
+            misfits.append((sero, sero, 'FLEX'))
+            missing = True
+        if missing:
             continue
         core = pd.read_csv(core_file)
         flex = pd.read_csv(flex_file)
@@ -220,13 +233,24 @@ def main():
     j = 0
 
     for c in tqdm(combolist):
+        missing = False
         core_file = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_CORE_FIT_OUT_fit_results.csv')
         flex_file = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_FLEX_FIT_OUT_fit_results.csv')
+        corestats = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_CORE_FIT_OUT_lmfit_report.txt')
+        flexstats = os.path.join(file_dir,  c[0]+'_'+c[1], c[0]+'_'+c[1]+'_FLEX_FIT_OUT_lmfit_report.txt')
         if not os.path.exists(core_file):
             repeats.append((c[0], c[1], 'CORE'))
+            missing = True
         if not os.path.exists(flex_file):
             repeats.append((c[0], c[1], 'FLEX'))
-        if not os.path.exists(core_file) or not os.path.exists(flex_file):
+            missing = True
+        if not os.path.exists(corestats):
+            misfits.append((c[0], c[1], 'CORE'))
+            missing = True
+        if not os.path.exists(flexstats):
+            misfits.append((c[0], c[1], 'FLEX'))
+            missing = True
+        if missing:
             continue
         core = pd.read_csv(core_file)
         flex = pd.read_csv(flex_file)
@@ -320,6 +344,10 @@ def main():
     repeatpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_incomplete.csv')
     repeatdf = pd.DataFrame(repeats, columns=['mate1', 'mate2','gene_type'])
     repeatdf.to_csv(repeatpath)
+    ##print a list of clusters which could not be fit using lmfit (and aren't worth repeating ...)
+    misfitpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_lmfit_failed.csv')
+    misfitdf = pd.DataFrame(misfits, columns=['mate1', 'mate2','gene_type'])
+    misfitdf.to_csv(misfitpath)
 
 if __name__ == "__main__":
     main()
