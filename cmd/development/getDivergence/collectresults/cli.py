@@ -102,92 +102,89 @@ def main():
     misfits = []
     ##for just within sero data
     for sero in tqdm(sero_list):
-        missing = False
+        core = True
+        flex = True
         core_file = os.path.join(file_dir, str(sero), str(sero)+'_CORE_FIT_OUT_fit_results.csv')
         flex_file = os.path.join(file_dir, str(sero), str(sero)+'_FLEX_FIT_OUT_fit_results.csv')
         corestats = os.path.join(file_dir, str(sero), str(sero)+'_CORE_FIT_OUT_lmfit_report.txt')
         flexstats = os.path.join(file_dir, str(sero), str(sero)+'_FLEX_FIT_OUT_lmfit_report.txt')
         if not os.path.exists(core_file):
-            repeats.append((sero, sero, 'CORE'))
-            missing = True
-        if not os.path.exists(flex_file):
-            repeats.append((sero, sero, 'FLEX'))
-            missing = True
+            repeats.append((c[0], c[1], 'CORE'))
+            core = False
         if not os.path.exists(corestats):
-            misfits.append((sero, sero, 'CORE'))
-            missing = True
+            misfits.append((c[0], c[1], 'CORE'))
+            core = False
+        if not os.path.exists(flex_file):
+            repeats.append((c[0], c[1], 'FLEX'))
+            flex = False
         if not os.path.exists(flexstats):
-            misfits.append((sero, sero, 'FLEX'))
-            missing = True
-        if missing:
-            continue
-        core = pd.read_csv(core_file)
-        flex = pd.read_csv(flex_file)
+            misfits.append((c[0], c[1], 'FLEX'))
+            flex = False
 
         ##core
-        phi.append(core['phi_pool'][0])
-        theta.append(core['theta_pool'][0])
-        d.append(core['d_sample'][0])
-        genenames.append('core')
-        seronames.append(str(sero))
-        type.append('within serotype')
+        if core:
+            core = pd.read_csv(core_file)
+            phi.append(core['phi_pool'][0])
+            theta.append(core['theta_pool'][0])
+            d.append(core['d_sample'][0])
+            genenames.append('core')
+            seronames.append(str(sero))
+            type.append('within serotype')
 
-        ##get bootstrap medians and CIs
-        phi_pool = core['phi_pool'][1:]
-        theta_pool = core['theta_pool'][1:]
-        phib.append(np.median(phi_pool))
-        thetab.append(np.median(theta_pool))
-        phi2pt5.append(np.percentile(phi_pool, 2.5))
-        phi97pt5.append(np.percentile(phi_pool, 97.5))
-        theta2pt5.append(np.percentile(theta_pool, 2.5))
-        theta97pt5.append(np.percentile(theta_pool, 97.5))
-        phi16.append(np.percentile(phi_pool, 16))
-        phi84.append(np.percentile(phi_pool, 84))
-        theta16.append(np.percentile(theta_pool, 16))
-        theta84.append(np.percentile(theta_pool, 84))
+            ##get bootstrap medians and CIs
+            phi_pool = core['phi_pool'][1:]
+            theta_pool = core['theta_pool'][1:]
+            phib.append(np.median(phi_pool))
+            thetab.append(np.median(theta_pool))
+            phi2pt5.append(np.percentile(phi_pool, 2.5))
+            phi97pt5.append(np.percentile(phi_pool, 97.5))
+            theta2pt5.append(np.percentile(theta_pool, 2.5))
+            theta97pt5.append(np.percentile(theta_pool, 97.5))
+            phi16.append(np.percentile(phi_pool, 16))
+            phi84.append(np.percentile(phi_pool, 84))
+            theta16.append(np.percentile(theta_pool, 16))
+            theta84.append(np.percentile(theta_pool, 84))
 
-        ##get fitstats
-        points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "CORE")
-        datapoints.append(points)
-        variables.append(vars)
-        chisquare.append(chi)
-        reducedchisquare.append(redchi)
+            ##get fitstats
+            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "CORE")
+            datapoints.append(points)
+            variables.append(vars)
+            chisquare.append(chi)
+            reducedchisquare.append(redchi)
+            i = i + 1
 
         ##flex
-        phi.append(flex['phi_pool'][0])
-        theta.append(flex['theta_pool'][0])
-        d.append(flex['d_sample'][0])
-        genenames.append('flex')
-        type.append('within serotype')
-        seronames.append(str(sero))
+        if flex:
+            flex = pd.read_csv(flex_file)
+            phi.append(flex['phi_pool'][0])
+            theta.append(flex['theta_pool'][0])
+            d.append(flex['d_sample'][0])
+            genenames.append('flex')
+            type.append('within serotype')
+            seronames.append(str(sero))
 
-        ##get bootstrap medians
-        phi_pool = flex['phi_pool'][1:]
-        theta_pool = flex['theta_pool'][1:]
-        phib.append(np.median(phi_pool))
-        thetab.append(np.median(theta_pool))
-        phi2pt5.append(np.percentile(phi_pool, 2.5))
-        phi97pt5.append(np.percentile(phi_pool, 97.5))
-        theta2pt5.append(np.percentile(theta_pool, 2.5))
-        theta97pt5.append(np.percentile(theta_pool, 97.5))
-        phi16.append(np.percentile(phi_pool, 16))
-        phi84.append(np.percentile(phi_pool, 84))
-        theta16.append(np.percentile(theta_pool, 16))
-        theta84.append(np.percentile(theta_pool, 84))
+            ##get bootstrap medians
+            phi_pool = flex['phi_pool'][1:]
+            theta_pool = flex['theta_pool'][1:]
+            phib.append(np.median(phi_pool))
+            thetab.append(np.median(theta_pool))
+            phi2pt5.append(np.percentile(phi_pool, 2.5))
+            phi97pt5.append(np.percentile(phi_pool, 97.5))
+            theta2pt5.append(np.percentile(theta_pool, 2.5))
+            theta97pt5.append(np.percentile(theta_pool, 97.5))
+            phi16.append(np.percentile(phi_pool, 16))
+            phi84.append(np.percentile(phi_pool, 84))
+            theta16.append(np.percentile(theta_pool, 16))
+            theta84.append(np.percentile(theta_pool, 84))
 
-        ##get fitstats
-        points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "FLEX")
-        datapoints.append(points)
-        variables.append(vars)
-        chisquare.append(chi)
-        reducedchisquare.append(redchi)
-
-
-        ##count how many you've done so far
-        if os.path.exists(core_file) and os.path.exists(flex_file):
-            i = i + 2
-        else:
+            ##get fitstats
+            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "FLEX")
+            datapoints.append(points)
+            variables.append(vars)
+            chisquare.append(chi)
+            reducedchisquare.append(redchi)
             i = i + 1
+
     if i != 0:
         all_values = list(zip(seronames, phi, phib, phi2pt5, phi97pt5,
                               phi16, phi84,
@@ -233,90 +230,88 @@ def main():
     j = 0
 
     for c in tqdm(combolist):
-        missing = False
+        core = True
+        flex = True
         core_file = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_CORE_FIT_OUT_fit_results.csv')
         flex_file = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_FLEX_FIT_OUT_fit_results.csv')
         corestats = os.path.join(file_dir, c[0]+'_'+c[1], c[0]+'_'+c[1]+'_CORE_FIT_OUT_lmfit_report.txt')
         flexstats = os.path.join(file_dir,  c[0]+'_'+c[1], c[0]+'_'+c[1]+'_FLEX_FIT_OUT_lmfit_report.txt')
         if not os.path.exists(core_file):
             repeats.append((c[0], c[1], 'CORE'))
-            missing = True
-        if not os.path.exists(flex_file):
-            repeats.append((c[0], c[1], 'FLEX'))
-            missing = True
+            core = False
         if not os.path.exists(corestats):
             misfits.append((c[0], c[1], 'CORE'))
-            missing = True
+            core = False
+        if not os.path.exists(flex_file):
+            repeats.append((c[0], c[1], 'FLEX'))
+            flex = False
         if not os.path.exists(flexstats):
             misfits.append((c[0], c[1], 'FLEX'))
-            missing = True
-        if missing:
-            continue
-        core = pd.read_csv(core_file)
-        flex = pd.read_csv(flex_file)
+            flex = False
         ##core
-        phi.append(core['phi_pool'][0])
-        theta.append(core['theta_pool'][0])
-        d.append(core['d_sample'][0])
-        genenames.append('core')
-        type.append('between serotype')
-        seronames.append(c[0]+'/'+c[1])
+        if core:
+            core = pd.read_csv(core_file)
+            phi.append(core['phi_pool'][0])
+            theta.append(core['theta_pool'][0])
+            d.append(core['d_sample'][0])
+            genenames.append('core')
+            type.append('between clusters')
+            seronames.append(c[0]+'/'+c[1])
 
-        ##get bootstrap medians
-        phi_pool = core['phi_pool'][1:]
-        theta_pool = core['theta_pool'][1:]
-        phib.append(np.median(phi_pool))
-        thetab.append(np.median(theta_pool))
-        phi2pt5.append(np.percentile(phi_pool, 2.5))
-        phi97pt5.append(np.percentile(phi_pool, 97.5))
-        theta2pt5.append(np.percentile(theta_pool, 2.5))
-        theta97pt5.append(np.percentile(theta_pool, 97.5))
-        phi16.append(np.percentile(phi_pool, 16))
-        phi84.append(np.percentile(phi_pool, 84))
-        theta16.append(np.percentile(theta_pool, 16))
-        theta84.append(np.percentile(theta_pool, 84))
+            ##get bootstrap medians
+            phi_pool = core['phi_pool'][1:]
+            theta_pool = core['theta_pool'][1:]
+            phib.append(np.median(phi_pool))
+            thetab.append(np.median(theta_pool))
+            phi2pt5.append(np.percentile(phi_pool, 2.5))
+            phi97pt5.append(np.percentile(phi_pool, 97.5))
+            theta2pt5.append(np.percentile(theta_pool, 2.5))
+            theta97pt5.append(np.percentile(theta_pool, 97.5))
+            phi16.append(np.percentile(phi_pool, 16))
+            phi84.append(np.percentile(phi_pool, 84))
+            theta16.append(np.percentile(theta_pool, 16))
+            theta84.append(np.percentile(theta_pool, 84))
 
-        ##get goodness of fit statistics
-        points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "CORE")
-        datapoints.append(points)
-        variables.append(vars)
-        chisquare.append(chi)
-        reducedchisquare.append(redchi)
+            ##get goodness of fit statistics
+            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "CORE")
+            datapoints.append(points)
+            variables.append(vars)
+            chisquare.append(chi)
+            reducedchisquare.append(redchi)
+            j = j + 1
+
         ##flex
-        phi.append(flex['phi_pool'][0])
-        theta.append(flex['theta_pool'][0])
-        d.append(flex['d_sample'][0])
-        genenames.append('flex')
-        type.append('between serotype')
-        seronames.append(c[0]+'/'+c[1])
+        if flex:
+            flex = pd.read_csv(flex_file)
+            phi.append(flex['phi_pool'][0])
+            theta.append(flex['theta_pool'][0])
+            d.append(flex['d_sample'][0])
+            genenames.append('flex')
+            type.append('between clusters')
+            seronames.append(c[0]+'/'+c[1])
 
-        ##get bootstrap medians
-        phi_pool = flex['phi_pool'][1:]
-        theta_pool = flex['theta_pool'][1:]
-        phib.append(np.median(phi_pool))
-        thetab.append(np.median(theta_pool))
-        phi2pt5.append(np.percentile(phi_pool, 2.5))
-        phi97pt5.append(np.percentile(phi_pool, 97.5))
-        theta2pt5.append(np.percentile(theta_pool, 2.5))
-        theta97pt5.append(np.percentile(theta_pool, 97.5))
-        phi16.append(np.percentile(phi_pool, 16))
-        phi84.append(np.percentile(phi_pool, 84))
-        theta16.append(np.percentile(theta_pool, 16))
-        theta84.append(np.percentile(theta_pool, 84))
+            ##get bootstrap medians
+            phi_pool = flex['phi_pool'][1:]
+            theta_pool = flex['theta_pool'][1:]
+            phib.append(np.median(phi_pool))
+            thetab.append(np.median(theta_pool))
+            phi2pt5.append(np.percentile(phi_pool, 2.5))
+            phi97pt5.append(np.percentile(phi_pool, 97.5))
+            theta2pt5.append(np.percentile(theta_pool, 2.5))
+            theta97pt5.append(np.percentile(theta_pool, 97.5))
+            phi16.append(np.percentile(phi_pool, 16))
+            phi84.append(np.percentile(phi_pool, 84))
+            theta16.append(np.percentile(theta_pool, 16))
+            theta84.append(np.percentile(theta_pool, 84))
 
-        ##get goodness of fit statistics
-        points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "FLEX")
-        datapoints.append(points)
-        variables.append(vars)
-        chisquare.append(chi)
-        reducedchisquare.append(redchi)
-
-        if os.path.exists(core_file) and os.path.exists(flex_file):
-            j = j + 2
-        else:
+            ##get goodness of fit statistics
+            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "FLEX")
+            datapoints.append(points)
+            variables.append(vars)
+            chisquare.append(chi)
+            reducedchisquare.append(redchi)
             j = j + 1
     print('Ran ' + str(i+j) + ' samples so far')
-    ##make sure you're not appending
 
     if j != 0:
         all_values = list(zip(seronames, phi, phib, phi2pt5, phi97pt5,
