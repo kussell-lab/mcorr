@@ -81,7 +81,7 @@ for g in gene:
                 outdir = os.path.join(archive, c[0]+'_'+c[1])
                 fh.writelines("cd %s\n" %outdir)
                 fh.writelines("\n")
-                fh.writelines("fit-stats %s/%s_%s_XMFA_OUT.csv %s/%s_%s_0122_newparams1 || true\n"
+                fh.writelines("fit-stats %s/%s_%s_XMFA_OUT.csv %s/%s_%s_0122_newparams1\n"
                               % (outdir, c[0]+'_'+c[1], g, outdir, c[0]+'_'+c[1], g))
                 fh.writelines("\n")
         os.system("sbatch %s" %job_file)

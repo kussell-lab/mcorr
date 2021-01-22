@@ -46,3 +46,37 @@ def get_numalns(file_dir, name1, name2, gene):
     numaln = allcorr['n'].to_numpy()
     avg_aln = np.mean(numaln)
     return avg_aln
+
+def read_lmfit_out(file_dir, name1, name2, gene, suffix):
+    'read lmfit output and return phi_pool, theta_pool, d_sample and goodness of fit stats'
+    if suffix == "":
+        suffix = '_FIT_OUT_lmfit_report.txt'
+    if name2 == "":
+        statsfile = os.path.join(file_dir, str(name1), str(name1)+'_'+gene+suffix)
+    else:
+        statsfile = os.path.join(file_dir, name1+'_'+name2, name1+'_'+name2+'_'+gene+suffix)
+    stats = open(statsfile)
+    for i, line in enumerate(stats):
+        if i == 3:
+            terms = line.rstrip().split(" ")
+            datapoints = terms[len(terms)-1]
+        if i == 4:
+            terms = line.rstrip().split(" ")
+            variables = terms[len(terms)-1]
+        if i == 5:
+            terms = line.rstrip().split(" ")
+            chisquare = terms[len(terms)-1]
+        if i == 6:
+            terms = line.rstrip().split(" ")
+            reducedchisquare = terms[len(terms)-1]
+        if i == 10:
+            terms = line.rstrip().split(" ")
+            d_sample = terms[len(terms)-2]
+        if i == 16:
+            terms = line.rstrip().split(" ")
+            theta_pool = terms[6]
+        if i == 17:
+            terms = line.rstrip().split(" ")
+            phi_pool = terms[8]
+            break
+    return datapoints, variables, chisquare, reducedchisquare, d_sample, theta_pool, phi_pool
