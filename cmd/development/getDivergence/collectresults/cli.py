@@ -9,15 +9,10 @@ import pandas as pd
 from itertools import combinations
 import numpy as np
 import linecache
-from collectresults.functions import mkdir_p, get_fitstats
+from collectresults.functions import mkdir_p, get_fitstats, get_numalns
 """
 Commandline program for collecting divergence and bootstrap interval outputs from mcorr-fit
 """
-
-# def mkdir_p(dir):
-#     'make a directory if doesnt exist'
-#     if not os.path.exists(dir):
-#         os.mkdir(dir)
 
 def main():
     parser = argparse.ArgumentParser(description="Collect results for many sequence clusters from mcorr-fit\n"+
@@ -25,6 +20,7 @@ def main():
                                                  " jobs named 'DATETIMESTAMP_incomplete.txt'")
     parser.add_argument("--file_dir", default="current", help="specify directory with output from mcorr if not current directory")
     parser.add_argument("--out_dir", default="current", help="optional output directory for divergence csv")
+    parser.add_argument("--suffix", default="", help="if the lmfit goodness-of-fit stats sheet has a different suffix")
     parser.add_argument("stats_sheet", help=" name of stats csv file from clusterSequences.py which has the list of clusters")
     parser.add_argument("file_name", help="prefix for resultant csv file (timestamp will be included)")
 
@@ -36,10 +32,11 @@ def main():
     out_dir = args.out_dir
 
     ##for local testing
-    #file_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
-    #out_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
-    #file_name = 'APS160.5_mcorr_res_test'
-    #clusters = [8, 221]
+    # file_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
+    # out_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
+    # file_name = '0122_mcorr_res_test'
+    # suffix = '_FIT_OUT_lmfit_report.txt'
+    # clusters = [8, 221]
     # stats_sheet = "20th_percentile_>=10strains_stats.csv"
 
     if file_dir == "current":
@@ -90,6 +87,7 @@ def main():
     type = []
     seronames = []
     ##fit statistics
+    alns = []
     datapoints = []
     variables = []
     chisquare = []
@@ -145,8 +143,12 @@ def main():
             theta16.append(np.percentile(theta_pool, 16))
             theta84.append(np.percentile(theta_pool, 84))
 
+            ##get avg number of alignments used to make corr profile
+            avg_aln = get_numalns(file_dir, sero, "", "CORE")
+            alns.append(avg_aln)
+
             ##get fitstats
-            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "CORE")
+            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "CORE", suffix)
             datapoints.append(points)
             variables.append(vars)
             chisquare.append(chi)
@@ -177,8 +179,12 @@ def main():
             theta16.append(np.percentile(theta_pool, 16))
             theta84.append(np.percentile(theta_pool, 84))
 
+            ##get avg number of alignments used to make corr profile
+            avg_aln = get_numalns(file_dir, sero, "", "FLEX")
+            alns.append(avg_aln)
+
             ##get fitstats
-            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "FLEX")
+            points, vars, chi, redchi = get_fitstats(file_dir, sero, "", "FLEX", suffix)
             datapoints.append(points)
             variables.append(vars)
             chisquare.append(chi)
@@ -190,13 +196,14 @@ def main():
                               phi16, phi84,
                               theta, thetab, theta2pt5, theta97pt5,
                               theta16, theta84,
-                              d, datapoints, variables, chisquare, reducedchisquare, genenames, type))
+                              d, alns, datapoints, variables, chisquare,
+                              reducedchisquare, genenames, type))
         within = pd.DataFrame(all_values,
                               columns=['cluster', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
                                        'phi16', 'phi84',
                                        'theta', 'theta_median', 'theta_2.5%', 'theta_97.5%',
-                                       'theta16', 'theta84', 'd_sample', 'bp analyzed', 'variables',
-                                       'chi-square', 'reduced chi-square', 'gene', 'type'])
+                                       'theta16', 'theta84', 'd_sample', 'avg_num_alns', 'bp_analyzed', 'variables',
+                                       'chi-square', 'reduced_chi-square', 'gene', 'type'])
 
 
     "for between sero data"
@@ -222,6 +229,7 @@ def main():
     theta84 = []
 
     ##fit statistics
+    alns = []
     datapoints = []
     variables = []
     chisquare = []
@@ -272,8 +280,12 @@ def main():
             theta16.append(np.percentile(theta_pool, 16))
             theta84.append(np.percentile(theta_pool, 84))
 
+            ##get avg number of alignments used to make corr profile
+            avg_aln = get_numalns(file_dir, c[0], c[1], "CORE")
+            alns.append(avg_aln)
+
             ##get goodness of fit statistics
-            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "CORE")
+            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "CORE", suffix)
             datapoints.append(points)
             variables.append(vars)
             chisquare.append(chi)
@@ -304,8 +316,12 @@ def main():
             theta16.append(np.percentile(theta_pool, 16))
             theta84.append(np.percentile(theta_pool, 84))
 
+            ##get avg number of alignments used to make corr profile
+            avg_aln = get_numalns(file_dir, c[0], c[1], "FLEX")
+            alns.append(avg_aln)
+
             ##get goodness of fit statistics
-            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "FLEX")
+            points, vars, chi, redchi = get_fitstats(file_dir, c[0], c[1], "FLEX", suffix)
             datapoints.append(points)
             variables.append(vars)
             chisquare.append(chi)
@@ -318,13 +334,14 @@ def main():
                               phi16, phi84,
                               theta, thetab, theta2pt5, theta97pt5,
                               theta16, theta84,
-                              d, datapoints, variables, chisquare, reducedchisquare, genenames, type))
+                              d, alns, datapoints, variables, chisquare,
+                              reducedchisquare, genenames, type))
         between = pd.DataFrame(all_values,
                               columns=['cluster', 'phi', 'phi_median', 'phi_2.5%', 'phi_97.5%',
                                        'phi16', 'phi84',
                                        'theta', 'theta_median', 'theta_2.5%', 'theta_97.5%',
-                                       'theta16', 'theta84', 'd_sample', 'bp analyzed', 'variables',
-                                       'chi-square', 'reduced chi-square', 'gene', 'type'])
+                                       'theta16', 'theta84', 'd_sample', 'avg_num_alns', 'bp_analyzed', 'variables',
+                                       'chi-square', 'reduced_chi-square', 'gene', 'type'])
     if i != 0 and j != 0:
         both = within.append(between)
     if i != 0 and j == 0:
