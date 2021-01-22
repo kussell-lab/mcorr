@@ -84,6 +84,10 @@ def main():
     variables = []
     chisquare = []
     reducedchisquare = []
+    ## additional fitting params
+    theta_sample = []
+    f = []
+    phi_sample = []
 
     i = 0
     ##check if any runs didn't finish
@@ -116,14 +120,18 @@ def main():
         if core:
             ##get phi, theta, d, goodness of fit stats, and number of alignments
             lmfitout = read_lmfit_out(file_dir, sero, "", "CORE", suffix)
-            phi.append(lmfitout[6])
-            theta.append(lmfitout[5])
-            d.append(lmfitout[4])
             ##get fitstats
             datapoints.append(lmfitout[0])
             variables.append(lmfitout[1])
             chisquare.append(lmfitout[2])
             reducedchisquare.append(lmfitout[3])
+            d.append(lmfitout[4])
+            theta_sample.append(lmfitout[5])
+            f.append(lmfitout[6])
+            phi_sample.append(lmfitout[7])
+            theta.append(lmfitout[8])
+            phi.append(lmfitout[9])
+
             genenames.append('core')
             seronames.append(str(sero))
             type.append('within cluster')
@@ -138,14 +146,18 @@ def main():
         if flex:
             ##get phi, theta, d, goodness of fit stats, and number of alignments
             lmfitout = read_lmfit_out(file_dir, sero, "", "FLEX", suffix)
-            phi.append(lmfitout[6])
-            theta.append(lmfitout[5])
-            d.append(lmfitout[4])
             ##get fitstats
             datapoints.append(lmfitout[0])
             variables.append(lmfitout[1])
             chisquare.append(lmfitout[2])
             reducedchisquare.append(lmfitout[3])
+            d.append(lmfitout[4])
+            theta_sample.append(lmfitout[5])
+            f.append(lmfitout[6])
+            phi_sample.append(lmfitout[7])
+            theta.append(lmfitout[8])
+            phi.append(lmfitout[9])
+
             genenames.append('core')
             seronames.append(str(sero))
             type.append('within cluster')
@@ -157,12 +169,14 @@ def main():
             i = i + 1
 
     if i != 0:
-        all_values = list(zip(seronames, phi,
-                              theta, d, alns, datapoints, variables, chisquare,
+        all_values = list(zip(seronames, phi, theta, d,
+                              theta_sample, f, phi_sample,
+                              alns, datapoints, variables, chisquare,
                               reducedchisquare, genenames, type))
         within = pd.DataFrame(all_values,
-                              columns=['cluster', 'phi',
-                                       'theta', 'd_sample', 'avg_num_alns', 'bp_analyzed', 'variables',
+                              columns=['cluster', 'phi', 'theta', 'd_s',
+                                       "theta_s", "f", "phi_s",
+                                       'avg_num_alns', 'bp_analyzed', 'variables',
                                        'chi-square', 'reduced_chi-square', 'gene', 'type'])
 
 
@@ -207,14 +221,18 @@ def main():
         if core:
             ##get phi, theta, d, goodness of fit stats, and number of alignments
             lmfitout = read_lmfit_out(file_dir, c[0], c[1], "CORE", suffix)
-            phi.append(lmfitout[6])
-            theta.append(lmfitout[5])
-            d.append(lmfitout[4])
             ##get fitstats
             datapoints.append(lmfitout[0])
             variables.append(lmfitout[1])
             chisquare.append(lmfitout[2])
             reducedchisquare.append(lmfitout[3])
+            d.append(lmfitout[4])
+            theta_sample.append(lmfitout[5])
+            f.append(lmfitout[6])
+            phi_sample.append(lmfitout[7])
+            theta.append(lmfitout[8])
+            phi.append(lmfitout[9])
+
             genenames.append('core')
             seronames.append(c[0]+'/'+c[1])
             type.append('between clusters')
@@ -228,14 +246,18 @@ def main():
         if flex:
             ##get phi, theta, d, goodness of fit stats, and number of alignments
             lmfitout = read_lmfit_out(file_dir, c[0], c[1], "FLEX", suffix)
-            phi.append(lmfitout[6])
-            theta.append(lmfitout[5])
-            d.append(lmfitout[4])
             ##get fitstats
             datapoints.append(lmfitout[0])
             variables.append(lmfitout[1])
             chisquare.append(lmfitout[2])
             reducedchisquare.append(lmfitout[3])
+            d.append(lmfitout[4])
+            theta_sample.append(lmfitout[5])
+            f.append(lmfitout[6])
+            phi_sample.append(lmfitout[7])
+            theta.append(lmfitout[8])
+            phi.append(lmfitout[9])
+
             genenames.append('flex')
             seronames.append(c[0]+'/'+c[1])
             type.append('between clusters')
@@ -247,12 +269,14 @@ def main():
     print('Ran ' + str(i+j) + ' samples so far')
 
     if j != 0:
-        all_values = list(zip(seronames, phi,
-                              theta, d, alns, datapoints, variables, chisquare,
+        all_values = list(zip(seronames, phi, theta, d,
+                              theta_sample, f, phi_sample,
+                              alns, datapoints, variables, chisquare,
                               reducedchisquare, genenames, type))
         between = pd.DataFrame(all_values,
-                              columns=['cluster', 'phi',
-                                       'theta', 'd_sample', 'avg_num_alns', 'bp_analyzed', 'variables',
+                              columns=['cluster', 'phi', 'theta', 'd_s',
+                                       "theta_s", "f", "phi_s",
+                                        'avg_num_alns', 'bp_analyzed', 'variables',
                                        'chi-square', 'reduced_chi-square', 'gene', 'type'])
     if i != 0 and j != 0:
         both = within.append(between)

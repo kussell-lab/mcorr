@@ -57,26 +57,29 @@ def read_lmfit_out(file_dir, name1, name2, gene, suffix):
         statsfile = os.path.join(file_dir, name1+'_'+name2, name1+'_'+name2+'_'+gene+suffix)
     stats = open(statsfile)
     for i, line in enumerate(stats):
-        if i == 3:
-            terms = line.rstrip().split(" ")
-            datapoints = terms[len(terms)-1]
-        if i == 4:
-            terms = line.rstrip().split(" ")
-            variables = terms[len(terms)-1]
-        if i == 5:
-            terms = line.rstrip().split(" ")
-            chisquare = terms[len(terms)-1]
-        if i == 6:
-            terms = line.rstrip().split(" ")
-            reducedchisquare = terms[len(terms)-1]
-        if i == 10:
-            terms = line.rstrip().split(" ")
-            d_sample = terms[len(terms)-2]
-        if i == 16:
-            terms = line.rstrip().split(" ")
-            theta_pool = terms[6]
-        if i == 17:
-            terms = line.rstrip().split(" ")
-            phi_pool = terms[8]
-            break
-    return datapoints, variables, chisquare, reducedchisquare, d_sample, theta_pool, phi_pool
+        terms = line.strip().split(" ")
+        if len(terms) > 1:
+            if terms[1] == "data":
+                datapoints = terms[len(terms)-1]
+            elif terms[1] == "variables":
+                variables = terms[len(terms)-1]
+            elif terms[0] == "chi-square":
+                chisquare = terms[len(terms)-1]
+            elif terms[0] == "reduced":
+                reducedchisquare = terms[len(terms)-1]
+            elif terms[0] == "ds:":
+                d_sample = terms[len(terms)-2]
+            elif terms[0] == "thetaS:":
+                theta_sample = terms[2]
+            elif terms[0] == "f:":
+                f = terms[7]
+            elif terms[0] == "phiS:":
+                phi_sample = terms[4]
+            elif terms[0] == "thetaP:":
+                theta_pool = terms[2]
+            elif terms[0] == "phiP:":
+                phi_pool = terms[4]
+                break
+
+    return datapoints, variables, chisquare, reducedchisquare, \
+           d_sample, theta_sample, f, phi_sample, theta_pool, phi_pool
