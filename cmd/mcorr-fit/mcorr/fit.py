@@ -54,12 +54,14 @@ def fit_model(xvalues, yvalues, d_sample, r1_func):
     params1.add('ds', value=d_sample, vary=False)
     params1.add('thetaS', value=0.00001, min=0, max=d_sample)
     params1.add('f', value=1000, min=3, max=300000)
-    params1.add('phiS', value=0.00005, min=0, max=1)
+    ## originally max was 1
+    params1.add('phiS', value=0.00005, min=0)
     params1.add('w', value=2.0/3.0, vary=False)
     params1.add('a', value=4.0/3.0, vary=False)
+    ##originally thetaP, phiP had no minima
     params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
-                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
-    params1.add('phiP', expr='phiS*thetaP/thetaS')
+                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))', min=0)
+    params1.add('phiP', expr='phiS*thetaP/thetaS', min=0)
     params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
