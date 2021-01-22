@@ -30,6 +30,7 @@ def main():
     file_name = args.file_name
     stats_sheet = args.stats_sheet
     out_dir = args.out_dir
+    suffix = args.suffix
 
     ##for local testing
     # file_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'

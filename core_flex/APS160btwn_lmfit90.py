@@ -14,8 +14,8 @@ def mkdir_p(dir):
 date = "0122_90"
 jobdir = "/scratch/aps376/recombo/APS160.5_lmfit"
 archive = "/scratch/aps376/recombo/APS160_SP_Archive/corethreshold90"
-submitdir = "/scratch/aps376/recombo/APS160_sp_btwnclusters/%s_submissions" % date
-slurmdir = "/scratch/aps376/recombo/APS160_sp_btwnclusters/%s_slurm" % date
+submitdir = "/scratch/aps376/recombo/APS160.5_lmfit/%s_submissions" % date
+slurmdir = "/scratch/aps376/recombo/APS160.5_lmfit/%s_slurm" % date
 #scratch = os.environ['SCRATCH']
 mkdir_p(archive)
 mkdir_p(submitdir)
