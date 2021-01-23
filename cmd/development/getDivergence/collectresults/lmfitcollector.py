@@ -9,7 +9,7 @@ import pandas as pd
 from itertools import combinations
 import numpy as np
 import linecache
-from collectresults.functions import mkdir_p, get_fitstats, get_numalns, read_lmfit_out
+from collectresults.functions import mkdir_p, get_numalns, read_lmfit_out, get_numpairs
 """
 Commandline program for collecting divergence and bootstrap interval outputs from mcorr-fit
 """
@@ -39,7 +39,7 @@ def main():
     ##for local testing
     # file_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
     # out_dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit'
-    # file_name = '0122_mcorr_res_test'
+    # file_name = 'mcorr_res_test'
     # suffix = '_FIT_OUT_lmfit_report.txt'
     # clusters = [8, 221]
 
@@ -80,6 +80,7 @@ def main():
     seronames = []
     ##fit statistics
     alns = []
+    avgpairs = []
     datapoints = []
     variables = []
     chisquare = []
@@ -139,6 +140,9 @@ def main():
             ##get avg number of alignments used to make corr profile
             avg_aln = get_numalns(file_dir, sero, "", "CORE")
             alns.append(avg_aln)
+            ##get avg number of pairs used
+            pairs = get_numpairs(file_dir, sero, "", "CORE")
+            avgpairs.append(pairs)
 
             i = i + 1
 
@@ -163,20 +167,23 @@ def main():
             type.append('within cluster')
 
             ##get avg number of alignments used to make corr profile
-            avg_aln = get_numalns(file_dir, sero, "", "CORE")
+            avg_aln = get_numalns(file_dir, sero, "", "FLEX")
             alns.append(avg_aln)
+            ##get avg number of pairs used
+            pairs = get_numpairs(file_dir, sero, "", "FLEX")
+            avgpairs.append(pairs)
 
             i = i + 1
 
     if i != 0:
         all_values = list(zip(seronames, phi, theta, d,
                               theta_sample, f, phi_sample,
-                              alns, datapoints, variables, chisquare,
+                              alns, avgpairs, datapoints, variables, chisquare,
                               reducedchisquare, genenames, type))
         within = pd.DataFrame(all_values,
                               columns=['cluster', 'phi', 'theta', 'd_s',
                                        "theta_s", "f", "phi_s",
-                                       'avg_num_alns', 'bp_analyzed', 'variables',
+                                       'avg_num_alns', 'avg_num_pairs', 'bp_analyzed', 'variables',
                                        'chi-square', 'reduced_chi-square', 'gene', 'type'])
 
 
@@ -191,6 +198,7 @@ def main():
 
     ##fit statistics
     alns = []
+    avgpairs = []
     datapoints = []
     variables = []
     chisquare = []
@@ -240,6 +248,9 @@ def main():
             ##get avg number of alignments used to make corr profile
             avg_aln = get_numalns(file_dir, c[0], c[1], "CORE")
             alns.append(avg_aln)
+            ##get avg number of pairs used
+            pairs = get_numpairs(file_dir, c[0], c[1], "CORE")
+            avgpairs.append(pairs)
             j = j + 1
 
         ##flex
@@ -265,18 +276,21 @@ def main():
             ##get avg number of alignments used to make corr profile
             avg_aln = get_numalns(file_dir, c[0], c[1], "FLEX")
             alns.append(avg_aln)
+            ##get avg number of pairs used
+            pairs = get_numpairs(file_dir, c[0], c[1], "FLEX")
+            avgpairs.append(pairs)
             j = j + 1
     print('Ran ' + str(i+j) + ' samples so far')
 
     if j != 0:
         all_values = list(zip(seronames, phi, theta, d,
                               theta_sample, f, phi_sample,
-                              alns, datapoints, variables, chisquare,
+                              alns, avgpairs, datapoints, variables, chisquare,
                               reducedchisquare, genenames, type))
         between = pd.DataFrame(all_values,
                               columns=['cluster', 'phi', 'theta', 'd_s',
                                        "theta_s", "f", "phi_s",
-                                        'avg_num_alns', 'bp_analyzed', 'variables',
+                                       'avg_num_alns', 'avg_num_pairs', 'bp_analyzed', 'variables',
                                        'chi-square', 'reduced_chi-square', 'gene', 'type'])
     if i != 0 and j != 0:
         both = within.append(between)

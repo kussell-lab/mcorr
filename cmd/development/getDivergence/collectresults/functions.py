@@ -83,3 +83,22 @@ def read_lmfit_out(file_dir, name1, name2, gene, suffix):
 
     return datapoints, variables, chisquare, reducedchisquare, \
            d_sample, theta_sample, f, phi_sample, theta_pool, phi_pool
+
+def get_numpairs(file_dir, name1, name2, gene):
+    'get the average number of alignments used to calculate the correlation profile'
+    if name2 == "":
+        corrfile = os.path.join(file_dir, str(name1), str(name1)+'_'+gene+'_XMFA_OUT.json')
+    else:
+        corrfile = os.path.join(file_dir, name1+'_'+name2, name1+'_'+name2+'_'+gene+'_XMFA_OUT.json')
+    dat = pd.read_json(corrfile, lines=True, orient="records")
+    N = 0
+    numgenes = 0
+    for i in np.arange(0, len(dat)):
+        gene = dat['Results'][i]
+        if gene is not None:
+            gdat = pd.DataFrame(gene)
+            N = N + gdat["N"][0]
+            numgenes = numgenes + 1
+
+    pairs = N/numgenes
+    return pairs
