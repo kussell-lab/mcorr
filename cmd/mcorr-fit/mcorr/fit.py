@@ -72,6 +72,30 @@ def fit_model(xvalues, yvalues, d_sample, r1_func):
         fitres1 = None
     return fitres1
 
+def vary_fit(xvalues, yvalues, d_sample, r1_func, f_i, thetaS_i, phiS_i):
+    """fitting correlation profile using lmfit"""
+    params1 = Parameters()
+    params1.add('ds', value=d_sample, vary=False)
+    params1.add('thetaS', value=thetaS_i, min=0, max=d_sample)
+    params1.add('f', value=f_i, min=3, max=300000)
+    ## originally max was 1
+    params1.add('phiS', value=phiS_i, min=0)
+    params1.add('w', value=2.0/3.0, vary=False)
+    params1.add('a', value=4.0/3.0, vary=False)
+    ##originally thetaP, phiP had no minima
+    params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
+                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))', min=0)
+    params1.add('phiP', expr='phiS*thetaP/thetaS', min=0)
+    params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
+    params1.add('dp', expr='thetaP/(1+a*thetaP)')
+    params1.add('dc', expr='thetaS/(1+a*thetaS)')
+    minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
+    try:
+        fitres1 = minner1.minimize()
+    except:
+        fitres1 = None
+    return fitres1
+
 def fit_one(fitdata, r1_func):
     """Fit one data set"""
     xvalues = fitdata.xvalues
