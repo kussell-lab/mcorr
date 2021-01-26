@@ -84,8 +84,8 @@ def vary_fit(xvalues, yvalues, d_sample, r1_func, f_i, thetaS_i, phiS_i):
     params1.add('a', value=4.0/3.0, vary=False)
     ##originally thetaP, phiP had no minima
     params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
-                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))', min=0)
-    params1.add('phiP', expr='phiS*thetaP/thetaS', min=0)
+                                ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
+    params1.add('phiP', expr='phiS*thetaP/thetaS')
     params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')

@@ -268,8 +268,11 @@ func getFitOut(cluster clusterFiles) (fitOut []string) {
 		if err != nil {
 			panic(err)
 		}
+		if i == 2 {
+			fitOut = append(fitOut, record[1])
+		}
 		if i == 10 {
-			fitOut = record
+			fitOut = append(fitOut, record...)
 			break
 		}
 		i++
@@ -290,7 +293,7 @@ func writeCSV(resChan chan result, root string, outName string) {
 	defer writer.Flush()
 	//write header
 	header := []string{"ID", "genome", "avg_pairs", "stdev_pairs", "num_genes",
-		"ds", "thetaS", "f", "phiS", "thetaP",
+		"bp_analyzed", "ds", "thetaS", "f", "phiS", "thetaP",
 		"phiP", "c", "dp", "dc", "chisq", "red-chisq"}
 	err = writer.Write(header)
 	for r := range resChan {
