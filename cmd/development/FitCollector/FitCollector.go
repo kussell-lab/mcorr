@@ -20,14 +20,14 @@ import (
 
 func main() {
 
-	app := kingpin.New("CollectMcorrFit", "Collect results from mcorr-fit for many sequence clusters")
+	app := kingpin.New("FitCollector", "Collect results from mcorr-fit or fitCorr for many sequence clusters")
 	app.Version("v20210126")
 	root := app.Arg("root", "root directory containing cluster out folders").Required().String()
 	jsonSuffix := app.Flag("jsonSuffix", "suffix for json files").Default("_XMFA_OUT.json").String()
 	lmfitSuffix := app.Flag("lmfitSuffix", "suffix for lmfit report output file").Default("_XMFA_OUT_lmfit_report.csv").String()
 	ncpu := app.Flag("numCpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numDigesters := app.Flag("numDigesters", "Number threads fetching results").Default("20").Int()
-	out := app.Flag("outCsv", "prefix for outputcsv").Default("mcorrfit_results").String()
+	out := app.Flag("outCsv", "prefix for output csv").Default("mcorrfit_results").String()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if *ncpu <= 0 {
@@ -48,7 +48,7 @@ func main() {
 	//out := "blarrrrgh"
 	clusterDirs := makeDirList(*root)
 	//make a channel for cluster directories which closes when we're out of them
-	clusters := clusterFileChan(done, *root, clusterDirs, *jsonSuffix, *lmfitSuffix)
+	clusters, fitFailed := clusterFileChan(done, *root, clusterDirs, *jsonSuffix, *lmfitSuffix)
 	//start a fixed number of goroutines to send results on
 	//make a results channel
 	resChan := make(chan result)
@@ -66,6 +66,8 @@ func main() {
 	timeStamp := fmt.Sprintf(currentTime.Format("060102_1504"))
 	outCsv := timeStamp + "_" + *out + ".csv"
 	writeCSV(resChan, *root, outCsv)
+	failOut := timeStamp + "_lmfitfailed.csv"
+	writeFitFails(fitFailed, *root, failOut)
 
 	duration := time.Since(start)
 	fmt.Println("Time to collect results:", duration)
@@ -125,27 +127,27 @@ func makeDirList(root string) (DirList []string) {
 	return DirList
 }
 
-//clusterFileChan returns a channel of clusterFiles
-func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSuffix string, lmfitSuffix string) <-chan clusterFiles {
+//clusterFileChan returns a channel of clusterFiles and a list of clusters where lmfit failed
+func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSuffix string, lmfitSuffix string) (<-chan clusterFiles, []clusterFiles) {
 	clusterFileChan := make(chan clusterFiles)
-
+	var lmfitFailed []clusterFiles
 	go func() {
 		defer close(clusterFileChan)
 		for _, d := range DirList {
 			//define the flex files
-			flexJson := d + "_FLEX" + jsonSuffix
-			json := filepath.Join(root, d, flexJson)
-			flexLmfit := d + "_FLEX" + lmfitSuffix
-			lmfit := filepath.Join(root, d, flexLmfit)
-			flex := clusterFiles{d, "FLEX", json, lmfit}
-			//define the core files
-			coreJson := d + "_CORE" + jsonSuffix
-			json = filepath.Join(root, d, coreJson)
-			coreLmfit := d + "_CORE" + lmfitSuffix
-			lmfit = filepath.Join(root, d, coreLmfit)
-			core := clusterFiles{d, "CORE", json, lmfit}
-
-			cGenomes := []clusterFiles{core, flex}
+			core, flex := makeClusterFiles(root, d, jsonSuffix, lmfitSuffix)
+			var cGenomes []clusterFiles
+			if checkLmfit(root, core) {
+				cGenomes = append(cGenomes, core)
+			} else {
+				lmfitFailed = append(lmfitFailed, core)
+			}
+			if checkLmfit(root, flex) {
+				cGenomes = append(cGenomes, flex)
+			} else {
+				lmfitFailed = append(lmfitFailed, flex)
+			}
+			//cGenomes := []clusterFiles{core, flex}
 			for _, c := range cGenomes {
 				select {
 				case clusterFileChan <- c:
@@ -155,7 +157,35 @@ func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSu
 			}
 		}
 	}()
-	return clusterFileChan
+	return clusterFileChan, lmfitFailed
+}
+
+//makeClusterFiles returns ClusterFiles for core and flexible genomes
+func makeClusterFiles(root string, d string, jsonSuffix string, lmfitSuffix string) (core clusterFiles, flex clusterFiles) {
+	//define the flex files
+	flexJson := d + "_FLEX" + jsonSuffix
+	json := filepath.Join(root, d, flexJson)
+	flexLmfit := d + "_FLEX" + lmfitSuffix
+	lmfit := filepath.Join(root, d, flexLmfit)
+	flex = clusterFiles{d, "FLEX", json, lmfit}
+	//define the core files
+	coreJson := d + "_CORE" + jsonSuffix
+	json = filepath.Join(root, d, coreJson)
+	coreLmfit := d + "_CORE" + lmfitSuffix
+	lmfit = filepath.Join(root, d, coreLmfit)
+	core = clusterFiles{d, "CORE", json, lmfit}
+	return core, flex
+}
+
+//checkLmfit check to see if lmfit completed for the cluster
+func checkLmfit(root string, c clusterFiles) bool {
+	lmfit := filepath.Join(root, c.lmfitOut)
+	_, err := os.Stat(lmfit)
+	if os.IsNotExist(err) {
+		return false
+	} else {
+		return true
+	}
 }
 
 func getNumPairs(cluster clusterFiles) (avgPairs float64) {
@@ -304,6 +334,32 @@ func writeCSV(resChan chan result, root string, outName string) {
 		numGenes := fmt.Sprintf("%d", r.numGenes)
 		line = append(line, r.ID, r.genome, mean, StDev, numGenes)
 		line = append(line, r.fitOut...)
+		err = writer.Write(line)
+		if err != nil {
+			fmt.Println("Error while writing to the file ::", err)
+			return
+		}
+	}
+}
+
+func writeFitFails(fitFailed []clusterFiles, root string, outName string) {
+	path := filepath.Join(root, outName)
+	recordFile, err := os.Create(path)
+	if err != nil {
+		fmt.Println("Error while creating the output csv ::", err)
+		return
+	}
+	defer recordFile.Close()
+	// Initialize the writer
+	writer := csv.NewWriter(recordFile)
+	defer writer.Flush()
+	//write header
+	header := []string{"ID", "genome"}
+	err = writer.Write(header)
+	for _, c := range fitFailed {
+		// Write all the records
+		var line []string
+		line = append(line, c.ID, c.genome)
 		err = writer.Write(line)
 		if err != nil {
 			fmt.Println("Error while writing to the file ::", err)
