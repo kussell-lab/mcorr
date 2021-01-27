@@ -37,7 +37,7 @@ func main() {
 
 	//timer
 	start := time.Now()
-
+	timeStamp := fmt.Sprintf(start.Format("060102_1504"))
 	done := make(chan struct{})
 	defer close(done)
 
@@ -48,7 +48,9 @@ func main() {
 	//out := "blarrrrgh"
 	clusterDirs := makeDirList(*root)
 	//make a channel for cluster directories which closes when we're out of them
-	clusters, fitFailed := clusterFileChan(done, *root, clusterDirs, *jsonSuffix, *lmfitSuffix)
+	failOut := timeStamp + "_lmfitfailed.csv"
+	initFailOut(*root, failOut)
+	clusters := clusterFileChan(done, *root, clusterDirs, *jsonSuffix, *lmfitSuffix, failOut)
 	//start a fixed number of goroutines to send results on
 	//make a results channel
 	resChan := make(chan result)
@@ -62,12 +64,11 @@ func main() {
 		close(resChan)
 	}()
 	//end of pipeline
-	currentTime := time.Now()
-	timeStamp := fmt.Sprintf(currentTime.Format("060102_1504"))
+
 	outCsv := timeStamp + "_" + *out + ".csv"
 	writeCSV(resChan, *root, outCsv)
-	failOut := timeStamp + "_lmfitfailed.csv"
-	writeFitFails(fitFailed, *root, failOut)
+
+	//writeFitFails(fitFailed, root, failOut)
 
 	duration := time.Since(start)
 	fmt.Println("Time to collect results:", duration)
@@ -128,27 +129,31 @@ func makeDirList(root string) (DirList []string) {
 }
 
 //clusterFileChan returns a channel of clusterFiles and a list of clusters where lmfit failed
-func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSuffix string, lmfitSuffix string) (<-chan clusterFiles, []clusterFiles) {
+func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSuffix string, lmfitSuffix string, failOut string) <-chan clusterFiles {
 	clusterFileChan := make(chan clusterFiles)
-	var lmfitFailed []clusterFiles
+	//var lmfitFailed []clusterFiles
 	go func() {
 		defer close(clusterFileChan)
 		for _, d := range DirList {
-			//define the flex files
+			//define the core and flex files
 			core, flex := makeClusterFiles(root, d, jsonSuffix, lmfitSuffix)
-			var cGenomes []clusterFiles
-			if checkLmfit(root, core) {
-				cGenomes = append(cGenomes, core)
-			} else {
-				lmfitFailed = append(lmfitFailed, core)
-			}
-			if checkLmfit(root, flex) {
-				cGenomes = append(cGenomes, flex)
-			} else {
-				lmfitFailed = append(lmfitFailed, flex)
-			}
-			//cGenomes := []clusterFiles{core, flex}
+			// var cGenomes []clusterFiles
+			//if checkLmfit(core) {
+			//	cGenomes = append(cGenomes, core)
+			//} else {
+			//	lmfitFailed = append(lmfitFailed, core)
+			//}
+			//if checkLmfit(flex) {
+			//	cGenomes = append(cGenomes, flex)
+			//} else {
+			//	lmfitFailed = append(lmfitFailed, flex)
+			//}
+			cGenomes := []clusterFiles{core, flex}
 			for _, c := range cGenomes {
+				if !checkLmfit(c) {
+					writeFitFail(c, root, failOut)
+					continue
+				}
 				select {
 				case clusterFileChan <- c:
 				case <-done:
@@ -157,7 +162,7 @@ func clusterFileChan(done <-chan struct{}, root string, DirList []string, jsonSu
 			}
 		}
 	}()
-	return clusterFileChan, lmfitFailed
+	return clusterFileChan
 }
 
 //makeClusterFiles returns ClusterFiles for core and flexible genomes
@@ -178,9 +183,8 @@ func makeClusterFiles(root string, d string, jsonSuffix string, lmfitSuffix stri
 }
 
 //checkLmfit check to see if lmfit completed for the cluster
-func checkLmfit(root string, c clusterFiles) bool {
-	lmfit := filepath.Join(root, c.lmfitOut)
-	_, err := os.Stat(lmfit)
+func checkLmfit(c clusterFiles) bool {
+	_, err := os.Stat(c.lmfitOut)
 	if os.IsNotExist(err) {
 		return false
 	} else {
@@ -365,5 +369,46 @@ func writeFitFails(fitFailed []clusterFiles, root string, outName string) {
 			fmt.Println("Error while writing to the file ::", err)
 			return
 		}
+	}
+}
+
+func writeFitFail(c clusterFiles, root string, outName string) {
+	path := filepath.Join(root, outName)
+	recordFile, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Error while writing to fail output ::", err)
+		return
+	}
+	defer recordFile.Close()
+	// Initialize the writer
+	writer := csv.NewWriter(recordFile)
+	defer writer.Flush()
+	// Write all the records
+	var line []string
+	line = append(line, c.ID, c.genome)
+	err = writer.Write(line)
+	if err != nil {
+		fmt.Println("Error while writing to the file ::", err)
+		return
+	}
+}
+
+func initFailOut(root string, outName string) {
+	path := filepath.Join(root, outName)
+	recordFile, err := os.Create(path)
+	if err != nil {
+		fmt.Println("Error while creating the fail output ::", err)
+		return
+	}
+	defer recordFile.Close()
+	// Initialize the writer
+	writer := csv.NewWriter(recordFile)
+	defer writer.Flush()
+	//write header
+	header := []string{"ID", "genome"}
+	err = writer.Write(header)
+	if err != nil {
+		fmt.Println("Error while writing header for failure output ::", err)
+		return
 	}
 }
