@@ -57,18 +57,17 @@ def residual(pars, x, data=None):
 def perform_lmfit(x, y, d_sample):
     """perform least-squares minimization"""
     pfit = Parameters()
-    pfit.add(name="phi_s", vary=True, min=0, value = 1e-5)
-    pfit.add(name="f", vary=True, min=0, max = 3e5,value = 1e3)
-    pfit.add(name="theta_s", vary=True, min=0, value = 1e-5)
-    ##found 1e-5 works better than 1e-2 for the initial condition for theta_p
-    pfit.add(name="theta_p", vary=True, min=0, value = 1e-5)
+    pfit.add(name="phi_s", vary=True, min=0, max=1, value=1e-5)  ##is this maximum valid?
+    pfit.add(name="f", vary=True, min=0, max=3e5, value=1e3)
+    pfit.add(name="theta_s", vary=True, min=0, value=1e-5, max=d_sample) ##this maximum this valid?
+    pfit.add(name="theta_p", vary=True, min=0, value=1e-5)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
     pfit.add(name="a", value=4.0/3.0, vary=False)
     ##constrained params
     pfit.add(name="c_s", expr="(phi_s*w*f)/(1+theta_s*a+phi_s*w*f)", min=0, max=1) #eq 21; range from 0 to 1 or eq 19 is unphysical
-    pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)", min=0, max=3/4) #eq 20 for theta_p
-    pfit.add(name="d_theta_s", expr="theta_s/(1+theta_s*a)", min=0, max=3/4) #eq 20 for theta_s
+    pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)", min=0) #eq 20 for theta_p -- should we have max 3/4?
+    pfit.add(name="d_theta_s", expr="theta_s/(1+theta_s*a)", min=0) #eq 20 for theta_s
     pfit.add(name="d_s", value=d_sample, expr="c_s*d_theta_p+(1-c_s)*d_theta_s", vary=False) ##CONSTRAINING WITH EQ 19
     ##adding in equation 27, but setting it to zero if theta_s is zero
     pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s if theta_s > 0 else 0") #eq. 27
