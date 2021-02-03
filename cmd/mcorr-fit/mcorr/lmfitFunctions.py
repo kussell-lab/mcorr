@@ -57,9 +57,9 @@ def residual(pars, x, data=None):
 def perform_lmfit(x, y, d_sample):
     """perform least-squares minimization"""
     pfit = Parameters()
-    pfit.add(name="phi_s", vary=True, min=0, max=1, value=1e-5)
-    pfit.add(name="f", vary=True, min=3, max=3e5, value=1e3)
-    pfit.add(name="theta_s", vary=True, min=0, max=d_sample, value=1e-5)
+    pfit.add(name="phi_s", vary=True, min=0, value = 1e-5)
+    pfit.add(name="f", vary=True, min=3, max=3e5, value = 1e3)
+    pfit.add(name="theta_s", vary=True, min=0, value = 1e-5)
     #pfit.add(name="theta_p", vary=True, min=0, value = 1e-4)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
@@ -72,8 +72,8 @@ def perform_lmfit(x, y, d_sample):
     #pfit.add(name="d_s", value=d_sample, expr="c_s*d_theta_p+(1-c_s)*d_theta_s", vary=False) ##CONSTRAINING WITH EQ 19
     #pfit.add(name="c_s", expr="(d_s-d_theta_s)/(d_theta_p-d_theta_s)", min=0, max=1) ##CONSTRAINING WITH EQ 19
     ##constraining with eq 26, but re-written ...
-    pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))", min=0)
-    pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s", min=0) #eq. 27
+    pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))")
+    pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s") #eq. 27
     ##collect d_theta_p for later
     pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)", vary=False) #eq 20 for theta_p
     myfit = Minimizer(residual, pfit,
