@@ -70,9 +70,9 @@ def residual(pars, x, data=None):
 def perform_lmfit(x, y, d_sample):
     "perform the fitting with lmfit"
     pfit = Parameters()
-    pfit.add(name="phi_s", vary=True, min=0, value = 1e-5) ##originally had upper bound of 1
-    pfit.add(name="f", vary=True, min=3, max=3e5, value = 1e3) ##originally min=3; value=1e3
-    pfit.add(name="theta_s", vary=True, min=0, value = 1e-5)
+    pfit.add(name="phi_s", vary=True, min=0, value=1e-5) ##originally had upper bound of 1
+    pfit.add(name="f", vary=True, min=3, value=5e2) ##originally min=3; value=1e3
+    pfit.add(name="theta_s", vary=True, min=0, value=1e-5)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
     pfit.add(name="a", value=4.0/3.0, vary=False)
