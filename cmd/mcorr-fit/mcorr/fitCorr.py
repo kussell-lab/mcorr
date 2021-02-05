@@ -39,7 +39,7 @@ def main():
     ##for testing fixes
     # dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8_cluster221'
     # corr_file = os.path.join(dir, 'cluster8_cluster221_CORE_XMFA_OUT.csv')
-    # prefix = 'cluster8_cluster221_CORE_FIT_OUT_0201test'
+    # prefix = 'cluster8_cluster221_CORE_FIT_OUT_0205test'
     # fit_start = 3
     # fit_end = 300
     # quiet = False
