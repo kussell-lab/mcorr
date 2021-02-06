@@ -1,5 +1,5 @@
 """defining lmfit functions for fitCorr.py script"""
-from lmfit import Minimizer, Parameters
+from lmfit import Minimizer, Parameters, minimize
 import numpy as np
 
 def c_s(phi_s, w, f, theta_s, a):
@@ -71,7 +71,8 @@ def perform_lmfit(x, y, d_sample):
     "perform the fitting with lmfit"
     pfit = Parameters()
     pfit.add(name="phi_s", vary=True, min=0, value=1e-5) ##originally had upper bound of 1
-    pfit.add(name="f", vary=True, value=7.5e2, min=3, max=5e6) ##originally min=3; value=1e3
+    ##inital 7.5e2
+    pfit.add(name="f", vary=True, value=1e3, min=3, max=3e5) ##originally min=3/max=3e5; value=1e3
     pfit.add(name="theta_s", vary=True, min=0, value=1e-5)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
@@ -84,11 +85,5 @@ def perform_lmfit(x, y, d_sample):
     pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))") #eq 26
     pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s") #eq. 27
     pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)") #eq 20 for theta_p (for outputs)
-
-    #do the fitting
-    myfit = Minimizer(residual, pfit,
-                      fcn_args=(x,), fcn_kws={'data': y},
-                      scale_covar=True)
-    ##pick least squares with TRF
-    result = myfit.least_squares()
+    result = minimize(residual, pfit, args=(x,), kws={'data': y}, method="least_squares", max_nfev=1e6)
     return result
