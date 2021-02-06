@@ -72,7 +72,7 @@ def perform_lmfit(x, y, d_sample):
     pfit = Parameters()
     pfit.add(name="phi_s", vary=True, min=0, value=1e-5) ##originally had upper bound of 1
     ##inital 7.5e2
-    pfit.add(name="f", vary=True, value=7.5e2, min=3, max=1e6) ##originally min=3/max=3e5; value=1e3
+    pfit.add(name="f", vary=True, value=7.5e2, min=3, max=3e5) ##originally min=3/max=3e5; value=1e3
     pfit.add(name="theta_s", vary=True, min=0, value=1e-5)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
