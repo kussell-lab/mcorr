@@ -70,20 +70,20 @@ def residual(pars, x, data=None):
 def perform_lmfit(x, y, d_sample):
     "perform the fitting with lmfit"
     pfit = Parameters()
-    pfit.add(name="phi_s", vary=True, min=0, value=1e-5) ##originally had upper bound of 1
+    pfit.add(name="phi_s", vary=True, min=0, value=1e-4) ##originally had upper bound of 1
     ##inital 7.5e2
-    pfit.add(name="f", vary=True, value=7.5e2, min=3, max=3e5) ##originally min=3/max=3e5; value=1e3
-    pfit.add(name="theta_s", vary=True, min=0, value=1e-5)
+    pfit.add(name="f", vary=True, value=7.5e2, min=3, max=1e6) ##originally min=3/max=3e5; value=1e3
+    pfit.add(name="theta_s", vary=True, min=0, value=1e-4)
     ##define the fixed params
     pfit.add(name="w", value=2.0/3.0, vary=False)
     pfit.add(name="a", value=4.0/3.0, vary=False)
     pfit.add(name="d_s", vary=False, value=d_sample)
     ##constrained params
     ##originally 0 to 1 for c_s
-    pfit.add(name="c_s", expr="(phi_s*w*f)/(1+theta_s*a+phi_s*w*f)") #eq 21
-    pfit.add(name="d_theta_s", expr="theta_s/(1+theta_s*a)") #eq 20 for theta_s (for eq 26)
-    pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))") #eq 26
-    pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s") #eq. 27
-    pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)") #eq 20 for theta_p (for outputs)
+    pfit.add(name="c_s", expr="(phi_s*w*f)/(1+theta_s*a+phi_s*w*f)", min=0, max=1) #eq 21
+    pfit.add(name="d_theta_s", expr="theta_s/(1+theta_s*a)", min=0) #eq 20 for theta_s (for eq 26)
+    pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))", min=0) #eq 26
+    pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s", min=0) #eq. 27
+    pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)", min=0) #eq 20 for theta_p (for outputs)
     result = minimize(residual, pfit, args=(x,), kws={'data': y}, method="least_squares", max_nfev=1e6)
     return result
