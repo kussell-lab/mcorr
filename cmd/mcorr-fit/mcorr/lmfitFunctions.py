@@ -85,5 +85,8 @@ def perform_lmfit(x, y, d_sample):
     pfit.add(name="theta_p", expr="((1-c_s)*d_theta_s-d_s)/(a*(d_s-d_theta_s)+c_s*(d_theta_s*a-1))", min=0) #eq 26
     pfit.add(name="phi_p", expr="(theta_p*phi_s)/theta_s", min=0) #eq. 27
     pfit.add(name="d_theta_p", expr="theta_p/(1+theta_p*a)", min=0) #eq 20 for theta_p (for outputs)
-    result = minimize(residual, pfit, args=(x,), kws={'data': y}, method="least_squares", max_nfev=1e6)
+    ##least squares with levenberg-marquardt
+    #result = minimize(residual, pfit, args=(x,), kws={'data': y}, method="least_squares", max_nfev=1e6)
+    ##nelder-mead algorithm for least-squares minimization
+    result = minimize(residual, pfit, args=(x,), kws={'data': y}, method="nelder", max_nfev=1e6)
     return result
