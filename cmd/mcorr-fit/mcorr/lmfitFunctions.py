@@ -1,6 +1,7 @@
 """defining lmfit functions for fitCorr.py script"""
 from lmfit import Minimizer, Parameters, minimize
 import numpy as np
+import numdifftools
 
 def c_s(phi_s, w, f, theta_s, a):
     """eq 21"""
