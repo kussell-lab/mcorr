@@ -116,7 +116,7 @@ def main():
             flex_row = []
             flex = pd.read_csv(flex_file)
             flex_row.append(str(sero))
-            flex_row.append("flex")
+            flex_row.append("FLEX")
             flex_row.append("within cluster")
             flex_data = flex[flex["group"] == "all"].values.flatten().tolist()
             flex_row = flex_row + flex_data
@@ -161,7 +161,7 @@ def main():
         if core:
             core_row = []
             core = pd.read_csv(core_file)
-            core_row.append(c[0]+'/'+c[1])
+            core_row.append(c[0]+'_'+c[1])
             core_row.append("CORE")
             core_row.append("between cluster")
             core_data = core[core["group"] == "all"].values.flatten().tolist()
@@ -177,8 +177,8 @@ def main():
         if flex:
             flex_row = []
             flex = pd.read_csv(flex_file)
-            flex_row.append(c[0]+'/'+c[1])
-            flex_row.append("flex")
+            flex_row.append(c[0]+'_'+c[1])
+            flex_row.append("FLEX")
             flex_row.append("between cluster")
             flex_data = flex[flex["group"] == "all"].values.flatten().tolist()
             flex_row = flex_row + flex_data
