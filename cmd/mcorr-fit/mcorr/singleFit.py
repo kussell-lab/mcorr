@@ -14,37 +14,37 @@ from mcorr.lmfitFunctions import perform_lmfit
 
 def main():
     """Fit just the data (no bootstraps) using the method from Nature Methods paper"""
-    # parser = ArgumentParser(
-    #     formatter_class=ArgumentDefaultsHelpFormatter,
-    #     description="Fit just data (no bootstraps) with fitting setup from Nature Methods")
-    # parser.add_argument("corr_file", type = str, help='correlation input file')
-    # parser.add_argument("output_prefix", type=str, help='output file prefix')
-    # parser.add_argument('--fit_start', type=int, default=3,
-    #                     help='fitting range starts at')
-    # parser.add_argument('--fit_end', type=int, default=300,
-    #                     help='fitting range ends at')
-    # parser.add_argument("--use_geom_frag", action="store_true",
-    #                     help='use geometric distribution for fragment sizes')
-    # parser.add_argument('--quiet', action="store_true")
-    # parser.add_argument("--title", type=str, help="plot title", default="")
-    # opts = parser.parse_args()
-    # corr_file = opts.corr_file
-    # prefix = opts.output_prefix
-    # fit_start = opts.fit_start
-    # fit_end = opts.fit_end
-    # quiet = opts.quiet
-    # use_geom_frag = opts.use_geom_frag
-    # title = opts.title
+    parser = ArgumentParser(
+        formatter_class=ArgumentDefaultsHelpFormatter,
+        description="Fit just data (no bootstraps) with fitting setup from Nature Methods")
+    parser.add_argument("corr_file", type = str, help='correlation input file')
+    parser.add_argument("output_prefix", type=str, help='output file prefix')
+    parser.add_argument('--fit_start', type=int, default=3,
+                        help='fitting range starts at')
+    parser.add_argument('--fit_end', type=int, default=300,
+                        help='fitting range ends at')
+    parser.add_argument("--use_geom_frag", action="store_true",
+                        help='use geometric distribution for fragment sizes')
+    parser.add_argument('--quiet', action="store_true")
+    parser.add_argument("--title", type=str, help="plot title", default="")
+    opts = parser.parse_args()
+    corr_file = opts.corr_file
+    prefix = opts.output_prefix
+    fit_start = opts.fit_start
+    fit_end = opts.fit_end
+    quiet = opts.quiet
+    use_geom_frag = opts.use_geom_frag
+    title = opts.title
 
     ##for testing fixes
-    dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8_cluster221'
-    corr_file = os.path.join(dir, 'cluster8_cluster221_CORE_XMFA_OUT.csv')
-    prefix = 'cluster8_cluster221_CORE_FIT_OUT_0205test'
-    fit_start = 3
-    fit_end = 300
-    quiet = False
-    use_geom_frag = False
-    title=""
+    # dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8_cluster221'
+    # corr_file = os.path.join(dir, 'cluster8_cluster221_CORE_XMFA_OUT.csv')
+    # prefix = 'cluster8_cluster221_CORE_FIT_OUT_0205test'
+    # fit_start = 3
+    # fit_end = 300
+    # quiet = False
+    # use_geom_frag = False
+    # title=""
 
     # read correlation results and prepare fitting data
     corr_results = read_corr(corr_file)
