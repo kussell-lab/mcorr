@@ -70,8 +70,9 @@ func main() {
 	}
 	calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
 	corrResChan := calcSingleClade(alnChan, calculator)
-
+	//what's in the json is actually Qs NOT P2!
 	resChan := mcorr.PipeOutCorrResults(corrResChan, *outPrefix+".json")
+	//division by d_sample or P2 is not until here!!!
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
 }
 

@@ -95,8 +95,9 @@ func main() {
 
 	calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
 	corrResChan := calcTwoClade(alnChan, mateAlnChan, calculator)
-
+	//what's in the json is actually Qs NOT P2!
 	resChan := mcorr.PipeOutCorrResults(corrResChan, *outPrefix+".json")
+	//division by d_sample or P2 is not until here!!!
 	mcorr.CollectWrite(resChan, *outPrefix+".csv", *numBoot)
 }
 

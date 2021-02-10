@@ -68,6 +68,7 @@ func CollectWrite(corrResChan chan CorrResults, outFile string, numBoot int) {
 
 	w.WriteString("l,m,v,n,t,b\n")
 	for _, bs := range bootstraps {
+		//this is where division by P(l = 0) happens!!!!
 		results := bs.Results()
 		for _, res := range results {
 			w.WriteString(fmt.Sprintf("%d,%g,%g,%d,%s,%s\n", res.Lag, res.Mean, res.Variance, res.N, res.Type, bs.ID))
