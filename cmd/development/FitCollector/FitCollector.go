@@ -294,22 +294,46 @@ func getFitOut(cluster clusterFiles) (fitOut []string) {
 	reader := csv.NewReader(l)
 	reader.FieldsPerRecord = -1
 	i := 0
+Loop:
 	for {
 		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
 		if err != nil {
-			panic(err)
+			if err == io.EOF {
+				break
+			} else {
+				panic(err)
+			}
 		}
-		if i == 2 {
+		switch i {
+		//did the fit succeed
+		case 0:
 			fitOut = append(fitOut, record[1])
-		}
-		if i == 10 {
+			//get the number of function evals
+		case 1:
+			fitOut = append(fitOut, record[1])
+			//get number of datapoints evaluated
+		case 2:
+			fitOut = append(fitOut, record[1])
+		case 10:
 			fitOut = append(fitOut, record...)
-			break
+			break Loop
 		}
 		i++
+		//if err == io.EOF {
+		//	break
+		//}
+		//if err != nil {
+		//	panic(err)
+		//}
+		////get number of data points
+		//if i == 2 {
+		//	fitOut = append(fitOut, record[1])
+		//}
+		//if i == 10 {
+		//	fitOut = append(fitOut, record...)
+		//	break Loop
+		//}
+		//i++
 	}
 	return fitOut
 }
@@ -327,7 +351,8 @@ func writeCSV(resChan chan result, root string, outName string) {
 	defer writer.Flush()
 	//write header
 	header := []string{"ID", "genome", "avg_pairs", "stdev_pairs", "num_genes",
-		"bp_analyzed", "ds", "thetaS", "f", "phiS", "thetaP",
+		"fit_success", "nefv",
+		"datapoints", "ds", "thetaS", "f", "phiS", "thetaP",
 		"phiP", "c", "dp", "dc", "chisq", "red-chisq"}
 	err = writer.Write(header)
 	for r := range resChan {
