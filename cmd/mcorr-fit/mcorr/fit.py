@@ -72,7 +72,7 @@ def fit_model(xvalues, yvalues, d_sample, r1_func):
         fitres1 = None
     return fitres1
 
-def fit_varynefv(xvalues, yvalues, d_sample, r1_func, nefv):
+def fit_modelopts(xvalues, yvalues, d_sample, r1_func, nefv, fit_method):
     """fitting correlation profile using lmfit"""
     params1 = Parameters()
     params1.add('ds', value=d_sample, vary=False)
@@ -89,12 +89,7 @@ def fit_varynefv(xvalues, yvalues, d_sample, r1_func, nefv):
     params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
-    # minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
-    # try:
-    #     fitres1 = minner1.minimize()
-    # except:
-    #     fitres1 = None
-    result = minimize(fcn2min, params1, args=(xvalues, yvalues, r1_func), method="least_squares", max_nfev=nefv)
+    result = minimize(fcn2min, params1, args=(xvalues, yvalues, r1_func), method=fit_method, max_nfev=nefv)
     return result
 
 def vary_fit(xvalues, yvalues, d_sample, r1_func, f_i, thetaS_i, phiS_i, phiS_max):
