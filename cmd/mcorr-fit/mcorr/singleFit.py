@@ -27,7 +27,7 @@ def main():
                         help='fitting range ends at')
     parser.add_argument("--use_geom_frag", action="store_true",
                         help='use geometric distribution for fragment sizes')
-    parser.add_argument("--fit_method", type=str, default="leastsq", help="lmfit method (see lmfit documentation)")
+    parser.add_argument("--fit_method", type=str, default="least_squares", help="lmfit method (see lmfit documentation)")
     parser.add_argument("--max_nfev", type=int, default=int(1e6),
                         help='max number of function evaluations before lmfit quits')
     parser.add_argument('--quiet', action="store_true")

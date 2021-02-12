@@ -17,7 +17,6 @@ setup(name='mcorr',
         packages=['mcorr'],
         install_requires=requirements,
         entry_points = {
-            'console_scripts' : ['mcorr-fit=mcorr.cli:main', 'fitCorr=mcorr.fitCorr:main',
-                                 'fitGeneCorr=mcorr.fitGeneCorr:main', 'mcorrFitOne=mcorr.singleFit:main'],
+            'console_scripts' : ['mcorr-fit=mcorr.cli:main', 'mcorrFitOne=mcorr.singleFit:main'],
             },
         zip_safe=False)
