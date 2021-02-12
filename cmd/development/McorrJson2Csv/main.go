@@ -5,45 +5,47 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
 
 func main() {
-	//app := kingpin.New("McorrJson2Csv", "converts gene json files to csv files which can be easily used with the python pandas package")
-	//app.Version("v20210127")
-	//currentDir, _ := os.Getwd()
-	//root := app.Flag("root", "root directory containing cluster out folders").Default(currentDir).String()
-	//geneJson := app.Arg("jsonName", "name of json file containing gene correlation profiles").Required().String()
-	//geneCsv := app.Arg("outputCsv", "name of output csv containing gene correlation profiles").Required().String()
-	//ncpu := app.Flag("numCpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	//kingpin.MustParse(app.Parse(os.Args[1:]))
-	//
-	//if *ncpu <= 0 {
-	//	*ncpu = runtime.NumCPU()
-	//}
-	//runtime.GOMAXPROCS(*ncpu)
+	app := kingpin.New("McorrJson2Csv", "converts gene json files to csv files which can be easily used with the python pandas package")
+	app.Version("v20210127")
+	currentDir, _ := os.Getwd()
+	root := app.Flag("root", "root directory containing cluster out folders").Default(currentDir).String()
+	geneJson := app.Arg("jsonName", "name of json file containing gene correlation profiles").Required().String()
+	geneCsv := app.Arg("outputCsv", "name of output csv containing gene correlation profiles").Required().String()
+	ncpu := app.Flag("numCpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
+	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	if *ncpu <= 0 {
+		*ncpu = runtime.NumCPU()
+	}
+	runtime.GOMAXPROCS(*ncpu)
 	//inputs for testing
 	//define root directory
-	root := "/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8/"
-	geneJson := "cluster8_CORE_XMFA_OUT.json"
-	geneCsv := "0212test.csv"
+	//root := "/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8/"
+	//geneJson := "cluster8_CORE_XMFA_OUT.json"
+	//geneCsv := "0212test.csv"
 
 	//timer
 	start := time.Now()
 
-	jsonPath := filepath.Join(root, geneJson)
+	jsonPath := filepath.Join(*root, *geneJson)
 	j, err := os.Open(jsonPath)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer j.Close()
 	//initialize the output csv
-	initCsvOut(root, geneCsv)
+	initCsvOut(*root, *geneCsv)
 	//initialize the Genes array
 	var genes CorrResults
 	//initialize the number of genes
@@ -57,7 +59,7 @@ func main() {
 		json.Unmarshal(byteValue, &genes)
 		//get N for l = 0
 		if len(genes.Results) > 0 {
-			write2Out(genes, root, geneCsv)
+			write2Out(genes, *root, *geneCsv)
 			numGenes++
 		}
 		if err != nil {
