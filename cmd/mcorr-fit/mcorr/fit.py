@@ -48,6 +48,31 @@ def fcn2min(params, xvalues, yvalues, r1_func):
     p2 = calcP2(thetaS, r1, r2, ds, a) / ds
     return p2 - yvalues
 
+##old version
+# def fit_model(xvalues, yvalues, d_sample, r1_func):
+#     """fitting correlation profile using lmfit"""
+#     params1 = Parameters()
+#     params1.add('ds', value=d_sample, vary=False)
+#     params1.add('thetaS', value=0.00001, min=0, max=d_sample)
+#     params1.add('f', value=1000, min=3, max=300000)
+#     ## originally max was 1
+#     params1.add('phiS', value=0.00005, min=0, max=1)
+#     params1.add('w', value=2.0/3.0, vary=False)
+#     params1.add('a', value=4.0/3.0, vary=False)
+#     ##originally thetaP, phiP had no minima
+#     params1.add('thetaP', expr='(ds*(1 + phiS*w*f + a*thetaS)-thetaS)/ \
+#                                 ((1 - a*ds)*(phiS*w*f + a*thetaS)-(a*ds))')
+#     params1.add('phiP', expr='phiS*thetaP/thetaS')
+#     params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
+#     params1.add('dp', expr='thetaP/(1+a*thetaP)')
+#     params1.add('dc', expr='thetaS/(1+a*thetaS)')
+#     minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
+#     try:
+#         fitres1 = minner1.minimize()
+#     except:
+#         fitres1 = None
+#     return fitres1
+
 def fit_model(xvalues, yvalues, d_sample, r1_func):
     """fitting correlation profile using lmfit"""
     params1 = Parameters()
@@ -65,12 +90,9 @@ def fit_model(xvalues, yvalues, d_sample, r1_func):
     params1.add('c', expr='w*phiS*f/(1+w*phiS*f+thetaS*a)')
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
-    minner1 = Minimizer(fcn2min, params1, fcn_args=(xvalues, yvalues, r1_func))
-    try:
-        fitres1 = minner1.minimize()
-    except:
-        fitres1 = None
-    return fitres1
+    result = minimize(fcn2min, params1, args=(xvalues, yvalues, r1_func),
+                      method="least_squares", max_nfev=int(1e6))
+    return result
 
 def fit_modelopts(xvalues, yvalues, d_sample, r1_func, nefv, fit_method):
     """fitting correlation profile using lmfit"""
