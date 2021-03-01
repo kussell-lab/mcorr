@@ -1,74 +1,85 @@
 package main
 
 import (
-	"bufio"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"gopkg.in/alecthomas/kingpin.v2"
-	"io"
-	"log"
+	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func main() {
-	app := kingpin.New("McorrJson2Csv", "converts gene json files to csv files which can be easily used with the python pandas package")
-	app.Version("v20210218")
-	currentDir, _ := os.Getwd()
-	root := app.Flag("root", "folder containing single gene json file").Default(currentDir).String()
-	geneJson := app.Arg("jsonName", "name of json file containing gene correlation profiles").Required().String()
-	geneCsv := app.Arg("outputCsv", "name of output csv containing gene correlation profiles").Required().String()
-	ncpu := app.Flag("numCpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+	//app := kingpin.New("CollectGeneJson", "collect gene jsons into a single file")
+	//app.Version("v20210227")
+	//currentDir, _ := os.Getwd()
+	//root := app.Flag("root", "folder containing single gene json file").Default(currentDir).String()
+	//geneJson := app.Arg("jsonName", "name of json file containing gene correlation profiles").Required().String()
+	//geneCsv := app.Arg("outputCsv", "name of output csv containing gene correlation profiles").Required().String()
+	//ncpu := app.Flag("numCpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
+	//kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	if *ncpu <= 0 {
-		*ncpu = runtime.NumCPU()
-	}
-	runtime.GOMAXPROCS(*ncpu)
+	//if *ncpu <= 0 {
+	//	*ncpu = runtime.NumCPU()
+	//}
+	//runtime.GOMAXPROCS(*ncpu)
 	//inputs for testing
 	//define root directory
-	//root := "/Volumes/GoogleDrive/My Drive/hpc/recombo/APS166_BF_Archive/E003188_34.0.periodic.trimmo.60.um"
-	//geneJson := "E003188_34.0.periodic.trimmo.60.um.json"
-	//geneCsv := "0218test.csv"
+	root := "/Volumes/GoogleDrive/My Drive/hpc/recombo/APS168_SC2_Archive/genes"
+	//geneJson := "gene_1_xmfa_out.json"
+	geneCsv := "all_genes.json"
+	numGenes := 13
 
 	//timer
 	start := time.Now()
-
-	jsonPath := filepath.Join(*root, *geneJson)
-	j, err := os.Open(jsonPath)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer j.Close()
-	//initialize the output csv
-	initCsvOut(*root, *geneCsv)
-	//initialize the Genes array
-	var genes CorrResults
-	//initialize the number of genes
-	numGenes := 0
-	r := bufio.NewReader(j)
-	for {
-		line, err := r.ReadString('\n')
-		// read our opened xmlFile as a byte array.
-		byteValue := []byte(line)
-		//unmarshall into genes
-		json.Unmarshal(byteValue, &genes)
-		//get N for l = 0
-		if len(genes.Results) > 0 {
-			write2Out(genes, *root, *geneCsv)
-			numGenes++
-		}
+	out := filepath.Join(root, geneCsv)
+	f, err := os.Create(out)
+	check(err)
+	defer f.Close()
+	var geneJson string
+	for i := 1; i < numGenes+1; i++ {
+		num := strconv.Itoa(i)
+		geneJson = "gene_" + num + "_xmfa_out.json"
+		jsonPath := filepath.Join(root, geneJson)
+		j, err := os.Open(jsonPath)
 		if err != nil {
-			if err != io.EOF {
-				log.Fatalf("Error when reading file %s: %v", j, err)
-			}
-			break
+			fmt.Println(err)
 		}
+		//defer j.Close()
+		dat, err := ioutil.ReadFile(jsonPath)
+		j.Close()
+		check(err)
+		_, err = f.Write(dat)
+		check(err)
 	}
+
+	//initialize the output csv
+	//initCsvOut(*root, *geneCsv)
+	////initialize the Genes array
+	//var genes CorrResults
+	////initialize the number of genes
+	//numGenes := 0
+	//r := bufio.NewReader(j)
+	//for {
+	//	line, err := r.ReadString('\n')
+	//	// read our opened xmlFile as a byte array.
+	//	byteValue := []byte(line)
+	//	//unmarshall into genes
+	//	json.Unmarshal(byteValue, &genes)
+	//	//get N for l = 0
+	//	if len(genes.Results) > 0 {
+	//		write2Out(genes, *root, *geneCsv)
+	//		numGenes++
+	//	}
+	//	if err != nil {
+	//		if err != io.EOF {
+	//			log.Fatalf("Error when reading file %s: %v", j, err)
+	//		}
+	//		break
+	//	}
+	//}
 	duration := time.Since(start)
 	fmt.Println("Conversion time:", duration)
 }
@@ -130,7 +141,7 @@ func write2Out(genes CorrResults, root string, outName string) {
 		var line []string
 		var Gene string
 		l := fmt.Sprintf("%d", genes.Results[i].Lag)
-		m := fmt.Sprintf("%e", genes.Results[i].Mean)
+		m := fmt.Sprintf("%f", genes.Results[i].Mean)
 		N := fmt.Sprintf("%d", genes.Results[i].N)
 		v := fmt.Sprintf("%f", genes.Results[i].Variance)
 		Type := genes.Results[i].Type
@@ -149,4 +160,10 @@ func write2Out(genes CorrResults, root string, outName string) {
 		}
 	}
 
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }

@@ -13,7 +13,7 @@ WRKD=${SCRATCH}/recombo/salmonella
 SRC=/home/aps376/salmonella
 Archive=${SCRATCH}/recombo/APS155_SE_Archive/SE_MASTER_OUT
 FASTA=${SRC}/Reference/GCF_000006945.2_ASM694v2_genomic.fna
-GFF=${SRC}/Reference//GCF_000006945.2_ASM694v2_genomic.gff
+GFF=${SRC}/Reference/GCF_000006945.2_ASM694v2_genomic.gff
 sra_list=APS155_finalpiles
 
 mkdir -p $Archive
