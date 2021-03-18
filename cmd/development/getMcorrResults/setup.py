@@ -18,6 +18,6 @@ setup(name='collectresults',
         install_requires=requirements,
         entry_points = {
             'console_scripts' : ['getDivergence=collectresults.cli:main', 'fitCollector=collectresults.lmfitcollector:main',
-                                 'collectParams=collectresults.collectParams:main'],
+                                 'collectParams=collectresults.collectParams:main', 'collectComparison=collectresults.collectModelComparison:main'],
             }
       )
