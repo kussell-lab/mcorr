@@ -4,10 +4,10 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --time=1:00:00
 #SBATCH --mem=16GB
-#SBATCH --job-name=500chunks
+#SBATCH --job-name=1000chunks
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=500chunks_slurm%j.out
+#SBATCH --output=1000chunks_slurm%j.out
 
 projectdir=/scratch/aps376/recombo
 cd ${projectdir}
@@ -23,15 +23,15 @@ module load go/1.15.7
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
 
 ## job directory
-jobdir=$SCRATCH/recombo/APS168clusterseqs
+jobdir=$SCRATCH/recombo/APS170clusterseqs
 ##cutoff
-splits=500
+splits=1000
 ##outdir
-outdir=${projectdir}/APS168_SC2_Archive
-list=${outdir}/APS168_completepiles
-MSA=${outdir}/MSA_SC2_MASTER_GAPFILTERED
+outdir=${projectdir}/APS170_SA_Archive
+list=${outdir}/strain_list
+MSA=${outdir}/MSA_SA_MASTER_GAPFILTERED
 cd ${outdir}
 
 echo "let's rock"
-chunkMSA ${MSA} ${list} ${splits} --chunk-folder="500chunks"
+chunkMSA ${MSA} ${list} ${splits} --chunk-folder="1000chunks"
 

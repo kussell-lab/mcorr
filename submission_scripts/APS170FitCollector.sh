@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --time=1:00:00
-#SBATCH --mem=16GB
-#SBATCH --job-name=500chunks
+#SBATCH --mem=4GB
+#SBATCH --job-name=APS170fitcollector
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=500chunks_slurm%j.out
+#SBATCH --output=APS170fitcollector_slurm%j.out
 
 projectdir=/scratch/aps376/recombo
 cd ${projectdir}
@@ -19,19 +19,18 @@ source venv/bin/activate;
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK;
 ##load Go
 module load go/1.15.7
+module load python/intel/3.8.6
 #put gobin on path
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
 
 ## job directory
-jobdir=$SCRATCH/recombo/APS168clusterseqs
-##cutoff
-splits=500
+jobdir=/scratch/aps376/recombo/APS160.5fitcollector
+
 ##outdir
-outdir=${projectdir}/APS168_SC2_Archive
-list=${outdir}/APS168_completepiles
-MSA=${outdir}/MSA_SC2_MASTER_GAPFILTERED
-cd ${outdir}
+archive=/scratch/aps376/recombo/APS170_SA_Archive
+##outdir
 
 echo "let's rock"
-chunkMSA ${MSA} ${list} ${splits} --chunk-folder="500chunks"
+cd ${archive}/corethreshold95
+FitCollector ${archive}/corethreshold95 --lmfitSuffix="_FIT_OUT_lmfit_report.csv"
 

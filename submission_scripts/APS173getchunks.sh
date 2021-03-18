@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
-#SBATCH --time=1:00:00
-#SBATCH --mem=16GB
-#SBATCH --job-name=500chunks
+#SBATCH --cpus-per-task=2
+#SBATCH --time=3:00:00
+#SBATCH --mem=100GB
+#SBATCH --job-name=SEchunks
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aps376@nyu.edu
-#SBATCH --output=500chunks_slurm%j.out
+#SBATCH --output=APS173collectchunks_slurm%j.out
 
 projectdir=/scratch/aps376/recombo
 cd ${projectdir}
@@ -23,15 +23,12 @@ module load go/1.15.7
 export PATH=$PATH:$HOME/go/bin:$HOME/.local/bin
 
 ## job directory
-jobdir=$SCRATCH/recombo/APS168clusterseqs
-##cutoff
-splits=500
-##outdir
-outdir=${projectdir}/APS168_SC2_Archive
-list=${outdir}/APS168_completepiles
-MSA=${outdir}/MSA_SC2_MASTER_GAPFILTERED
-cd ${outdir}
-
+jobdir=/scratch/aps376/recombo/APS173clusterseqs
+archive=/scratch/aps376/recombo/APS173_SE_Archive
+##mcp output
+mcp=${archive}/0315_SE_mps_dists/
+strains=${archive}/strain_list
+cd ${archive}
 echo "let's rock"
-chunkMSA ${MSA} ${list} ${splits} --chunk-folder="500chunks"
+mcorr-dm-chunks ${mcp} ${strains} APS173distancematrix
 

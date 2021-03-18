@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	app := kingpin.New("McorrJson2Csv", "converts gene json files to csv files which can be easily used with the python pandas package")
+	app := kingpin.New("McorrJson2Csv", "converts gene json files to csv files which can be easily used with the python pandas package; need to divide output by d_sample to get corr profiles")
 	app.Version("v20210218")
 	currentDir, _ := os.Getwd()
 	root := app.Flag("root", "folder containing single gene json file").Default(currentDir).String()

@@ -9,6 +9,10 @@ def Power(a, b):
     """compute power"""
     return a**b
 
+def zero_r1(x, fBar, phiC, w):
+    """zero r1 for the no recombination case"""
+    return numpy.zeros(len(x))
+
 def const_r1(x, fBar, phiC, w):
     """calculate r1 assuming constant fragment size"""
     return numpy.where(x < fBar, w*phiC*x, w*phiC*fBar)
@@ -46,6 +50,15 @@ def fcn2min(params, xvalues, yvalues, r1_func):
     ds = params['ds']
     a = params['a']
     p2 = calcP2(thetaS, r1, r2, ds, a) / ds
+    return p2 - yvalues
+
+def zerofcn2min(params, xvalues, yvalues):
+    """function to 2 min for zero recombination case"""
+    thetaS = params['thetaS']
+    a = params['a']
+    ds = params['ds']
+    d2thetaS = (2*thetaS)/(1+2*thetaS*a)
+    p2 = d2thetaS*numpy.ones(len(xvalues))
     return p2 - yvalues
 
 ##old version
@@ -112,6 +125,16 @@ def fit_modelopts(xvalues, yvalues, d_sample, r1_func, nefv, fit_method):
     params1.add('dp', expr='thetaP/(1+a*thetaP)')
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
     result = minimize(fcn2min, params1, args=(xvalues, yvalues, r1_func), method=fit_method, max_nfev=nefv)
+    return result
+
+def fit_zerorecombo(xvalues, yvalues, d_sample, nefv, fit_method):
+    """fitting correlation profile using lmfit"""
+    params1 = Parameters()
+    params1.add('ds', value=d_sample, vary=False)
+    params1.add('thetaS', value=0.00001, min=0)
+    params1.add('a', value=4.0/3.0, vary=False)
+    params1.add('dc', expr='thetaS/(1+a*thetaS)')
+    result = minimize(zerofcn2min, params1, args=(xvalues, yvalues), method=fit_method, max_nfev=nefv)
     return result
 
 def vary_fit(xvalues, yvalues, d_sample, r1_func, f_i, thetaS_i, phiS_i, phiS_max):
