@@ -24,7 +24,7 @@ mkdir_p(submitdir)
 mkdir_p(slurmdir)
 
 "make a list of the redos"
-lmfitfails = os.path.join(archive, "210316_0914_lmfitfailed.csv")
+lmfitfails = os.path.join(archive, "210322_1621_lmfitfailed.csv")
 redos = pd.read_csv(lmfitfails)
 clusterlist = np.array(redos["ID"])
 genomelist = np.array(redos["genome"])

@@ -1,17 +1,16 @@
 package main
 
 import (
-	"io"
-	"os"
-	"runtime"
-	"strings"
-
 	"fmt"
 	"github.com/apsteinberg/biogo/seq"
 	"github.com/apsteinberg/mcorr"
 	"github.com/apsteinberg/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/cheggaaa/pb.v2"
+	"io"
+	"os"
+	"runtime"
+	"strings"
 )
 
 // global variables.
@@ -19,12 +18,10 @@ func main() {
 	fmt.Println("a new hope") //assuming fmt is imported
 	app := kingpin.New("mcorr-xmfa-2clades", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
 	app.Version("v20200808")
-
 	alnFile := app.Arg("in-1", "Alignment file in XMFA format.").Required().String()
 	//added by Asher
 	mateAlnFile := app.Arg("in-2", "Alignment file in XMFA format.").Required().String()
 	outPrefix := app.Arg("out", "Output prefix.").Required().String()
-
 	maxl := app.Flag("max-corr-length", "Maximum distance of correlation (base pairs)").Default("300").Int()
 	ncpu := app.Flag("num-cpu", "Number of CPUs (default: using all available cores)").Default("0").Int()
 	numBoot := app.Flag("num-boot", "Number of bootstrapping on genes").Default("1000").Int()
