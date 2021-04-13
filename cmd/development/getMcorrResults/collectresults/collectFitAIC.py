@@ -72,6 +72,7 @@ def main():
     d_theta_s = []
     chisq = []
     red_chisq = []
+    fit_success = []
 
     for csvfile in tqdm(csvpaths):
         terms = csvfile.split("/")
@@ -79,9 +80,9 @@ def main():
         cluster_names.append(cluster_name)
         terms = cluster_name.split("_")
         if len(terms) > 1:
-            cluster_types.append("between")
+            cluster_types.append("Btwn clusters")
         else:
-            cluster_types.append("within")
+            cluster_types.append("W/n cluster")
 
         dat = pd.read_csv(csvfile, skiprows=10)
         AIC = np.array(dat["AIC"])
@@ -104,13 +105,19 @@ def main():
         d_theta_s.append(float(params["d_theta_s"]))
         chisq.append(float(params["chisq"]))
         red_chisq.append(float(params["red-chisq"]))
+        ##check if the fit succeeded
+        stats = open(csvfile)
+        for i, line in enumerate(stats):
+            if i == 1:
+                terms = line.rstrip().split(",")
+                fit_success.append(terms[1])
 
     data = list(zip(cluster_names, cluster_types, genome, modelAIC, lineAIC,
                     d_s, theta_s, fbar, phi_s, theta_p, phi_p, c, d_theta_p,
-                    d_theta_s, chisq, red_chisq))
+                    d_theta_s, chisq, red_chisq, fit_success))
     outdat = pd.DataFrame(data, columns=["cluster", "type", "genome", "recombo_AIC", "zero-recombo_AIC",
-                                         "d_s", "theta_s", "f", "phi_s", "theta_p", "phi_p", "c", "d_theta_p",
-                                         "d_theta_s", "chisq", "red-chisq"])
+                                         "ds", "thetaS", "f", "phiS", "thetaP", "phiP", "c", "d_thetaP",
+                                         "d_thetaS", "chisq", "red-chisq", "fit_success"])
 
     now = datetime.datetime.now()
     outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_'+file_name+'.csv')
