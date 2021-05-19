@@ -19,6 +19,6 @@ setup(name='collectresults',
         entry_points = {
             'console_scripts' : ['getDivergence=collectresults.cli:main', 'fitCollector=collectresults.lmfitcollector:main',
                                  'collectParams=collectresults.collectParams:main', 'collectComparison=collectresults.collectModelComparison:main',
-                                 'collectFitAIC=collectresults.collectFitAIC:main', "collectBins:collectresults.collectBins:main"],
+                                 'collectFitAIC=collectresults.collectFitAIC:main', "collectBins=collectresults.collectBins:main"],
             }
       )

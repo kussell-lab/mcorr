@@ -199,8 +199,10 @@ func calcP2Coding(aln Alignment, codonOffset int, maxCodonLen int, codingTable *
 						good := true
 						if synonymous {
 							//this is a mistake -- i think it should be b1 and b2 here
-							d1, found1 := codingTable.Table[string(c1)]
-							d2, found2 := codingTable.Table[string(c2)]
+							//d1, found1 := codingTable.Table[string(c1)]
+							//d2, found2 := codingTable.Table[string(c2)]
+							d1, found1 := codingTable.Table[string(b1)]
+							d2, found2 := codingTable.Table[string(b2)]
 							if found1 && found2 && d1 == d2 {
 								good = true
 							} else {
