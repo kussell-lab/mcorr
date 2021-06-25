@@ -1,7 +1,7 @@
 package main
 
+// script written by Asher Preska Steinberg (apsteinberg@nyu.edu)
 import (
-	"fmt"
 	"github.com/apsteinberg/biogo/seq"
 	"github.com/apsteinberg/mcorr"
 	"github.com/apsteinberg/ncbiftp/taxonomy"
@@ -15,7 +15,6 @@ import (
 
 // global variables.
 func main() {
-	fmt.Println("a new hope") //assuming fmt is imported
 	app := kingpin.New("mcorr-xmfa-2clades", "Calculate mutation correlation from bacterial sequence alignments from two clades in XMFA format.")
 	app.Version("v20200808")
 	alnFile := app.Arg("in-1", "Alignment file in XMFA format.").Required().String()
@@ -68,29 +67,6 @@ func main() {
 			}
 		}()
 	}
-
-	//added by Asher
-	/*	var mateAlnChan chan Alignment
-		if bar == nil {
-			mateAlnChan = readAlignments(*mateAlnFile)
-			//mateAlnChan = findMateAln(+mateAlnFile, aln.ID)
-		} else {
-			mateAlnChan = make(chan Alignment)
-			go func() {
-				defer close(mateAlnChan)
-				count := 0
-				c := readAlignments(*mateAlnFile)
-				for a := range c {
-					mateAlnChan <- a
-					bar.Add(1)
-					count++
-				}
-			}()
-		}*/
-	// these are the lines that potentially need to change; mate calculator for mates
-	// calctwoclades for clades
-	//calculator = NewCodingCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
-	//corrResChan := calcSingleClade(alnChan, calculator)
 
 	calculator = NewMateCalculator(codingTable, maxCodonLen, codonOffset, codonPos-1, synonymous)
 	corrResChan := calcTwoClade(alnChan, calculator, mateAlnFile)
