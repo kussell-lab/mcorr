@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"strings"
 
-	"fmt"
 	"github.com/apsteinberg/biogo/seq"
 	"github.com/apsteinberg/mcorr"
 	"github.com/apsteinberg/ncbiftp/taxonomy"
@@ -16,7 +15,6 @@ import (
 
 // global variables.
 func main() {
-	fmt.Println("Singles only") //assuming fmt is imported
 	app := kingpin.New("mcorr-xmfa", "Calculate mutation correlation from bacterial sequence alignments in XMFA format.")
 	app.Version("v20180102")
 

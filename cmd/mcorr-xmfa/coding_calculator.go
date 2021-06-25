@@ -43,17 +43,11 @@ func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, co
 		codons := extractCodons(s, codonOffset)
 		codonSequences = append(codonSequences, codons)
 	}
-	//ks := 1.0
-	//nn := 0
+
 	for l := 0; l < maxCodonLen; l++ {
 		totalP2 := 0.0
 		totaln := 0
-		// while this speeds up the code slightly, causes a minor bug when there
-		//are identical sequences loaded
-		//if l > 0 && ks == 0.0 {
-		//	totalP2 = 0.0
-		//	totaln = nn
-		//} else {
+
 		for i := 0; i+l < len(codonSequences[0]); i++ {
 			codonPairs := []CodonPair{}
 			j := i + l
@@ -79,12 +73,7 @@ func calcP2Coding(aln Alignment, codonOffset, codonPosition, maxCodonLen int, co
 				}
 			}
 		}
-		//}
 
-		//if l == 0 {
-		//	ks = totalP2
-		//	nn = totaln
-		//}
 		if totaln > 0 {
 			res1 := mcorr.CorrResult{
 				Lag:  l * 3,

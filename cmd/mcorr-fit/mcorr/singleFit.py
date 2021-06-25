@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+""""
+written by Asher Preska Steinberg (apsteinberg@nyu.edu)
+"""
 import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 #from mcorr import fit_p2
@@ -42,16 +45,6 @@ def main():
     title = opts.title
     fit_method = opts.fit_method
     max_nfev = opts.max_nfev
-
-    ##for testing fixes
-    # dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8_cluster221'
-    # corr_file = os.path.join(dir, 'cluster8_cluster221_CORE_XMFA_OUT.csv')
-    # prefix = 'cluster8_cluster221_CORE_FIT_OUT_0205test'
-    # fit_start = 3
-    # fit_end = 300
-    # quiet = False
-    # use_geom_frag = False
-    # title=""
 
     # read correlation results and prepare fitting data
     corr_results = read_corr(corr_file)
