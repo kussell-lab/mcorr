@@ -45,11 +45,11 @@ def plot_zerorecombo(fitdata, fitres, plot_file, title=None):
     plt.setp(markerline, "markersize", 4)
     fig.tight_layout()
 
-    ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
-    ax3.hist(fitres, bins="auto", facecolor='green', alpha=0.5)
-    ax3.set_xlabel("Residual")
-    plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
-    ax3.axes.get_yaxis().set_ticks([])
+    # ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
+    # ax3.hist(fitres, bins="auto", facecolor='green', alpha=0.5)
+    # ax3.set_xlabel("Residual")
+    # plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
+    # ax3.axes.get_yaxis().set_ticks([])
 
     fig.savefig(plot_file)
 
@@ -87,11 +87,11 @@ def plot_fit(fitdata, fitres, plot_file, title=None):
     plt.setp(markerline, "markersize", 4)
     fig.tight_layout()
 
-    ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
-    ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
-    ax3.set_xlabel("Residual")
-    plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
-    ax3.axes.get_yaxis().set_ticks([])
+    # ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
+    # ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
+    # ax3.set_xlabel("Residual")
+    # plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
+    # ax3.axes.get_yaxis().set_ticks([])
 
     fig.savefig(plot_file)
 
