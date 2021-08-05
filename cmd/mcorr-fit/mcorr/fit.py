@@ -1,5 +1,7 @@
 """Infer recombination rates by fitting correlation profile"""
 from __future__ import print_function
+
+import math
 import numpy as numpy
 from lmfit import Parameters, Minimizer, minimize
 from tqdm import tqdm
@@ -136,6 +138,25 @@ def fit_zerorecombo(xvalues, yvalues, d_sample, nefv, fit_method):
     params1.add('dc', expr='thetaS/(1+a*thetaS)')
     result = minimize(zerofcn2min, params1, args=(xvalues, yvalues), method=fit_method, max_nfev=nefv)
     return result
+
+def solve_zerorecombo(xvalues, yvalues, d_sample):
+    """solve the null recombination model exactly"""
+    d2thetaS = numpy.mean(yvalues)
+    residuals = numpy.ones(len(yvalues))*d2thetaS - yvalues
+    chisq = numpy.sum(residuals**2)
+    ndata = len(xvalues)
+    red_chisq = chisq/(ndata-1)
+    if chisq == 0:
+        aic = -numpy.Inf
+    else:
+        aic = ndata*math.log(chisq/ndata)+2*1
+    a = 4/3
+    thetaS = 0.5*d_sample/(1-a*d_sample)
+    dc = thetaS/(1+a*thetaS)
+    return ndata, residuals, chisq, red_chisq, aic, thetaS, dc
+
+
+
 
 def vary_fit(xvalues, yvalues, d_sample, r1_func, f_i, thetaS_i, phiS_i, phiS_max):
     """fitting correlation profile using lmfit"""

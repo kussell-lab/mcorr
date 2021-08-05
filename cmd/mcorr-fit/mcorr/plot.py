@@ -11,8 +11,50 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 plt.rcParams['mathtext.fontset'] = 'cm'
 
-def plot_fit(fitdata, fitres, plot_file, title=None):
+def plot_zerorecombo(fitdata, fitres, plot_file, title=None):
     """Fit all row data and do ploting"""
+    xvalues = fitdata.xvalues
+    yvalues = fitdata.yvalues
+    fig = plt.figure(tight_layout=False)
+
+    figsize = 4
+    fig.set_figheight(figsize)
+    fig.set_figwidth(figsize)
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1], hspace=0)
+    ax1 = plt.subplot(gs[0, 0])
+    ax1.scatter(xvalues, yvalues, s=20, facecolors='none', edgecolors='k')
+    predictions = yvalues + fitres
+    ax1.plot(xvalues, predictions, 'k')
+    ax1.set_ylabel(r'$P$')
+    if numpy.min(yvalues) != numpy.max(yvalues):
+        ax1.set_ylim([numpy.min(yvalues)*0.9, numpy.max(yvalues)*1.1])
+    ax1.locator_params(axis='x', nbins=5)
+    ax1.locator_params(axis='y', nbins=5)
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    if title: plt.title(title, loc="left")
+
+    ax2 = plt.subplot(gs[1, 0])
+    markerline, _, _ = ax2.stem(xvalues,
+                                fitres,
+                                linefmt='k-',
+                                basefmt='r-',
+                                markerfmt='ko')
+    ax2.set_xlabel(r'$l$')
+    ax2.set_ylabel("Residual")
+    ax2.locator_params(axis='x', nbins=5)
+    plt.setp(markerline, "markersize", 4)
+    fig.tight_layout()
+
+    ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
+    ax3.hist(fitres, bins="auto", facecolor='green', alpha=0.5)
+    ax3.set_xlabel("Residual")
+    plt.setp(ax3.get_xticklabels(), rotation=20, horizontalalignment='right')
+    ax3.axes.get_yaxis().set_ticks([])
+
+    fig.savefig(plot_file)
+
+def plot_fit(fitdata, fitres, plot_file, title=None):
+    """Fit all row data and do plotting"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     fig = plt.figure(tight_layout=False)
@@ -26,7 +68,8 @@ def plot_fit(fitdata, fitres, plot_file, title=None):
     predictions = yvalues + fitres.residual
     ax1.plot(xvalues, predictions, 'k')
     ax1.set_ylabel(r'$P$')
-    ax1.set_ylim([numpy.min(yvalues)*0.9, numpy.max(yvalues)*1.1])
+    if numpy.min(yvalues) != numpy.max(yvalues):
+        ax1.set_ylim([numpy.min(yvalues)*0.9, numpy.max(yvalues)*1.1])
     ax1.locator_params(axis='x', nbins=5)
     ax1.locator_params(axis='y', nbins=5)
     plt.setp(ax1.get_xticklabels(), visible=False)
