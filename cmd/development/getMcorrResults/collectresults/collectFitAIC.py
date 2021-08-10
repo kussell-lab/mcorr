@@ -28,12 +28,14 @@ def main():
     parser.add_argument("--out_dir", default="current", help="optional out directory for output csv")
     parser.add_argument("--suffix", default="", help="if the goodness-of-fit stats sheet has a different suffix")
     parser.add_argument("file_name", help="prefix for resultant csv file (timestamp will be included)")
+    parser.add_argument("--corr_dir", default="", help="corr profile directory (if they aren't in the same directory")
 
     ##define commandline args as variables
     args = parser.parse_args()
     file_dir = args.file_dir
     file_name = args.file_name
     out_dir = args.out_dir
+    corr_dir = args.corr_dir
     suffix = args.suffix
 
     if suffix == "":
@@ -99,7 +101,10 @@ def main():
             g = "CORE"
         ## get the correlation profile to compute rsquared
         corrcsv = cluster_name + "_" + g + "_XMFA_OUT.csv"
-        dir = os.getcwd()
+        if corr_dir == "":
+            dir = os.getcwd()
+        else:
+            dir = corr_dir
         corr_file = os.path.join(dir, cluster_name, corrcsv)
         # read correlation results
         corr_results = read_corr(corr_file)
