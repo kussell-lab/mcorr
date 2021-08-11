@@ -11,8 +11,8 @@ from itertools import combinations
 import numpy as np
 import linecache
 #from .functions import mkdir_p
-from mcorr.fit_data import FitDatas
-from mcorr.corr_res import read_corr
+# from mcorr.fit_data import FitDatas
+# from mcorr.corr_res import read_corr
 """
 Commandline program for collecting the model comparison results from mcorrFitCompare
 """
