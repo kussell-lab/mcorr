@@ -83,15 +83,15 @@ def main():
     ##get R^2
     ## https://en.wikipedia.org/wiki/Coefficient_of_determination#In_a_multiple_linear_model
     ##get total variance
-    deltay = y-np.mean(y)
-    SStot = np.sum(deltay**2)
-    if fitres.success:
-        rsquare = 1-fitres.chisqr/SStot
-    else:
-        rsquare = np.NaN
-        r_p = np.NaN
-    ## rsquare for flat line ...
-    z_rsquare = 1-zchisq/SStot
+    # deltay = y-np.mean(y)
+    # SStot = np.sum(deltay**2)
+    # if fitres.success:
+    #     rsquare = 1-fitres.chisqr/SStot
+    # else:
+    #     rsquare = np.NaN
+    #     r_p = np.NaN
+    # ## rsquare for flat line ...
+    # z_rsquare = 1-zchisq/SStot
     lmfitfile = prefix + "_comparemodels.csv"
     with open(lmfitfile, "w+") as csvfile:
         lmfit_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -107,13 +107,13 @@ def main():
         lmfit_writer.writerow([""])
         lmfit_writer.writerow(["recombination", "d_s", "theta_s", "f", "phi_s",
                                "theta_p", "phi_p", "c", "d_theta_p",
-                               "d_theta_s", "chisq", "red-chisq", "AIC", "r-square"])
+                               "d_theta_s", "chisq", "red-chisq", "AIC"])
         lmfit_writer.writerow(["recombo", params["ds"], params["thetaS"], params["f"], params["phiS"],
                                params["thetaP"], params["phiP"], params["c"], params["dp"],
-                               params["dc"], fitres.chisqr, fitres.redchi, fitres.aic, rsquare])
+                               params["dc"], fitres.chisqr, fitres.redchi, fitres.aic])
         lmfit_writer.writerow(["zero_recombo", d_sample, zthetaS, np.NAN, np.NAN,
                                np.NAN, np.NAN, np.NAN, np.NAN,
-                               z_dc, zchisq, zred_chisq, zaic, z_rsquare])
+                               z_dc, zchisq, zred_chisq, zaic])
     ##save the residuals as a .csv file
     residuals = zres
     resdat = pd.DataFrame(residuals)
