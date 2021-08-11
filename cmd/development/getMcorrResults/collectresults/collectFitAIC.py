@@ -77,7 +77,7 @@ def main():
     chisq = []
     red_chisq = []
     fit_success = []
-    rsq = []
+    #rsq = []
 
     for csvfile in tqdm(csvpaths):
         terms = csvfile.split("/")
@@ -100,20 +100,20 @@ def main():
             genome.append("CORE")
             g = "CORE"
         ## get the correlation profile to compute rsquared
-        corrcsv = cluster_name + "_" + g + "_XMFA_OUT.csv"
-        if corr_dir == "":
-            dir = os.getcwd()
-        else:
-            dir = corr_dir
-        corr_file = os.path.join(dir, cluster_name, corrcsv)
-        # read correlation results
-        corr_results = read_corr(corr_file)
-        fitdatas = FitDatas(corr_results, 3, 300)
-        all = fitdatas.get("all")
-        y = all.yvalues
-        ##get the total variance
-        deltay = y - np.mean(y)
-        SStot = np.sum(deltay**2)
+        # corrcsv = cluster_name + "_" + g + "_XMFA_OUT.csv"
+        # if corr_dir == "":
+        #     dir = os.getcwd()
+        # else:
+        #     dir = corr_dir
+        # corr_file = os.path.join(dir, cluster_name, corrcsv)
+        # # read correlation results
+        # corr_results = read_corr(corr_file)
+        # fitdatas = FitDatas(corr_results, 3, 300)
+        # all = fitdatas.get("all")
+        # y = all.yvalues
+        # ##get the total variance
+        # deltay = y - np.mean(y)
+        # SStot = np.sum(deltay**2)
         ##collect params
         params = dat[dat["recombination"]=="recombo"]
         d_s.append(float(params["d_s"]))
@@ -127,7 +127,7 @@ def main():
         d_theta_s.append(float(params["d_theta_s"]))
         chisq.append(float(params["chisq"]))
         red_chisq.append(float(params["red-chisq"]))
-        rsq.append(1-float(params["chisq"])/SStot)
+        #rsq.append(1-float(params["chisq"])/SStot)
         ##check if the fit succeeded
         stats = open(csvfile)
         for i, line in enumerate(stats):
@@ -137,10 +137,10 @@ def main():
 
     data = list(zip(cluster_names, cluster_types, genome, modelAIC, lineAIC,
                     d_s, theta_s, fbar, phi_s, theta_p, phi_p, c, d_theta_p,
-                    d_theta_s, chisq, red_chisq, rsq, fit_success))
+                    d_theta_s, chisq, red_chisq, fit_success))
     outdat = pd.DataFrame(data, columns=["cluster", "type", "genome", "recombo_AIC", "zero-recombo_AIC",
                                          "ds", "thetaS", "f", "phiS", "thetaP", "phiP", "c", "d_thetaP",
-                                         "d_thetaS", "chisq", "red-chisq", "R-sq", "fit_success"])
+                                         "d_thetaS", "chisq", "red-chisq", "fit_success"])
 
     now = datetime.datetime.now()
     outpath = os.path.join(out_dir, now.strftime("%Y%m%d_%H%M")+'_'+file_name+'.csv')

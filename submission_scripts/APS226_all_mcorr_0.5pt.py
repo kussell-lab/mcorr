@@ -11,7 +11,7 @@ def mkdir_p(dir):
         os.mkdir(dir)
 
 #define directories
-threshold = "1pt"
+threshold = "0.5pt"
 date = "0811_%s_all" % threshold
 jobdir = "/scratch/aps376/recombo/APS226mcorr"
 archive = "/scratch/aps376/recombo/APS226_SP_Archive/cut_%s" % threshold
@@ -24,10 +24,10 @@ mkdir_p(slurmdir)
 
 "make all possible combos of clusters"
 
-sero_list = [13, 195, 200, 212, 217, 259, 286, 361, 408, 438, 505, 513, 520, 545, 546, 554,
-             574, 607, 748, 763, 767, 768, 775, 778, 782, 807, 881, 883, 909, 918, 933, 942,
-             949, 954, 995, 1102, 1104, 1122, 1128, 1150, 1172, 1193, 1195, 1196, 1214, 1258,
-             1271, 1280, 1317, 1322, 1360, 1361, 1362, 1411, 1603, 1642, 1646]
+sero_list = [311, 330, 331, 374, 591, 738, 917, 1098, 1141, 1151, 1162, 1170,
+             1269, 1486, 1488, 1527, 1532, 1561, 1567, 1576, 1587, 1589, 1666,
+             1689, 1852, 1856, 1936, 1995, 2022, 2048, 2058, 2065, 2395, 2440,
+             2444, 2481, 2528, 2562, 2592, 2733, 2818, 2827, 2830, 2899, 3000, 3338, 3409]
 
 serocombs = combinations(sero_list, 2)
 complete_combolist = []
