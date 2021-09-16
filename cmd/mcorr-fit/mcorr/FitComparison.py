@@ -46,16 +46,6 @@ def main():
     fit_method = opts.fit_method
     max_nfev = opts.max_nfev
 
-    ##for testing fixes
-    # dir = '/Volumes/aps_timemachine/recombo/APS160.5_lmfit/cluster8_cluster221'
-    # corr_file = os.path.join(dir, 'cluster8_cluster221_CORE_XMFA_OUT.csv')
-    # prefix = 'cluster8_cluster221_CORE_FIT_OUT_0205test'
-    # fit_start = 3
-    # fit_end = 300
-    # quiet = False
-    # use_geom_frag = False
-    # title=""
-
     # read correlation results and prepare fitting data
     corr_results = read_corr(corr_file)
     fitdatas = FitDatas(corr_results, fit_start, fit_end)
@@ -79,19 +69,6 @@ def main():
     thetaS = fitres.params["thetaS"]
     phiS = fitres.params["phiS"]
     f = fitres.params["f"]
-    ##for the zero recombination case
-    ##get R^2
-    ## https://en.wikipedia.org/wiki/Coefficient_of_determination#In_a_multiple_linear_model
-    ##get total variance
-    # deltay = y-np.mean(y)
-    # SStot = np.sum(deltay**2)
-    # if fitres.success:
-    #     rsquare = 1-fitres.chisqr/SStot
-    # else:
-    #     rsquare = np.NaN
-    #     r_p = np.NaN
-    # ## rsquare for flat line ...
-    # z_rsquare = 1-zchisq/SStot
     lmfitfile = prefix + "_comparemodels.csv"
     with open(lmfitfile, "w+") as csvfile:
         lmfit_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

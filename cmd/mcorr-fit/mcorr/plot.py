@@ -1,6 +1,3 @@
-##some edits added by Asher
-
-##test to try to fix X11 forwarding problem for server runs
 import matplotlib as mpl
 mpl.use('Agg')
 
@@ -12,7 +9,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 plt.rcParams['mathtext.fontset'] = 'cm'
 
 def plot_zerorecombo(fitdata, fitres, plot_file, title=None):
-    """Fit all row data and do ploting"""
+    """plot the analytical solution from fitting to the zero-recombination model"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     fig = plt.figure(tight_layout=False)
@@ -45,6 +42,7 @@ def plot_zerorecombo(fitdata, fitres, plot_file, title=None):
     plt.setp(markerline, "markersize", 4)
     fig.tight_layout()
 
+    ##remove histograms as they can cause problems for samples with widely varying bootstrap results
     # ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
     # ax3.hist(fitres, bins="auto", facecolor='green', alpha=0.5)
     # ax3.set_xlabel("Residual")
@@ -54,7 +52,7 @@ def plot_zerorecombo(fitdata, fitres, plot_file, title=None):
     fig.savefig(plot_file)
 
 def plot_fit(fitdata, fitres, plot_file, title=None):
-    """Fit all row data and do plotting"""
+    """Fit all row data and do plotting for the full-recombination model"""
     xvalues = fitdata.xvalues
     yvalues = fitdata.yvalues
     fig = plt.figure(tight_layout=False)
@@ -87,6 +85,7 @@ def plot_fit(fitdata, fitres, plot_file, title=None):
     plt.setp(markerline, "markersize", 4)
     fig.tight_layout()
 
+    ##remove histograms as they can cause problems for samples with widely varying bootstrap results
     # ax3 = inset_axes(ax1, width="50%", height="33%", loc=1)
     # ax3.hist(fitres.residual, bins="auto", facecolor='green', alpha=0.5)
     # ax3.set_xlabel("Residual")
@@ -96,7 +95,8 @@ def plot_fit(fitdata, fitres, plot_file, title=None):
     fig.savefig(plot_file)
 
 def plot_params(fit_results, param_names, plot_file):
-    """plot histogram of parameters"""
+    """plot histogram of parameters; this function has been taken out of the main scripts for now
+    due to some issues with determining bins for widely-varying bootstraps"""
     # determine how many columns and rows of sub-plots.
     num_col = 3
     num_row = len(param_names) // num_col
