@@ -29,7 +29,7 @@ In MacOS, you can do it as follows:
 export PATH=$PATH:$HOME/go/bin:$HOME/Library/Python/3.6/bin
 ```
 
-We have tested installation in Windows 10, Ubuntu 17.10, and MacOS High Sierra, using Python 3 and Go v1.9.2.
+We have tested installation in Windows 10, Ubuntu 17.10, and MacOS Big Sur (on both Intel and M1 chips), using Python 3 and Go 1.15 and 1.16.
 
 Typical installation time on an iMac is 10 minutes.
 
