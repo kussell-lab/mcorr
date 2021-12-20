@@ -126,7 +126,8 @@ def solve_zerorecombo(xvalues, yvalues, d_sample):
     else:
         aic = ndata*math.log(chisq/ndata)+2*1
     a = 4/3
-    thetaS = 0.5*d_sample/(1-a*d_sample)
+    ##equation is classic expression of heterozygosity
+    thetaS = d_sample/(1-a*d_sample)
     dc = thetaS/(1+a*thetaS)
     return ndata, residuals, chisq, red_chisq, aic, thetaS, dc
 
