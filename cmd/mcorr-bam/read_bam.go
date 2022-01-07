@@ -4,9 +4,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/apsteinberg/biogo/feat/gff"
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
+	"github.com/kussell-lab/biogo/feat/gff"
 )
 
 // SamReader is an interface for sam or bam reader.

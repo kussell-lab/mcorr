@@ -2,9 +2,9 @@ package main
 
 // script written by Asher Preska Steinberg (apsteinberg@nyu.edu)
 import (
-	"github.com/apsteinberg/biogo/seq"
-	"github.com/apsteinberg/mcorr"
-	"github.com/apsteinberg/ncbiftp/taxonomy"
+	"github.com/kussell-lab/biogo/seq"
+	"github.com/kussell-lab/mcorr"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/cheggaaa/pb.v2"
 	"io"

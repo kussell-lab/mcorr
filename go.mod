@@ -1,19 +1,15 @@
-module github.com/apsteinberg/mcorr
+module github.com/kussell-lab/mcorr
 
 go 1.16
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
-	github.com/apsteinberg/biogo v0.0.0-20180102204004-ca4e680bc9e3
-	github.com/apsteinberg/ncbiftp v0.0.0-20180102204232-614f5f8e9538
-	github.com/biogo/hts v1.2.2
-	github.com/boltdb/bolt v1.3.1
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/biogo/hts v1.4.3
 	github.com/kussell-lab/biogo v0.0.0-20180102204004-ca4e680bc9e3
-	github.com/mattn/go-colorable v0.1.8 // indirect
-	github.com/sbinet/npyio v0.5.2
-	github.com/tobgu/qframe v0.3.5
-	gonum.org/v1/gonum v0.8.2
+	github.com/kussell-lab/ncbiftp v0.0.0-20180102204232-614f5f8e9538
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	gonum.org/v1/gonum v0.9.3
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/cheggaaa/pb.v2 v2.0.7

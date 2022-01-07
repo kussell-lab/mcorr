@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/apsteinberg/mcorr"
+	"github.com/kussell-lab/mcorr"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

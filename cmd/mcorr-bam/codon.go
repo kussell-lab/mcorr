@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/apsteinberg/ncbiftp/taxonomy"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
 )
 
 // Codon stores a codon value, the position in a genome and the read id.

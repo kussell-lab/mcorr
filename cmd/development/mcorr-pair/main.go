@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apsteinberg/biogo/seq"
-	"github.com/apsteinberg/mcorr"
-	"github.com/apsteinberg/ncbiftp/taxonomy"
+	"github.com/kussell-lab/biogo/seq"
+	"github.com/kussell-lab/mcorr"
+	"github.com/kussell-lab/ncbiftp/taxonomy"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
