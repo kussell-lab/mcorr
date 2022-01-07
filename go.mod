@@ -9,6 +9,7 @@ require (
 	github.com/kussell-lab/biogo v0.0.0-20180102204004-ca4e680bc9e3
 	github.com/kussell-lab/ncbiftp v0.0.0-20180102204232-614f5f8e9538
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
